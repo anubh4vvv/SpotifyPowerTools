@@ -1,9 +1,9 @@
-from src.services.spotify_api import get_spotify_client, add_to_queue
-from src.services.playback import print_current_song
-from src.services.playlist import get_current_playlist, get_playlist_tracks
+from services.spotify_api import get_spotify_client, add_to_queue
+from services.playback import print_current_song
+from services.playlist import get_current_playlist, get_playlist_tracks
+from shuffle.reshuffler import smart_shuffle
+from analytics.playlist_health import playlist_health_report
 from song_position import get_current_track_index
-from src.shuffle.reshuffler import smart_shuffle
-
 
 def main():
     # Connect to Spotify
@@ -58,6 +58,18 @@ def main():
 
     for song in shuffled_tracks[index + 1:index + 6]:
         print(f"• {song.name} — {song.artist}")
+
+    report = playlist_health_report(tracks)
+
+    hours = report["duration_ms"] // 1000 // 3600
+    minutes = (report["duration_ms"] // 1000 % 3600) // 60
+
+    print("\n========== Playlist Health ==========")
+    print(f"Songs           : {report['songs']}")
+    print(f"Unique Artists  : {report['artists']}")
+    print(f"Unique Albums   : {report['albums']}")
+    print(f"Duration        : {hours}h {minutes}m")
+    print("=====================================")
 
 
 if __name__ == "__main__":

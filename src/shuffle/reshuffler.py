@@ -1,6 +1,6 @@
 import random
 
-from src.shuffle.scoring import score_song
+from shuffle.scoring import score_song
 
 
 def smart_shuffle(tracks, current_index, seed=None):

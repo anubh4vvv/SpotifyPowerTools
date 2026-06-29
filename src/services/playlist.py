@@ -1,4 +1,4 @@
-from song_mapper import playlist_item_to_song
+from services.song_mapper import playlist_item_to_song
 def get_current_playlist(sp, current):
     """
     Returns the playlist dictionary for the playlist
