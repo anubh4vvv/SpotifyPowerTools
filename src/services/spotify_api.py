@@ -21,3 +21,10 @@ def get_spotify_client():
     )
 
     return spotipy.Spotify(auth_manager=auth_manager)
+
+def add_to_queue(sp, song):
+    """
+    Adds a Song to Spotify's queue.
+    """
+
+    sp.add_to_queue(song.id)
