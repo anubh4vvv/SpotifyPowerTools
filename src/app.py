@@ -1,5 +1,6 @@
 from spotify_api import get_spotify_client
 from playback import print_current_song
+from playlist import get_current_playlist
 
 
 def main():
@@ -9,8 +10,15 @@ def main():
 
     print_current_song(current)
 
+    playlist = get_current_playlist(sp, current)
 
-if __name__ == "__main__":
-    main()
+    if playlist is None:
+        print("No playlist is currently playing.")
+        return
+
+    print("\n=== Playlist ===")
+    print(playlist["name"])
+
+
 if __name__ == "__main__":
     main()
