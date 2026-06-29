@@ -14,6 +14,12 @@ def get_current_playlist(sp, current):
 
     playlist_uri = context["uri"]
 
-    playlist = sp.playlist(playlist_uri)
+    return sp.playlist(playlist_uri)
 
-    return playlist
+
+def get_playlist_tracks(playlist):
+    """
+    Returns every track in the playlist.
+    """
+
+    return playlist["items"]["items"]
