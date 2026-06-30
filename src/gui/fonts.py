@@ -1,0 +1,9 @@
+TITLE = 30
+
+HEADER = 22
+
+SUBHEADER = 18
+
+BODY = 13
+
+SMALL = 11

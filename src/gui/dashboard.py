@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (
     QWidget,
-    QVBoxLayout,
+    QGridLayout,
 )
 
 from gui.current_song_card import CurrentSongCard
@@ -14,9 +14,21 @@ class Dashboard(QWidget):
     def __init__(self):
         super().__init__()
 
-        layout = QVBoxLayout(self)
+        layout = QGridLayout(self)
 
-        layout.setSpacing(20)
+        layout.setContentsMargins(25, 25, 25, 25)
+
+        layout.setHorizontalSpacing(24)
+
+        layout.setVerticalSpacing(24)
+        # Make both columns equal width
+        # Give the left column more room
+        layout.setColumnStretch(0, 3)
+        layout.setColumnStretch(1, 2)
+
+        # Keep both rows equal height
+        layout.setRowStretch(0, 1)
+        layout.setRowStretch(1, 1)
 
         self.current_song_card = CurrentSongCard()
 
@@ -26,12 +38,40 @@ class Dashboard(QWidget):
 
         self.preview_panel = PreviewPanel()
 
-        layout.addWidget(self.current_song_card)
+        # Top row
+        layout.addWidget(
+            self.current_song_card,
+            0,
+            0
+        )
 
-        layout.addWidget(self.playlist_card)
+        layout.addWidget(
+            self.playlist_card,
+            0,
+            1
+        )
 
-        layout.addWidget(self.shuffle_panel)
+        # Bottom row
+        layout.addWidget(
+            self.shuffle_panel,
+            1,
+            0
+        )
 
-        layout.addWidget(self.preview_panel)
+        layout.addWidget(
+            self.preview_panel,
+            1,
+            1
+        )
 
-        layout.addStretch()
+        # Analytics placeholder
+        #
+        # Future:
+        #
+        # layout.addWidget(
+        #     self.analytics_panel,
+        #     2,
+        #     0,
+        #     1,
+        #     2
+        # )

@@ -16,6 +16,7 @@ class ShufflePanel(Card):
     def __init__(self):
 
         super().__init__("Smart Shuffle")
+        self.setMinimumHeight(260)
 
         self.profile = QComboBox()
 

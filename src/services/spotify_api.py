@@ -8,9 +8,10 @@ SCOPE = (
     "user-read-playback-state "
     "user-modify-playback-state "
     "playlist-read-private "
-    "playlist-read-collaborative"
+    "playlist-read-collaborative "
+    "playlist-modify-private "
+    "playlist-modify-public"
 )
-
 
 def get_spotify_client():
     auth_manager = SpotifyOAuth(

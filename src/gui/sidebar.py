@@ -1,7 +1,9 @@
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QFrame,
-    QVBoxLayout,
     QLabel,
+    QPushButton,
+    QVBoxLayout,
 )
 
 
@@ -10,17 +12,48 @@ class Sidebar(QFrame):
     def __init__(self):
         super().__init__()
 
-        self.setFixedWidth(220)
+        self.setObjectName("Sidebar")
+        self.setFixedWidth(240)
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(22, 28, 22, 24)
+        layout.setSpacing(12)
 
-        title = QLabel("Spotify\nPower Tools")
+        title = QLabel("🎵 Spotify\nPower Tools")
+        title.setObjectName("SidebarTitle")
+        title.setWordWrap(True)
 
-        title.setStyleSheet("""
-            font-size:24px;
-            font-weight:bold;
-        """)
+        subtitle = QLabel("Smart Playlist Companion")
+        subtitle.setObjectName("SidebarSubtitle")
+        subtitle.setWordWrap(True)
 
         layout.addWidget(title)
+        layout.addWidget(subtitle)
+
+        layout.addSpacing(28)
+
+        self.dashboard_btn = self.make_button("🏠  Dashboard")
+        self.shuffle_btn = self.make_button("🔀  Smart Shuffle")
+        self.analytics_btn = self.make_button("📊  Analytics")
+        self.settings_btn = self.make_button("⚙  Settings")
+        self.about_btn = self.make_button("ℹ  About")
+
+        layout.addWidget(self.dashboard_btn)
+        layout.addWidget(self.shuffle_btn)
+        layout.addWidget(self.analytics_btn)
+        layout.addWidget(self.settings_btn)
+        layout.addWidget(self.about_btn)
 
         layout.addStretch()
+
+        version = QLabel("Version 0.7.0")
+        version.setAlignment(Qt.AlignCenter)
+        version.setObjectName("SidebarVersion")
+
+        layout.addWidget(version)
+
+    def make_button(self, text):
+        button = QPushButton(text)
+        button.setObjectName("SidebarButton")
+        button.setCursor(Qt.PointingHandCursor)
+        return button
