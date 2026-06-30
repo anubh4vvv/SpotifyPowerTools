@@ -11,6 +11,7 @@ from PySide6.QtCore import Qt
 from gui.card import Card
 from gui.stat_tile import StatTile
 from gui.bar_chart_card import BarChartCard
+from gui.health_score_card import HealthScoreCard
 
 from services.analytics_service import calculate_playlist_analytics
 
@@ -87,6 +88,11 @@ class AnalyticsPage(QWidget):
         stats_grid.addWidget(self.clean_songs, 2, 3)
 
         layout.addLayout(stats_grid)
+        self.health_visual_card = HealthScoreCard()
+
+        layout.addWidget(
+            self.health_visual_card
+        )
 
         # ---------- Chart Cards ----------
 
@@ -207,6 +213,13 @@ class AnalyticsPage(QWidget):
 
         self.clean_songs.set_value(
             analytics["clean_songs"]
+        )
+
+        self.health_visual_card.update_health(
+            analytics["health_score"],
+            analytics["health_status"],
+            analytics["duplicate_count"],
+            analytics["diversity_score"]
         )
 
         self.top_artists_chart.set_data(
