@@ -14,6 +14,7 @@ from PySide6.QtCore import (
 
 from gui.dashboard import Dashboard
 from gui.analytics_page import AnalyticsPage
+from gui.duplicates_page import DuplicatesPage
 from gui.sidebar import Sidebar
 from gui.header import Header
 from gui.app_status_bar import AppStatusBar
@@ -63,10 +64,12 @@ class MainWindow(QMainWindow):
 
         self.dashboard = Dashboard()
         self.analytics_page = AnalyticsPage()
+        self.duplicates_page = DuplicatesPage()
         self.settings_page = SettingsPage()
 
         self.stack.addWidget(self.dashboard)
         self.stack.addWidget(self.analytics_page)
+        self.stack.addWidget(self.duplicates_page)
         self.stack.addWidget(self.settings_page)
 
         body_layout.addWidget(self.sidebar)
@@ -86,8 +89,16 @@ class MainWindow(QMainWindow):
             self.show_dashboard
         )
 
+        self.sidebar.shuffle_btn.clicked.connect(
+            self.show_dashboard
+        )
+
         self.sidebar.analytics_btn.clicked.connect(
             self.show_analytics
+        )
+
+        self.sidebar.duplicates_btn.clicked.connect(
+            self.show_duplicates
         )
 
         self.sidebar.settings_btn.clicked.connect(
@@ -144,6 +155,28 @@ class MainWindow(QMainWindow):
                 "Analytics • No playlist currently playing"
             )
 
+    def show_duplicates(self):
+
+        self.stack.setCurrentWidget(
+            self.duplicates_page
+        )
+
+        playlist, tracks = self.controller.current_playlist()
+
+        self.duplicates_page.update_duplicates(
+            playlist,
+            tracks
+        )
+
+        if playlist is not None:
+            self.status_bar.set_message(
+                f"Duplicates • {playlist['name']}"
+            )
+        else:
+            self.status_bar.set_message(
+                "Duplicates • No playlist currently playing"
+            )
+
     def show_settings(self):
 
         self.settings_page.load_from_saved()
@@ -189,6 +222,11 @@ class MainWindow(QMainWindow):
             )
 
             self.analytics_page.update_analytics(
+                playlist,
+                tracks
+            )
+
+            self.duplicates_page.update_duplicates(
                 playlist,
                 tracks
             )
