@@ -29,21 +29,96 @@ class SpotifyController:
         self._playlist = None
         self._tracks = None
 
-        # Full list after current song
         self._preview = []
-
-        # Full smart-shuffled playlist order
         self._shuffled = []
+
+        # Used to detect stale preview data
+        self._current_context_key = None
+        self._preview_context_key = None
 
     def current_playback(self):
         return self.sp.current_playback()
 
-    def current_playlist(self):
+    def _playlist_id_from_playback(self, current):
 
-        if self._playlist is not None:
+        if current is None:
+            return None
+
+        context = current.get("context")
+
+        if context is None:
+            return None
+
+        if context.get("type") != "playlist":
+            return None
+
+        uri = context.get("uri", "")
+
+        return uri.split(":")[-1]
+
+    def _make_context_key(self, current, playlist):
+
+        if current is None or playlist is None:
+            return None
+
+        track = current.get("item")
+
+        if track is None:
+            return None
+
+        return (
+            playlist.get("id"),
+            track.get("id"),
+        )
+
+    def _clear_shuffle_cache(self):
+
+        self._preview = []
+        self._shuffled = []
+        self._preview_context_key = None
+
+    def _sync_context(self, current, playlist):
+
+        context_key = self._make_context_key(
+            current,
+            playlist
+        )
+
+        if context_key != self._current_context_key:
+
+            self._clear_shuffle_cache()
+
+            self._current_context_key = context_key
+
+    def current_playlist(self, current=None):
+
+        if current is None:
+            current = self.current_playback()
+
+        playlist_id = self._playlist_id_from_playback(
+            current
+        )
+
+        if playlist_id is None:
+
+            self._playlist = None
+            self._tracks = None
+            self._clear_shuffle_cache()
+
+            return None, []
+
+        if (
+            self._playlist is not None
+            and self._tracks is not None
+            and self._playlist.get("id") == playlist_id
+        ):
+
+            self._sync_context(
+                current,
+                self._playlist
+            )
+
             return self._playlist, self._tracks
-
-        current = self.current_playback()
 
         playlist = get_current_playlist(
             self.sp,
@@ -51,6 +126,11 @@ class SpotifyController:
         )
 
         if playlist is None:
+
+            self._playlist = None
+            self._tracks = None
+            self._clear_shuffle_cache()
+
             return None, []
 
         tracks = get_playlist_tracks(
@@ -61,6 +141,11 @@ class SpotifyController:
         self._playlist = playlist
         self._tracks = tracks
 
+        self._sync_context(
+            current,
+            playlist
+        )
+
         return playlist, tracks
 
     def preview_shuffle(self):
@@ -70,7 +155,9 @@ class SpotifyController:
         if current is None:
             return []
 
-        playlist, tracks = self.current_playlist()
+        playlist, tracks = self.current_playlist(
+            current
+        )
 
         if playlist is None:
             return []
@@ -89,11 +176,13 @@ class SpotifyController:
         )
 
         self._shuffled = shuffled
+        self._preview = shuffled[1:]
 
-        # All songs after the current song
-        self._preview = shuffled[index + 1:]
+        self._preview_context_key = self._make_context_key(
+            current,
+            playlist
+        )
 
-        # Only show first 10 in GUI
         return self._preview[:10]
 
     def get_preview(self):
@@ -108,18 +197,37 @@ class SpotifyController:
 
     def queue_smart_shuffle(self, limit=DEFAULT_QUEUE_LIMIT):
         """
-        Adds the next smart-shuffled songs to the Spotify queue.
-        This keeps playback in the user's current Spotify session.
+        Adds smart-shuffled songs to the Spotify queue.
+        If the song or playlist changed after previewing,
+        the preview is regenerated automatically.
         """
 
-        playlist, tracks = self.current_playlist()
+        current = self.current_playback()
+
+        if current is None:
+            raise RuntimeError(
+                "Spotify is not currently playing anything."
+            )
+
+        playlist, tracks = self.current_playlist(
+            current
+        )
 
         if playlist is None:
             raise RuntimeError(
                 "No Spotify playlist is currently playing."
             )
 
-        if not self._preview:
+        current_context_key = self._make_context_key(
+            current,
+            playlist
+        )
+
+        if (
+            not self._preview
+            or self._preview_context_key != current_context_key
+        ):
+
             self.preview_shuffle()
 
         songs_to_queue = self._preview[:limit]
@@ -135,10 +243,13 @@ class SpotifyController:
             limit
         )
 
+        current_track = current.get("item", {})
+
         return {
             "queued_count": queued_count,
             "playlist_name": playlist["name"],
             "queue_limit": limit,
+            "current_song_name": current_track.get("name", "Unknown Song"),
         }
 
     def apply_shuffle_playlist(self):
@@ -182,5 +293,4 @@ class SpotifyController:
 
         self._playlist = None
         self._tracks = None
-        self._preview = []
-        self._shuffled = []
+        self._clear_shuffle_cache()

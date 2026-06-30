@@ -277,7 +277,7 @@ class MainWindow(QMainWindow):
         self.dashboard.shuffle_panel.preview_button.setEnabled(True)
 
         self.status_bar.set_message(
-            f"Queued {result['queued_count']} smart-shuffled songs"
+            f"Queued {result['queued_count']} songs from {result['playlist_name']}"
         )
 
         QMessageBox.information(
@@ -286,6 +286,7 @@ class MainWindow(QMainWindow):
             (
                 f"Queued {result['queued_count']} smart-shuffled songs.\n\n"
                 f"Playlist: {result['playlist_name']}\n\n"
+                f"Starting after: {result['current_song_name']}\n\n"
                 f"Music will continue from your current Spotify playback."
             )
         )

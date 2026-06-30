@@ -1,7 +1,9 @@
 import random
 
 from models.shuffle_context import ShuffleContext
+
 from shuffle.scoring import score_song
+
 from settings.shuffle_config import (
     ARTIST_SPACING,
     ALBUM_SPACING,
@@ -10,44 +12,45 @@ from settings.shuffle_config import (
 
 def smart_shuffle(tracks, current_index, seed=None):
     """
-    Smart Shuffle V2
+    Smart-shuffles the playlist while keeping the currently
+    playing song as the first song.
 
-    Preserves songs before the current song and
-    intelligently shuffles everything after it.
+    This fixes the "last song" issue because the shuffle now uses
+    every other song in the playlist, not only songs after the
+    current index.
     """
+
+    if not tracks:
+        return []
+
+    if current_index < 0 or current_index >= len(tracks):
+        return tracks[:]
 
     rng = random.Random(seed)
 
-    before = tracks[:current_index]
-
     current = tracks[current_index]
 
-    remaining = tracks[current_index + 1:]
+    # Use every song except the current one.
+    # This makes the shuffle wrap naturally even if current song is last.
+    remaining = (
+        tracks[:current_index]
+        + tracks[current_index + 1:]
+    )
 
-    result = before + [current]
-
+    result = [current]
     previous = current
 
     while remaining:
 
         context = ShuffleContext(
             previous_song=previous,
-
-            recent_songs=result[-
-                                max(
-                                    ARTIST_SPACING,
-                                    ALBUM_SPACING
-                                ):
-            ],
-
+            recent_songs=result[-max(ARTIST_SPACING, ALBUM_SPACING):],
             artist_spacing=ARTIST_SPACING,
-
             album_spacing=ALBUM_SPACING,
         )
 
         best_song = None
         best_score = float("-inf")
-        best_reasons = []
 
         for song in remaining:
 
@@ -60,14 +63,9 @@ def smart_shuffle(tracks, current_index, seed=None):
             if score > best_score:
                 best_score = score
                 best_song = song
-                best_reasons = reasons
 
-        print(f"\nChosen: {best_song.name}")
-
-        for reason in best_reasons:
-            print(reason)
-
-        print(f"Final Score: {best_score}")
+        if best_song is None:
+            break
 
         result.append(best_song)
 
