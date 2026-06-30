@@ -3,23 +3,30 @@ from engine.rule_engine import RuleEngine
 from settings.shuffle_config import (
     RANDOM_MIN,
     RANDOM_MAX,
-    RANDOM_WEIGHT,
 )
+
+from shuffle.profile_config import resolve_shuffle_settings
+
 
 engine = RuleEngine()
 
 
-def score_song(candidate, context, rng):
+def score_song(candidate, context, rng, settings=None):
     """
     Returns:
         total_score
         reasons
     """
 
+    resolved_settings = resolve_shuffle_settings(
+        settings
+    )
+
     results = engine.evaluate(
         candidate,
         context,
-        rng
+        rng,
+        resolved_settings
     )
 
     random_points = rng.randint(
@@ -27,10 +34,12 @@ def score_song(candidate, context, rng):
         RANDOM_MAX
     )
 
-    total_score = random_points * RANDOM_WEIGHT
+    random_weight = resolved_settings["random_weight"]
+
+    total_score = random_points * random_weight
 
     reasons = [
-        f"{random_points:+} × {RANDOM_WEIGHT} = {total_score:+.1f} Random factor"
+        f"{random_points:+} × {random_weight} = {total_score:+.1f} Random factor"
     ]
 
     for result in results:

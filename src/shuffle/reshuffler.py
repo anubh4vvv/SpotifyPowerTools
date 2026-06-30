@@ -4,20 +4,13 @@ from models.shuffle_context import ShuffleContext
 
 from shuffle.scoring import score_song
 
-from settings.shuffle_config import (
-    ARTIST_SPACING,
-    ALBUM_SPACING,
-)
+from shuffle.profile_config import resolve_shuffle_settings
 
 
-def smart_shuffle(tracks, current_index, seed=None):
+def smart_shuffle(tracks, current_index, seed=None, settings=None):
     """
     Smart-shuffles the playlist while keeping the currently
     playing song as the first song.
-
-    This fixes the "last song" issue because the shuffle now uses
-    every other song in the playlist, not only songs after the
-    current index.
     """
 
     if not tracks:
@@ -26,12 +19,17 @@ def smart_shuffle(tracks, current_index, seed=None):
     if current_index < 0 or current_index >= len(tracks):
         return tracks[:]
 
+    resolved_settings = resolve_shuffle_settings(
+        settings
+    )
+
+    artist_spacing = resolved_settings["artist_spacing"]
+    album_spacing = resolved_settings["album_spacing"]
+
     rng = random.Random(seed)
 
     current = tracks[current_index]
 
-    # Use every song except the current one.
-    # This makes the shuffle wrap naturally even if current song is last.
     remaining = (
         tracks[:current_index]
         + tracks[current_index + 1:]
@@ -44,9 +42,9 @@ def smart_shuffle(tracks, current_index, seed=None):
 
         context = ShuffleContext(
             previous_song=previous,
-            recent_songs=result[-max(ARTIST_SPACING, ALBUM_SPACING):],
-            artist_spacing=ARTIST_SPACING,
-            album_spacing=ALBUM_SPACING,
+            recent_songs=result[-max(artist_spacing, album_spacing):],
+            artist_spacing=artist_spacing,
+            album_spacing=album_spacing,
         )
 
         best_song = None
@@ -57,7 +55,8 @@ def smart_shuffle(tracks, current_index, seed=None):
             score, reasons = score_song(
                 song,
                 context,
-                rng
+                rng,
+                resolved_settings
             )
 
             if score > best_score:

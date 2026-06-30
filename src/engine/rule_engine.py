@@ -4,16 +4,24 @@ from rules.album_rule import album_score
 
 class RuleEngine:
 
-    def evaluate(self, candidate, context, rng):
+    def evaluate(self, candidate, context, rng, settings=None):
 
         results = []
 
         results.append(
-            artist_score(candidate, context)
+            artist_score(
+                candidate,
+                context,
+                settings
+            )
         )
 
         results.append(
-            album_score(candidate, context)
+            album_score(
+                candidate,
+                context,
+                settings
+            )
         )
 
         return results

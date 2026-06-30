@@ -1,0 +1,109 @@
+BALANCED_PROFILE = {
+    "artist_weight": 2.0,
+    "album_weight": 1.0,
+    "random_weight": 1.0,
+    "artist_spacing": 5,
+    "album_spacing": 3,
+}
+
+DISCOVERY_PROFILE = {
+    "artist_weight": 3.5,
+    "album_weight": 2.0,
+    "random_weight": 0.8,
+    "artist_spacing": 8,
+    "album_spacing": 5,
+}
+
+ALBUM_PROFILE = {
+    "artist_weight": 1.0,
+    "album_weight": 0.3,
+    "random_weight": 0.9,
+    "artist_spacing": 3,
+    "album_spacing": 1,
+}
+
+RANDOM_PROFILE = {
+    "artist_weight": 0.4,
+    "album_weight": 0.2,
+    "random_weight": 3.0,
+    "artist_spacing": 1,
+    "album_spacing": 1,
+}
+
+
+PROFILES = {
+    "Balanced": BALANCED_PROFILE,
+    "Discovery": DISCOVERY_PROFILE,
+    "Album": ALBUM_PROFILE,
+    "Random": RANDOM_PROFILE,
+}
+
+
+def clamp(value, minimum, maximum):
+
+    return max(
+        minimum,
+        min(maximum, value)
+    )
+
+
+def resolve_shuffle_settings(settings=None):
+    """
+    Converts saved/UI settings into actual shuffle-engine values.
+    """
+
+    if settings is None:
+        settings = {}
+
+    if (
+        "random_weight" in settings
+        and "artist_spacing" in settings
+        and "album_spacing" in settings
+    ):
+        return settings.copy()
+
+    profile = settings.get(
+        "shuffle_profile",
+        "Balanced"
+    )
+
+    if profile in PROFILES and profile != "Custom":
+        return PROFILES[profile].copy()
+
+    artist_value = int(
+        settings.get("artist_weight", 50)
+    )
+
+    album_value = int(
+        settings.get("album_weight", 50)
+    )
+
+    randomness_value = int(
+        settings.get("randomness", 50)
+    )
+
+    artist_value = clamp(
+        artist_value,
+        0,
+        100
+    )
+
+    album_value = clamp(
+        album_value,
+        0,
+        100
+    )
+
+    randomness_value = clamp(
+        randomness_value,
+        0,
+        100
+    )
+
+    return {
+        "artist_weight": round(artist_value / 25, 2),
+        "album_weight": round(album_value / 50, 2),
+        "random_weight": round(max(0.1, randomness_value / 50), 2),
+        "artist_spacing": 2 + artist_value // 20,
+        "album_spacing": 1 + album_value // 25,
+    }

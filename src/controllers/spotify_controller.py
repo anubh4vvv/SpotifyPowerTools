@@ -18,6 +18,7 @@ from services.queue_service import (
 )
 
 from shuffle.reshuffler import smart_shuffle
+from services.settings_service import load_settings
 
 
 class SpotifyController:
@@ -35,6 +36,7 @@ class SpotifyController:
         # Used to detect stale preview data
         self._current_context_key = None
         self._preview_context_key = None
+        self._preview_settings_key = None
 
     def current_playback(self):
         return self.sp.current_playback()
@@ -71,11 +73,32 @@ class SpotifyController:
             track.get("id"),
         )
 
+    def _resolve_settings(self, settings):
+
+        if settings is None:
+            return load_settings()
+
+        return settings
+
+    def _make_settings_key(self, settings):
+
+        settings = self._resolve_settings(
+            settings
+        )
+
+        return (
+            settings.get("shuffle_profile"),
+            settings.get("artist_weight"),
+            settings.get("album_weight"),
+            settings.get("randomness"),
+        )
+
     def _clear_shuffle_cache(self):
 
         self._preview = []
         self._shuffled = []
         self._preview_context_key = None
+        self._preview_settings_key = None
 
     def _sync_context(self, current, playlist):
 
@@ -148,7 +171,7 @@ class SpotifyController:
 
         return playlist, tracks
 
-    def preview_shuffle(self):
+    def preview_shuffle(self, settings=None):
 
         current = self.current_playback()
 
@@ -170,9 +193,13 @@ class SpotifyController:
         if index == -1:
             return []
 
+        shuffle_settings = self._resolve_settings(
+            settings
+        )
         shuffled = smart_shuffle(
             tracks,
-            index
+            index,
+            settings=shuffle_settings
         )
 
         self._shuffled = shuffled
@@ -181,6 +208,9 @@ class SpotifyController:
         self._preview_context_key = self._make_context_key(
             current,
             playlist
+        )
+        self._preview_settings_key = self._make_settings_key(
+            shuffle_settings
         )
 
         return self._preview[:10]
@@ -195,7 +225,7 @@ class SpotifyController:
 
         return self._shuffled
 
-    def queue_smart_shuffle(self, limit=DEFAULT_QUEUE_LIMIT):
+    def queue_smart_shuffle(self, limit=DEFAULT_QUEUE_LIMIT, settings=None):
         """
         Adds smart-shuffled songs to the Spotify queue.
         If the song or playlist changed after previewing,
@@ -222,13 +252,22 @@ class SpotifyController:
             current,
             playlist
         )
+        shuffle_settings = self._resolve_settings(
+            settings
+        )
+
+        settings_key = self._make_settings_key(
+            shuffle_settings
+        )
 
         if (
-            not self._preview
-            or self._preview_context_key != current_context_key
+                not self._preview
+                or self._preview_context_key != current_context_key
+                or self._preview_settings_key != settings_key
         ):
-
-            self.preview_shuffle()
+            self.preview_shuffle(
+                settings=shuffle_settings
+            )
 
         songs_to_queue = self._preview[:limit]
 

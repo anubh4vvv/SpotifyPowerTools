@@ -6,11 +6,12 @@ class QueueShuffleWorker(QObject):
     finished = Signal(dict)
     error = Signal(str)
 
-    def __init__(self, controller, limit):
+    def __init__(self, controller, limit, settings=None):
         super().__init__()
 
         self.controller = controller
         self.limit = limit
+        self.settings = settings
 
     @Slot()
     def run(self):
@@ -18,7 +19,8 @@ class QueueShuffleWorker(QObject):
         try:
 
             result = self.controller.queue_smart_shuffle(
-                limit=self.limit
+                limit=self.limit,
+                settings=self.settings
             )
 
             self.finished.emit(result)

@@ -7,10 +7,18 @@ from settings.shuffle_config import (
 )
 
 
-def artist_score(candidate, context):
+def artist_score(candidate, context, settings=None):
     """
     Scores a song based on recent artist history.
     """
+
+    weight = ARTIST_WEIGHT
+
+    if settings is not None:
+        weight = settings.get(
+            "artist_weight",
+            ARTIST_WEIGHT
+        )
 
     recent = context.recent_songs[-context.artist_spacing:]
 
@@ -19,11 +27,11 @@ def artist_score(candidate, context):
             return RuleResult(
                 score=ARTIST_PENALTY,
                 reason=f"Artist '{candidate.artist}' appeared recently",
-                weight=ARTIST_WEIGHT,
+                weight=weight,
             )
 
     return RuleResult(
         score=ARTIST_BONUS,
         reason="Fresh artist",
-        weight=ARTIST_WEIGHT,
+        weight=weight,
     )

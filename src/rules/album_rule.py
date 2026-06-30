@@ -7,10 +7,18 @@ from settings.shuffle_config import (
 )
 
 
-def album_score(candidate, context):
+def album_score(candidate, context, settings=None):
     """
     Scores a song based on recent album history.
     """
+
+    weight = ALBUM_WEIGHT
+
+    if settings is not None:
+        weight = settings.get(
+            "album_weight",
+            ALBUM_WEIGHT
+        )
 
     recent = context.recent_songs[-context.album_spacing:]
 
@@ -19,11 +27,11 @@ def album_score(candidate, context):
             return RuleResult(
                 score=ALBUM_PENALTY,
                 reason=f"Album '{candidate.album}' appeared recently",
-                weight=ALBUM_WEIGHT,
+                weight=weight,
             )
 
     return RuleResult(
         score=ALBUM_BONUS,
         reason="Fresh album",
-        weight=ALBUM_WEIGHT,
+        weight=weight,
     )

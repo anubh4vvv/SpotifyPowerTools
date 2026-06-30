@@ -220,6 +220,8 @@ class MainWindow(QMainWindow):
 
         self.dashboard.shuffle_panel.apply_button.setEnabled(False)
 
+        shuffle_settings = self.dashboard.shuffle_panel.get_settings()
+
         self.status_bar.set_message(
             "Generating Smart Shuffle preview..."
         )
@@ -227,7 +229,8 @@ class MainWindow(QMainWindow):
         self.preview_thread = QThread()
 
         self.preview_worker = PreviewWorker(
-            self.controller
+            self.controller,
+            shuffle_settings
         )
 
         self.preview_worker.moveToThread(
@@ -312,7 +315,9 @@ class MainWindow(QMainWindow):
 
         self.dashboard.shuffle_panel.preview_button.setEnabled(False)
 
-        queue_limit = self.dashboard.shuffle_panel.get_queue_limit()
+        shuffle_settings = self.dashboard.shuffle_panel.get_settings()
+
+        queue_limit = shuffle_settings["queue_size"]
 
         self.status_bar.set_message(
             f"Adding {queue_limit} smart-shuffled songs to Spotify queue..."
@@ -322,7 +327,8 @@ class MainWindow(QMainWindow):
 
         self.queue_worker = QueueShuffleWorker(
             self.controller,
-            queue_limit
+            queue_limit,
+            shuffle_settings
         )
 
         self.queue_worker.moveToThread(
