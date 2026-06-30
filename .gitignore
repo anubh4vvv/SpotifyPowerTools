@@ -1,24 +1,22 @@
 # Python
 __pycache__/
-*.py[cod]
-*.pyo
+*.pyc
 
-# Virtual Environment
+# Virtual environment
 .venv/
-
-# Environment Variables
-.env
+venv/
 
 # IDE
 .idea/
+.vscode/
+
+# Environment variables
+.env
+
+# Build
+dist/
+build/
 
 # OS
 .DS_Store
 Thumbs.db
-
-# OAuth cache
-.cache
-
-# Build files
-dist/
-build/
