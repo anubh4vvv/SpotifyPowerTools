@@ -18,6 +18,7 @@ from gui.app_status_bar import AppStatusBar
 from gui.styles import APP_STYLE
 
 from controllers.spotify_controller import SpotifyController
+from workers.apply_shuffle_worker import ApplyShuffleWorker
 from workers.preview_worker import PreviewWorker
 
 
@@ -29,8 +30,13 @@ class MainWindow(QMainWindow):
         self.controller = SpotifyController()
 
         # Background preview worker
+        # Background preview worker
         self.preview_thread = None
         self.preview_worker = None
+
+        # Background apply-shuffle worker
+        self.apply_thread = None
+        self.apply_worker = None
 
         self.setWindowTitle("Spotify Power Tools")
         self.resize(1600, 950)
@@ -197,12 +203,91 @@ class MainWindow(QMainWindow):
 
     def apply_shuffle(self):
 
-        QMessageBox.information(
-            self,
-            "Spotify Power Tools",
-            "Apply Shuffle will be implemented next."
+        self.dashboard.shuffle_panel.apply_button.setEnabled(False)
+
+        self.dashboard.shuffle_panel.apply_button.setText(
+            "Applying..."
         )
 
+        self.dashboard.shuffle_panel.preview_button.setEnabled(False)
+
         self.status_bar.set_message(
-            "Apply Shuffle clicked"
+            "Creating Smart Shuffle playlist..."
+        )
+
+        self.apply_thread = QThread()
+
+        self.apply_worker = ApplyShuffleWorker(
+            self.controller
+        )
+
+        self.apply_worker.moveToThread(
+            self.apply_thread
+        )
+
+        self.apply_thread.started.connect(
+            self.apply_worker.run
+        )
+
+        self.apply_worker.finished.connect(
+            self.apply_finished
+        )
+
+        self.apply_worker.error.connect(
+            self.apply_error
+        )
+
+        self.apply_worker.finished.connect(
+            self.apply_thread.quit
+        )
+
+        self.apply_thread.finished.connect(
+            self.apply_thread.deleteLater
+        )
+
+        self.apply_thread.start()
+
+    def apply_finished(self, result):
+
+        self.dashboard.shuffle_panel.apply_button.setEnabled(True)
+
+        self.dashboard.shuffle_panel.apply_button.setText(
+            "Apply Shuffle"
+        )
+
+        self.dashboard.shuffle_panel.preview_button.setEnabled(True)
+
+        self.status_bar.set_message(
+            f"Smart Shuffle applied • {result['track_count']} songs"
+        )
+
+        QMessageBox.information(
+            self,
+            "Smart Shuffle Applied",
+            (
+                f"Created/updated playlist:\n\n"
+                f"{result['playlist_name']}\n\n"
+                f"Songs added: {result['track_count']}\n\n"
+                f"Your original playlist was not modified."
+            )
+        )
+
+    def apply_error(self, message):
+
+        self.dashboard.shuffle_panel.apply_button.setEnabled(True)
+
+        self.dashboard.shuffle_panel.apply_button.setText(
+            "Apply Shuffle"
+        )
+
+        self.dashboard.shuffle_panel.preview_button.setEnabled(True)
+
+        self.status_bar.set_message(
+            "Apply Shuffle failed"
+        )
+
+        QMessageBox.critical(
+            self,
+            "Apply Shuffle Error",
+            message
         )
