@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt
 
 from gui.card import Card
 from gui.stat_tile import StatTile
+from gui.bar_chart_card import BarChartCard
 
 from services.analytics_service import calculate_playlist_analytics
 
@@ -87,38 +88,36 @@ class AnalyticsPage(QWidget):
 
         layout.addLayout(stats_grid)
 
+        # ---------- Chart Cards ----------
+
+        charts_grid = QGridLayout()
+        charts_grid.setSpacing(20)
+
+        self.top_artists_chart = BarChartCard("Top Artists")
+        self.top_albums_chart = BarChartCard("Top Albums")
+        self.release_years_chart = BarChartCard("Release Years")
+        self.clean_explicit_chart = BarChartCard("Clean vs Explicit")
+
+        charts_grid.addWidget(self.top_artists_chart, 0, 0)
+        charts_grid.addWidget(self.top_albums_chart, 0, 1)
+
+        charts_grid.addWidget(self.release_years_chart, 1, 0)
+        charts_grid.addWidget(self.clean_explicit_chart, 1, 1)
+
+        layout.addLayout(charts_grid)
+
         # ---------- Insight Cards ----------
 
         insight_grid = QGridLayout()
         insight_grid.setSpacing(20)
 
-        self.top_artists_card = Card("Top Artists")
-        self.top_albums_card = Card("Top Albums")
-        self.release_years_card = Card("Release Years")
-
         self.duplicates_card = Card("Duplicate Tracks")
         self.dominance_card = Card("Dominance")
         self.age_card = Card("Oldest / Newest")
 
-        self.top_artists_label = self.make_text_label()
-        self.top_albums_label = self.make_text_label()
-        self.release_years_label = self.make_text_label()
-
         self.duplicates_label = self.make_text_label()
         self.dominance_label = self.make_text_label()
         self.age_label = self.make_text_label()
-
-        self.top_artists_card.layout.addWidget(
-            self.top_artists_label
-        )
-
-        self.top_albums_card.layout.addWidget(
-            self.top_albums_label
-        )
-
-        self.release_years_card.layout.addWidget(
-            self.release_years_label
-        )
 
         self.duplicates_card.layout.addWidget(
             self.duplicates_label
@@ -132,13 +131,9 @@ class AnalyticsPage(QWidget):
             self.age_label
         )
 
-        insight_grid.addWidget(self.top_artists_card, 0, 0)
-        insight_grid.addWidget(self.top_albums_card, 0, 1)
-        insight_grid.addWidget(self.release_years_card, 0, 2)
-
-        insight_grid.addWidget(self.duplicates_card, 1, 0)
-        insight_grid.addWidget(self.dominance_card, 1, 1)
-        insight_grid.addWidget(self.age_card, 1, 2)
+        insight_grid.addWidget(self.duplicates_card, 0, 0)
+        insight_grid.addWidget(self.dominance_card, 0, 1)
+        insight_grid.addWidget(self.age_card, 0, 2)
 
         layout.addLayout(insight_grid)
         layout.addStretch()
@@ -214,23 +209,28 @@ class AnalyticsPage(QWidget):
             analytics["clean_songs"]
         )
 
-        self.top_artists_label.setText(
-            self.format_ranked_list(
-                analytics["top_artists"]
-            )
+        self.top_artists_chart.set_data(
+            analytics["top_artists"]
         )
 
-        self.top_albums_label.setText(
-            self.format_ranked_list(
-                analytics["top_albums"]
-            )
+        self.top_albums_chart.set_data(
+            analytics["top_albums"]
         )
 
-        self.release_years_label.setText(
-            self.format_ranked_list(
-                analytics["release_years"]
-            )
+        self.release_years_chart.set_data(
+            analytics["release_years"]
         )
+
+        self.clean_explicit_chart.set_data([
+            (
+                "Clean",
+                analytics["clean_songs"]
+            ),
+            (
+                "Explicit",
+                analytics["explicit_songs"]
+            ),
+        ])
 
         self.duplicates_label.setText(
             self.format_duplicate_list(
@@ -249,22 +249,6 @@ class AnalyticsPage(QWidget):
                 analytics
             )
         )
-
-    def format_ranked_list(self, items):
-
-        if not items:
-            return "No data yet"
-
-        lines = []
-
-        for index, item in enumerate(items, start=1):
-            name, count = item
-
-            lines.append(
-                f"{index}. {name}  —  {count}"
-            )
-
-        return "\n".join(lines)
 
     def format_duplicate_list(self, duplicates):
 
