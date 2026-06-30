@@ -16,7 +16,7 @@ class ShufflePanel(Card):
     def __init__(self):
 
         super().__init__("Smart Shuffle")
-        self.setMinimumHeight(260)
+        self.setMinimumHeight(300)
 
         self.profile = QComboBox()
 
@@ -28,28 +28,36 @@ class ShufflePanel(Card):
             "Custom"
         ])
 
+        self.queue_size = QComboBox()
+
+        self.queue_size.addItems([
+            "10 songs",
+            "25 songs",
+            "50 songs",
+            "100 songs"
+        ])
+
+        self.queue_size.setCurrentText("25 songs")
+
         self.artist_slider = QSlider(
             Qt.Horizontal
         )
 
-        self.artist_slider.setRange(0,100)
-
+        self.artist_slider.setRange(0, 100)
         self.artist_slider.setValue(50)
 
         self.album_slider = QSlider(
             Qt.Horizontal
         )
 
-        self.album_slider.setRange(0,100)
-
+        self.album_slider.setRange(0, 100)
         self.album_slider.setValue(50)
 
         self.random_slider = QSlider(
             Qt.Horizontal
         )
 
-        self.random_slider.setRange(0,100)
-
+        self.random_slider.setRange(0, 100)
         self.random_slider.setValue(50)
 
         self.preview_button = QPushButton(
@@ -57,7 +65,7 @@ class ShufflePanel(Card):
         )
 
         self.apply_button = QPushButton(
-            "Apply Shuffle"
+            "Queue Smart Shuffle"
         )
 
         self.apply_button.setEnabled(False)
@@ -68,6 +76,14 @@ class ShufflePanel(Card):
 
         self.layout.addWidget(
             self.profile
+        )
+
+        self.layout.addWidget(
+            QLabel("Queue Size")
+        )
+
+        self.layout.addWidget(
+            self.queue_size
         )
 
         self.layout.addWidget(
@@ -105,3 +121,11 @@ class ShufflePanel(Card):
         )
 
         self.layout.addLayout(buttons)
+
+    def get_queue_limit(self):
+
+        text = self.queue_size.currentText()
+
+        number = text.split()[0]
+
+        return int(number)
