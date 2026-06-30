@@ -1,5 +1,9 @@
 from services.spotify_api import get_spotify_client
 
+from services.cleaner_service import (
+    create_cleaned_playlist as create_cleaned_playlist_service,
+)
+
 from services.playlist import (
     get_current_playlist,
     get_playlist_tracks,
@@ -17,8 +21,9 @@ from services.queue_service import (
     DEFAULT_QUEUE_LIMIT,
 )
 
-from shuffle.reshuffler import smart_shuffle
 from services.settings_service import load_settings
+
+from shuffle.reshuffler import smart_shuffle
 
 
 class SpotifyController:
@@ -327,6 +332,29 @@ class SpotifyController:
             "playlist_url": temp_playlist["external_urls"]["spotify"],
             "track_count": track_count,
         }
+
+    def create_cleaned_playlist(self):
+        """
+        Creates a safe cleaned copy of the current playlist.
+        The original playlist is not modified.
+        """
+
+        current = self.current_playback()
+
+        playlist, tracks = self.current_playlist(
+            current
+        )
+
+        if playlist is None:
+            raise RuntimeError(
+                "No Spotify playlist is currently playing."
+            )
+
+        return create_cleaned_playlist_service(
+            self.sp,
+            playlist,
+            tracks
+        )
 
     def refresh_playlist(self):
 

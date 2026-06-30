@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QLabel,
     QScrollArea,
+    QPushButton,
 )
 
 from PySide6.QtCore import Qt
@@ -18,6 +19,8 @@ class DuplicatesPage(QWidget):
 
     def __init__(self):
         super().__init__()
+
+        self.is_busy = False
 
         root_layout = QVBoxLayout(self)
         root_layout.setContentsMargins(0, 0, 0, 0)
@@ -40,8 +43,8 @@ class DuplicatesPage(QWidget):
         title.setObjectName("SectionTitle")
 
         subtitle = QLabel(
-            "Find duplicate tracks in the playlist you are currently listening to. "
-            "This page is read-only and does not modify your Spotify playlist."
+            "Find duplicate tracks and create a safe cleaned playlist copy. "
+            "Your original Spotify playlist is never modified."
         )
         subtitle.setWordWrap(True)
         subtitle.setStyleSheet(
@@ -67,6 +70,7 @@ class DuplicatesPage(QWidget):
         layout.addLayout(stats_grid)
 
         self.duplicates_card = Card("Duplicate Tracks")
+
         self.duplicates_label = QLabel("No data yet")
         self.duplicates_label.setWordWrap(True)
         self.duplicates_label.setTextInteractionFlags(
@@ -76,8 +80,31 @@ class DuplicatesPage(QWidget):
             "color:#DADADA; font-size:11pt;"
         )
 
+        self.clean_button = QPushButton(
+            "Create Cleaned Copy"
+        )
+        self.clean_button.setEnabled(False)
+
+        self.helper_label = QLabel(
+            "A cleaned copy keeps the first copy of every song and removes extra duplicates."
+        )
+        self.helper_label.setWordWrap(True)
+        self.helper_label.setStyleSheet(
+            "color:#A0A0A0; font-size:10pt;"
+        )
+
         self.duplicates_card.layout.addWidget(
             self.duplicates_label
+        )
+
+        self.duplicates_card.layout.addSpacing(12)
+
+        self.duplicates_card.layout.addWidget(
+            self.helper_label
+        )
+
+        self.duplicates_card.layout.addWidget(
+            self.clean_button
         )
 
         layout.addWidget(self.duplicates_card)
@@ -85,6 +112,16 @@ class DuplicatesPage(QWidget):
 
         scroll.setWidget(content)
         root_layout.addWidget(scroll)
+
+    def set_busy(self, busy):
+
+        self.is_busy = busy
+
+        if busy:
+            self.clean_button.setEnabled(False)
+            self.clean_button.setText("Creating...")
+        else:
+            self.clean_button.setText("Create Cleaned Copy")
 
     def update_duplicates(self, playlist, tracks):
 
@@ -104,12 +141,19 @@ class DuplicatesPage(QWidget):
             analysis["extra_copies"]
         )
 
+        has_duplicates = analysis["extra_copies"] > 0
+
         if playlist is None:
             self.status.set_value("No Playlist")
-        elif analysis["extra_copies"] == 0:
+        elif not has_duplicates:
             self.status.set_value("Clean")
         else:
             self.status.set_value("Review")
+
+        if not self.is_busy:
+            self.clean_button.setEnabled(
+                playlist is not None and has_duplicates
+            )
 
         self.duplicates_label.setText(
             self.format_duplicates(

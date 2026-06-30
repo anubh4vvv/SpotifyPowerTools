@@ -25,7 +25,7 @@ from controllers.spotify_controller import SpotifyController
 
 from workers.preview_worker import PreviewWorker
 from workers.queue_shuffle_worker import QueueShuffleWorker
-
+from workers.cleaner_worker import CleanerWorker
 
 class MainWindow(QMainWindow):
 
@@ -39,6 +39,9 @@ class MainWindow(QMainWindow):
 
         self.queue_thread = None
         self.queue_worker = None
+
+        self.cleaner_thread = None
+        self.cleaner_worker = None
 
         self.setWindowTitle("Spotify Power Tools")
         self.resize(1600, 950)
@@ -109,6 +112,10 @@ class MainWindow(QMainWindow):
             self.apply_saved_settings
         )
 
+        self.duplicates_page.clean_button.clicked.connect(
+            self.create_cleaned_playlist
+        )
+
         self.refresh()
 
         self.timer = QTimer(self)
@@ -176,6 +183,81 @@ class MainWindow(QMainWindow):
             self.status_bar.set_message(
                 "Duplicates • No playlist currently playing"
             )
+
+    def create_cleaned_playlist(self):
+
+        self.duplicates_page.set_busy(True)
+
+        self.status_bar.set_message(
+            "Creating cleaned playlist copy..."
+        )
+
+        self.cleaner_thread = QThread()
+
+        self.cleaner_worker = CleanerWorker(
+            self.controller
+        )
+
+        self.cleaner_worker.moveToThread(
+            self.cleaner_thread
+        )
+
+        self.cleaner_thread.started.connect(
+            self.cleaner_worker.run
+        )
+
+        self.cleaner_worker.finished.connect(
+            self.cleaner_finished
+        )
+
+        self.cleaner_worker.error.connect(
+            self.cleaner_error
+        )
+
+        self.cleaner_worker.finished.connect(
+            self.cleaner_thread.quit
+        )
+
+        self.cleaner_thread.finished.connect(
+            self.cleaner_thread.deleteLater
+        )
+
+        self.cleaner_thread.start()
+
+    def cleaner_finished(self, result):
+
+        self.duplicates_page.set_busy(False)
+
+        self.status_bar.set_message(
+            f"Created cleaned playlist • Removed {result['removed_count']} duplicates"
+        )
+
+        QMessageBox.information(
+            self,
+            "Cleaned Playlist Created",
+            (
+                f"Created playlist:\n\n"
+                f"{result['playlist_name']}\n\n"
+                f"Original songs: {result['original_count']}\n"
+                f"Cleaned songs: {result['cleaned_count']}\n"
+                f"Removed duplicates: {result['removed_count']}\n\n"
+                f"Your original playlist was not modified."
+            )
+        )
+
+    def cleaner_error(self, message):
+
+        self.duplicates_page.set_busy(False)
+
+        self.status_bar.set_message(
+            "Cleaned playlist creation failed"
+        )
+
+        QMessageBox.critical(
+            self,
+            "Playlist Cleaner Error",
+            message
+        )
 
     def show_settings(self):
 
