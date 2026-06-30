@@ -1,3 +1,4 @@
+import webbrowser
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -232,18 +233,40 @@ class MainWindow(QMainWindow):
             f"Created cleaned playlist • Removed {result['removed_count']} duplicates"
         )
 
-        QMessageBox.information(
+        message = (
+            f"Created playlist:\n\n"
+            f"{result['playlist_name']}\n\n"
+            f"Original songs: {result['original_count']}\n"
+            f"Cleaned songs: {result['cleaned_count']}\n"
+            f"Removed duplicates: {result['removed_count']}\n\n"
+            f"Your original playlist was not modified.\n\n"
+            f"Open the cleaned playlist in Spotify?"
+        )
+
+        reply = QMessageBox.question(
             self,
             "Cleaned Playlist Created",
-            (
-                f"Created playlist:\n\n"
-                f"{result['playlist_name']}\n\n"
-                f"Original songs: {result['original_count']}\n"
-                f"Cleaned songs: {result['cleaned_count']}\n"
-                f"Removed duplicates: {result['removed_count']}\n\n"
-                f"Your original playlist was not modified."
-            )
+            message,
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.Yes
         )
+
+        if reply == QMessageBox.Yes:
+
+            playlist_url = result.get("playlist_url")
+
+            if playlist_url:
+                webbrowser.open(playlist_url)
+
+                self.status_bar.set_message(
+                    "Opened cleaned playlist in Spotify"
+                )
+            else:
+                QMessageBox.warning(
+                    self,
+                    "Spotify Link Missing",
+                    "The playlist was created, but no Spotify link was returned."
+                )
 
     def cleaner_error(self, message):
 
