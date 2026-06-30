@@ -3,7 +3,12 @@ from services.playback import print_current_song
 from services.playlist import get_current_playlist, get_playlist_tracks
 from shuffle.reshuffler import smart_shuffle
 from analytics.playlist_health import playlist_health_report
-from song_position import get_current_track_index
+from services.song_position import get_current_track_index
+import sys
+
+from PySide6.QtWidgets import QApplication
+
+from gui.main_window import MainWindow
 
 def main():
     # Connect to Spotify
@@ -74,3 +79,11 @@ def main():
 
 if __name__ == "__main__":
     main()
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+
+    window = MainWindow()
+
+    window.show()
+
+    sys.exit(app.exec())

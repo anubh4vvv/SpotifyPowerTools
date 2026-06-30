@@ -1,0 +1,7 @@
+TEMP_PLAYLIST_NAME = "Spotify Power Tools"
+
+PREVIEW_COUNT = 10
+
+QUEUE_SIZE = 50
+
+APP_VERSION = "0.5.0"
