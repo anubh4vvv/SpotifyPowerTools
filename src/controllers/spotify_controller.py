@@ -12,6 +12,11 @@ from services.temporary_playlist import (
     replace_playlist_tracks,
 )
 
+from services.queue_service import (
+    queue_songs,
+    DEFAULT_QUEUE_LIMIT,
+)
+
 from shuffle.reshuffler import smart_shuffle
 
 
@@ -24,7 +29,7 @@ class SpotifyController:
         self._playlist = None
         self._tracks = None
 
-        # First 10 songs shown in the UI
+        # Full list after current song
         self._preview = []
 
         # Full smart-shuffled playlist order
@@ -85,10 +90,10 @@ class SpotifyController:
 
         self._shuffled = shuffled
 
-        # Save every remaining song after the current song
+        # All songs after the current song
         self._preview = shuffled[index + 1:]
 
-        # Only display the first 10 in the GUI
+        # Only show first 10 in GUI
         return self._preview[:10]
 
     def get_preview(self):
@@ -101,9 +106,45 @@ class SpotifyController:
 
         return self._shuffled
 
+    def queue_smart_shuffle(self, limit=DEFAULT_QUEUE_LIMIT):
+        """
+        Adds the next smart-shuffled songs to the Spotify queue.
+        This keeps playback in the user's current Spotify session.
+        """
+
+        playlist, tracks = self.current_playlist()
+
+        if playlist is None:
+            raise RuntimeError(
+                "No Spotify playlist is currently playing."
+            )
+
+        if not self._preview:
+            self.preview_shuffle()
+
+        songs_to_queue = self._preview[:limit]
+
+        if not songs_to_queue:
+            raise RuntimeError(
+                "No songs available to queue. Try Preview Shuffle first."
+            )
+
+        queued_count = queue_songs(
+            self.sp,
+            songs_to_queue,
+            limit
+        )
+
+        return {
+            "queued_count": queued_count,
+            "playlist_name": playlist["name"],
+            "queue_limit": limit,
+        }
+
     def apply_shuffle_playlist(self):
         """
-        Creates or updates the safe temporary Smart Shuffle playlist.
+        Backup/export feature:
+        creates or updates the safe temporary Smart Shuffle playlist.
         This does NOT modify the original playlist.
         """
 

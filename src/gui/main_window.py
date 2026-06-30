@@ -18,8 +18,9 @@ from gui.app_status_bar import AppStatusBar
 from gui.styles import APP_STYLE
 
 from controllers.spotify_controller import SpotifyController
-from workers.apply_shuffle_worker import ApplyShuffleWorker
+
 from workers.preview_worker import PreviewWorker
+from workers.queue_shuffle_worker import QueueShuffleWorker
 
 
 class MainWindow(QMainWindow):
@@ -30,13 +31,12 @@ class MainWindow(QMainWindow):
         self.controller = SpotifyController()
 
         # Background preview worker
-        # Background preview worker
         self.preview_thread = None
         self.preview_worker = None
 
-        # Background apply-shuffle worker
-        self.apply_thread = None
-        self.apply_worker = None
+        # Background queue worker
+        self.queue_thread = None
+        self.queue_worker = None
 
         self.setWindowTitle("Spotify Power Tools")
         self.resize(1600, 950)
@@ -68,6 +68,10 @@ class MainWindow(QMainWindow):
         root_layout.addWidget(body, 1)
         root_layout.addWidget(self.status_bar)
 
+        self.dashboard.shuffle_panel.apply_button.setText(
+            "Queue Smart Shuffle"
+        )
+
         self.refresh()
 
         self.timer = QTimer(self)
@@ -79,7 +83,7 @@ class MainWindow(QMainWindow):
         )
 
         self.dashboard.shuffle_panel.apply_button.clicked.connect(
-            self.apply_shuffle
+            self.queue_shuffle
         )
 
     def refresh(self):
@@ -128,6 +132,8 @@ class MainWindow(QMainWindow):
         self.dashboard.shuffle_panel.preview_button.setText(
             "Generating..."
         )
+
+        self.dashboard.shuffle_panel.apply_button.setEnabled(False)
 
         self.status_bar.set_message(
             "Generating Smart Shuffle preview..."
@@ -179,6 +185,10 @@ class MainWindow(QMainWindow):
 
         self.dashboard.shuffle_panel.apply_button.setEnabled(True)
 
+        self.dashboard.shuffle_panel.apply_button.setText(
+            "Queue Smart Shuffle"
+        )
+
         self.status_bar.set_message(
             f"Preview ready • Showing {len(preview)} upcoming songs"
         )
@@ -197,97 +207,102 @@ class MainWindow(QMainWindow):
             "Preview Shuffle"
         )
 
+        self.dashboard.shuffle_panel.apply_button.setEnabled(True)
+
+        self.dashboard.shuffle_panel.apply_button.setText(
+            "Queue Smart Shuffle"
+        )
+
         self.status_bar.set_message(
             "Preview failed"
         )
 
-    def apply_shuffle(self):
+    def queue_shuffle(self):
 
         self.dashboard.shuffle_panel.apply_button.setEnabled(False)
 
         self.dashboard.shuffle_panel.apply_button.setText(
-            "Applying..."
+            "Queueing..."
         )
 
         self.dashboard.shuffle_panel.preview_button.setEnabled(False)
 
         self.status_bar.set_message(
-            "Creating Smart Shuffle playlist..."
+            "Adding smart-shuffled songs to Spotify queue..."
         )
 
-        self.apply_thread = QThread()
+        self.queue_thread = QThread()
 
-        self.apply_worker = ApplyShuffleWorker(
+        self.queue_worker = QueueShuffleWorker(
             self.controller
         )
 
-        self.apply_worker.moveToThread(
-            self.apply_thread
+        self.queue_worker.moveToThread(
+            self.queue_thread
         )
 
-        self.apply_thread.started.connect(
-            self.apply_worker.run
+        self.queue_thread.started.connect(
+            self.queue_worker.run
         )
 
-        self.apply_worker.finished.connect(
-            self.apply_finished
+        self.queue_worker.finished.connect(
+            self.queue_finished
         )
 
-        self.apply_worker.error.connect(
-            self.apply_error
+        self.queue_worker.error.connect(
+            self.queue_error
         )
 
-        self.apply_worker.finished.connect(
-            self.apply_thread.quit
+        self.queue_worker.finished.connect(
+            self.queue_thread.quit
         )
 
-        self.apply_thread.finished.connect(
-            self.apply_thread.deleteLater
+        self.queue_thread.finished.connect(
+            self.queue_thread.deleteLater
         )
 
-        self.apply_thread.start()
+        self.queue_thread.start()
 
-    def apply_finished(self, result):
+    def queue_finished(self, result):
 
         self.dashboard.shuffle_panel.apply_button.setEnabled(True)
 
         self.dashboard.shuffle_panel.apply_button.setText(
-            "Apply Shuffle"
+            "Queue Smart Shuffle"
         )
 
         self.dashboard.shuffle_panel.preview_button.setEnabled(True)
 
         self.status_bar.set_message(
-            f"Smart Shuffle applied • {result['track_count']} songs"
+            f"Queued {result['queued_count']} smart-shuffled songs"
         )
 
         QMessageBox.information(
             self,
-            "Smart Shuffle Applied",
+            "Smart Shuffle Queued",
             (
-                f"Created/updated playlist:\n\n"
-                f"{result['playlist_name']}\n\n"
-                f"Songs added: {result['track_count']}\n\n"
-                f"Your original playlist was not modified."
+                f"Queued {result['queued_count']} smart-shuffled songs.\n\n"
+                f"Playlist: {result['playlist_name']}\n\n"
+                f"Music will continue from your current Spotify playback."
             )
         )
 
-    def apply_error(self, message):
+    def queue_error(self, message):
 
         self.dashboard.shuffle_panel.apply_button.setEnabled(True)
 
         self.dashboard.shuffle_panel.apply_button.setText(
-            "Apply Shuffle"
+            "Queue Smart Shuffle"
         )
 
         self.dashboard.shuffle_panel.preview_button.setEnabled(True)
 
         self.status_bar.set_message(
-            "Apply Shuffle failed"
+            "Queue Smart Shuffle failed"
         )
 
         QMessageBox.critical(
             self,
-            "Apply Shuffle Error",
+            "Queue Smart Shuffle Error",
             message
         )
