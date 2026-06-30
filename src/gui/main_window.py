@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
     QMessageBox,
+    QStackedWidget,
 )
 
 from PySide6.QtCore import (
@@ -12,6 +13,7 @@ from PySide6.QtCore import (
 )
 
 from gui.dashboard import Dashboard
+from gui.analytics_page import AnalyticsPage
 from gui.sidebar import Sidebar
 from gui.header import Header
 from gui.app_status_bar import AppStatusBar
@@ -30,11 +32,9 @@ class MainWindow(QMainWindow):
 
         self.controller = SpotifyController()
 
-        # Background preview worker
         self.preview_thread = None
         self.preview_worker = None
 
-        # Background queue worker
         self.queue_thread = None
         self.queue_worker = None
 
@@ -57,10 +57,17 @@ class MainWindow(QMainWindow):
         body_layout.setSpacing(0)
 
         self.sidebar = Sidebar()
+
+        self.stack = QStackedWidget()
+
         self.dashboard = Dashboard()
+        self.analytics_page = AnalyticsPage()
+
+        self.stack.addWidget(self.dashboard)
+        self.stack.addWidget(self.analytics_page)
 
         body_layout.addWidget(self.sidebar)
-        body_layout.addWidget(self.dashboard, 1)
+        body_layout.addWidget(self.stack, 1)
 
         self.status_bar = AppStatusBar()
 
@@ -70,6 +77,14 @@ class MainWindow(QMainWindow):
 
         self.dashboard.shuffle_panel.apply_button.setText(
             "Queue Smart Shuffle"
+        )
+
+        self.sidebar.dashboard_btn.clicked.connect(
+            self.show_dashboard
+        )
+
+        self.sidebar.analytics_btn.clicked.connect(
+            self.show_analytics
         )
 
         self.refresh()
@@ -85,6 +100,38 @@ class MainWindow(QMainWindow):
         self.dashboard.shuffle_panel.apply_button.clicked.connect(
             self.queue_shuffle
         )
+
+    def show_dashboard(self):
+
+        self.stack.setCurrentWidget(
+            self.dashboard
+        )
+
+        self.status_bar.set_message(
+            "Dashboard"
+        )
+
+    def show_analytics(self):
+
+        self.stack.setCurrentWidget(
+            self.analytics_page
+        )
+
+        playlist, tracks = self.controller.current_playlist()
+
+        self.analytics_page.update_analytics(
+            playlist,
+            tracks
+        )
+
+        if playlist is not None:
+            self.status_bar.set_message(
+                f"Analytics • {playlist['name']}"
+            )
+        else:
+            self.status_bar.set_message(
+                "Analytics • No playlist currently playing"
+            )
 
     def refresh(self):
 
@@ -104,6 +151,11 @@ class MainWindow(QMainWindow):
             )
 
             self.dashboard.playlist_card.update_playlist(
+                playlist,
+                tracks
+            )
+
+            self.analytics_page.update_analytics(
                 playlist,
                 tracks
             )
