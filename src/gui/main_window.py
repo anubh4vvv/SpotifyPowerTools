@@ -18,6 +18,7 @@ from gui.sidebar import Sidebar
 from gui.header import Header
 from gui.app_status_bar import AppStatusBar
 from gui.styles import APP_STYLE
+from gui.settings_page import SettingsPage
 
 from controllers.spotify_controller import SpotifyController
 
@@ -62,9 +63,11 @@ class MainWindow(QMainWindow):
 
         self.dashboard = Dashboard()
         self.analytics_page = AnalyticsPage()
+        self.settings_page = SettingsPage()
 
         self.stack.addWidget(self.dashboard)
         self.stack.addWidget(self.analytics_page)
+        self.stack.addWidget(self.settings_page)
 
         body_layout.addWidget(self.sidebar)
         body_layout.addWidget(self.stack, 1)
@@ -85,6 +88,14 @@ class MainWindow(QMainWindow):
 
         self.sidebar.analytics_btn.clicked.connect(
             self.show_analytics
+        )
+
+        self.sidebar.settings_btn.clicked.connect(
+            self.show_settings
+        )
+
+        self.settings_page.settings_saved.connect(
+            self.apply_saved_settings
         )
 
         self.refresh()
@@ -132,6 +143,28 @@ class MainWindow(QMainWindow):
             self.status_bar.set_message(
                 "Analytics • No playlist currently playing"
             )
+
+    def show_settings(self):
+
+        self.settings_page.load_from_saved()
+
+        self.stack.setCurrentWidget(
+            self.settings_page
+        )
+
+        self.status_bar.set_message(
+            "Settings"
+        )
+
+    def apply_saved_settings(self, settings):
+
+        self.dashboard.shuffle_panel.apply_settings(
+            settings
+        )
+
+        self.status_bar.set_message(
+            "Settings saved"
+        )
 
     def refresh(self):
 

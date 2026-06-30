@@ -10,6 +10,8 @@ from PySide6.QtCore import Qt
 
 from gui.card import Card
 
+from services.settings_service import load_settings
+
 
 class ShufflePanel(Card):
 
@@ -37,28 +39,23 @@ class ShufflePanel(Card):
             "100 songs"
         ])
 
-        self.queue_size.setCurrentText("25 songs")
-
         self.artist_slider = QSlider(
             Qt.Horizontal
         )
 
         self.artist_slider.setRange(0, 100)
-        self.artist_slider.setValue(50)
 
         self.album_slider = QSlider(
             Qt.Horizontal
         )
 
         self.album_slider.setRange(0, 100)
-        self.album_slider.setValue(50)
 
         self.random_slider = QSlider(
             Qt.Horizontal
         )
 
         self.random_slider.setRange(0, 100)
-        self.random_slider.setValue(50)
 
         self.preview_button = QPushButton(
             "Preview Shuffle"
@@ -121,6 +118,42 @@ class ShufflePanel(Card):
         )
 
         self.layout.addLayout(buttons)
+
+        self.apply_settings(
+            load_settings()
+        )
+
+    def apply_settings(self, settings):
+
+        self.profile.setCurrentText(
+            settings["shuffle_profile"]
+        )
+
+        self.queue_size.setCurrentText(
+            f"{settings['queue_size']} songs"
+        )
+
+        self.artist_slider.setValue(
+            settings["artist_weight"]
+        )
+
+        self.album_slider.setValue(
+            settings["album_weight"]
+        )
+
+        self.random_slider.setValue(
+            settings["randomness"]
+        )
+
+    def get_settings(self):
+
+        return {
+            "queue_size": self.get_queue_limit(),
+            "shuffle_profile": self.profile.currentText(),
+            "artist_weight": self.artist_slider.value(),
+            "album_weight": self.album_slider.value(),
+            "randomness": self.random_slider.value(),
+        }
 
     def get_queue_limit(self):
 
