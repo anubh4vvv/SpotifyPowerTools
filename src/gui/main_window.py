@@ -16,6 +16,7 @@ from PySide6.QtCore import (
 from gui.dashboard import Dashboard
 from gui.analytics_page import AnalyticsPage
 from gui.duplicates_page import DuplicatesPage
+from gui.about_page import AboutPage
 from gui.sidebar import Sidebar
 from gui.header import Header
 from gui.app_status_bar import AppStatusBar
@@ -70,11 +71,13 @@ class MainWindow(QMainWindow):
         self.analytics_page = AnalyticsPage()
         self.duplicates_page = DuplicatesPage()
         self.settings_page = SettingsPage()
+        self.about_page = AboutPage()
 
         self.stack.addWidget(self.dashboard)
         self.stack.addWidget(self.analytics_page)
         self.stack.addWidget(self.duplicates_page)
         self.stack.addWidget(self.settings_page)
+        self.stack.addWidget(self.about_page)
 
         body_layout.addWidget(self.sidebar)
         body_layout.addWidget(self.stack, 1)
@@ -107,6 +110,10 @@ class MainWindow(QMainWindow):
 
         self.sidebar.settings_btn.clicked.connect(
             self.show_settings
+        )
+
+        self.sidebar.about_btn.clicked.connect(
+            self.show_about
         )
 
         self.settings_page.settings_saved.connect(
@@ -292,6 +299,16 @@ class MainWindow(QMainWindow):
 
         self.status_bar.set_message(
             "Settings"
+        )
+
+    def show_about(self):
+
+        self.stack.setCurrentWidget(
+            self.about_page
+        )
+
+        self.status_bar.set_message(
+            "About Spotify Power Tools"
         )
 
     def apply_saved_settings(self, settings):
