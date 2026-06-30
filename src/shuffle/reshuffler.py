@@ -1,12 +1,19 @@
 import random
 
+from models.shuffle_context import ShuffleContext
 from shuffle.scoring import score_song
+from settings.shuffle_config import (
+    ARTIST_SPACING,
+    ALBUM_SPACING,
+)
 
 
 def smart_shuffle(tracks, current_index, seed=None):
     """
-    Smart shuffle that avoids consecutive songs
-    from the same artist and album.
+    Smart Shuffle V2
+
+    Preserves songs before the current song and
+    intelligently shuffles everything after it.
     """
 
     rng = random.Random(seed)
@@ -23,16 +30,44 @@ def smart_shuffle(tracks, current_index, seed=None):
 
     while remaining:
 
+        context = ShuffleContext(
+            previous_song=previous,
+
+            recent_songs=result[-
+                                max(
+                                    ARTIST_SPACING,
+                                    ALBUM_SPACING
+                                ):
+            ],
+
+            artist_spacing=ARTIST_SPACING,
+
+            album_spacing=ALBUM_SPACING,
+        )
+
         best_song = None
         best_score = float("-inf")
+        best_reasons = []
 
         for song in remaining:
 
-            score = score_song(song, previous, rng)
+            score, reasons = score_song(
+                song,
+                context,
+                rng
+            )
 
             if score > best_score:
                 best_score = score
                 best_song = song
+                best_reasons = reasons
+
+        print(f"\nChosen: {best_song.name}")
+
+        for reason in best_reasons:
+            print(reason)
+
+        print(f"Final Score: {best_score}")
 
         result.append(best_song)
 

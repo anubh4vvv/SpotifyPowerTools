@@ -1,15 +1,46 @@
-import random
+from engine.rule_engine import RuleEngine
 
-from rules.artist_rule import artist_score
-from rules.album_rule import album_score
+from settings.shuffle_config import (
+    RANDOM_MIN,
+    RANDOM_MAX,
+    RANDOM_WEIGHT,
+)
+
+engine = RuleEngine()
 
 
-def score_song(candidate, previous_song, rng):
-    score = 0
+def score_song(candidate, context, rng):
+    """
+    Returns:
+        total_score
+        reasons
+    """
 
-    score += artist_score(candidate, previous_song)
-    score += album_score(candidate, previous_song)
+    results = engine.evaluate(
+        candidate,
+        context,
+        rng
+    )
 
-    score += rng.randint(0, 100)
+    random_points = rng.randint(
+        RANDOM_MIN,
+        RANDOM_MAX
+    )
 
-    return score
+    total_score = random_points * RANDOM_WEIGHT
+
+    reasons = [
+        f"{random_points:+} × {RANDOM_WEIGHT} = {total_score:+.1f} Random factor"
+    ]
+
+    for result in results:
+
+        weighted_score = result.score * result.weight
+
+        total_score += weighted_score
+
+        reasons.append(
+            f"{result.score:+} × {result.weight} = {weighted_score:+.1f} {result.reason}"
+        )
+
+    return total_score, reasons

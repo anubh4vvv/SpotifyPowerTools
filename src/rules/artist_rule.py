@@ -1,12 +1,29 @@
-def artist_score(candidate, previous_song):
+from models.rule_result import RuleResult
+
+from settings.shuffle_config import (
+    ARTIST_BONUS,
+    ARTIST_PENALTY,
+    ARTIST_WEIGHT,
+)
+
+
+def artist_score(candidate, context):
     """
-    Reward songs from different artists.
+    Scores a song based on recent artist history.
     """
 
-    if previous_song is None:
-        return 0
+    recent = context.recent_songs[-context.artist_spacing:]
 
-    if candidate.artist == previous_song.artist:
-        return -50
+    for song in recent:
+        if song.artist == candidate.artist:
+            return RuleResult(
+                score=ARTIST_PENALTY,
+                reason=f"Artist '{candidate.artist}' appeared recently",
+                weight=ARTIST_WEIGHT,
+            )
 
-    return 20
+    return RuleResult(
+        score=ARTIST_BONUS,
+        reason="Fresh artist",
+        weight=ARTIST_WEIGHT,
+    )
