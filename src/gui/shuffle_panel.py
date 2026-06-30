@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QSlider,
 )
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 
 from gui.card import Card
 
@@ -154,6 +154,26 @@ class ShufflePanel(Card):
             "album_weight": self.album_slider.value(),
             "randomness": self.random_slider.value(),
         }
+
+    def highlight(self):
+        self.setStyleSheet(
+            """
+            QFrame#Card{
+                background:#111113;
+                border:2px solid #1DB954;
+                border-radius:16px;
+            }
+            """
+        )
+
+        QTimer.singleShot(
+            1200,
+            self.clear_highlight
+        )
+
+    def clear_highlight(self):
+        self.setStyleSheet("")
+
 
     def get_queue_limit(self):
 

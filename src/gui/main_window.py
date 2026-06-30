@@ -97,7 +97,7 @@ class MainWindow(QMainWindow):
         )
 
         self.sidebar.shuffle_btn.clicked.connect(
-            self.show_dashboard
+            self.show_smart_shuffle
         )
 
         self.sidebar.analytics_btn.clicked.connect(
@@ -146,6 +146,20 @@ class MainWindow(QMainWindow):
 
         self.status_bar.set_message(
             "Dashboard"
+        )
+
+    def show_smart_shuffle(self):
+
+        self.stack.setCurrentWidget(
+            self.dashboard
+        )
+
+        self.dashboard.shuffle_panel.highlight()
+
+        self.dashboard.shuffle_panel.preview_button.setFocus()
+
+        self.status_bar.set_message(
+            "Smart Shuffle selected"
         )
 
     def show_analytics(self):
