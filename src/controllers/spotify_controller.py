@@ -36,6 +36,11 @@ from services.player_service import (
     seek_to_position as seek_to_position_service,
 )
 
+from services.device_service import (
+    get_available_devices as get_available_devices_service,
+    transfer_playback as transfer_playback_service,
+)
+
 
 class SpotifyController:
 
@@ -229,7 +234,11 @@ class SpotifyController:
             shuffle_settings
         )
 
-        return self._preview[:10]
+        preview_limit = int(
+            shuffle_settings.get("queue_size", 10)
+        )
+
+        return self._preview[:preview_limit]
 
     def seek_to_position(self, position_ms):
         """
@@ -249,6 +258,25 @@ class SpotifyController:
         return set_volume_service(
             self.sp,
             volume_percent
+        )
+
+    def get_available_devices(self):
+        """
+        Returns available Spotify Connect devices.
+        """
+
+        return get_available_devices_service(
+            self.sp
+        )
+
+    def transfer_playback(self, device_id):
+        """
+        Transfers Spotify playback to another device.
+        """
+
+        return transfer_playback_service(
+            self.sp,
+            device_id
         )
 
     def toggle_shuffle(self):

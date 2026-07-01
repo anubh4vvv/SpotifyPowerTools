@@ -165,21 +165,33 @@ class MainWindow(QMainWindow):
             self.next_song
         )
 
-        self.dashboard.current_song_card.volume_slider.sliderReleased.connect(
+        self.dashboard.player_controls_card.volume_slider.sliderReleased.connect(
             self.set_volume_from_slider
         )
+
+        self.dashboard.player_controls_card.shuffle_button.clicked.connect(
+            self.toggle_shuffle
+        )
+
+        self.dashboard.player_controls_card.repeat_combo.currentTextChanged.connect(
+            self.set_repeat_mode
+        )
+
+        self.dashboard.player_controls_card.refresh_devices_button.clicked.connect(
+            self.refresh_devices
+        )
+
+        self.dashboard.player_controls_card.device_combo.activated.connect(
+            self.transfer_playback_to_selected_device
+        )
+
+
 
         self.dashboard.current_song_card.progress_slider.sliderReleased.connect(
             self.seek_from_progress_slider
         )
 
-        self.dashboard.current_song_card.shuffle_button.clicked.connect(
-            self.toggle_shuffle
-        )
-
-        self.dashboard.current_song_card.repeat_combo.currentTextChanged.connect(
-            self.set_repeat_mode
-        )
+        self.refresh_devices()
 
     def show_dashboard(self):
 
@@ -466,33 +478,46 @@ class MainWindow(QMainWindow):
                 current
             )
 
+            self.dashboard.player_controls_card.update_playback_state(
+                current
+            )
+
+            current_page = self.stack.currentWidget()
+
             playlist, tracks = (
                 self.controller.current_playlist()
             )
 
-            self.dashboard.playlist_card.update_playlist(
-                playlist,
-                tracks
-            )
+            if current_page == self.dashboard:
 
-            self.analytics_page.update_analytics(
-                playlist,
-                tracks
-            )
-
-            self.duplicates_page.update_duplicates(
-                playlist,
-                tracks
-            )
-
-            if playlist is not None:
-                self.status_bar.set_message(
-                    f"Connected • Playlist: {playlist['name']} • {len(tracks)} songs"
+                self.dashboard.playlist_card.update_playlist(
+                    playlist,
+                    tracks
                 )
-            else:
-                self.status_bar.set_message(
-                    "Connected • No playlist currently playing"
+
+                if playlist is not None:
+                    self.status_bar.set_message(
+                        f"Connected • Playlist: {playlist['name']} • {len(tracks)} songs"
+                    )
+                else:
+                    self.status_bar.set_message(
+                        "Connected • No playlist currently playing"
+                    )
+
+            elif current_page == self.analytics_page:
+
+                self.analytics_page.update_analytics(
+                    playlist,
+                    tracks
                 )
+
+            elif current_page == self.duplicates_page:
+
+                if not self.duplicates_page.is_busy:
+                    self.duplicates_page.update_duplicates(
+                        playlist,
+                        tracks
+                    )
 
         except Exception as error:
 
@@ -563,6 +588,78 @@ class MainWindow(QMainWindow):
                 str(error)
             )
 
+    def refresh_devices(self):
+
+        try:
+            devices = self.controller.get_available_devices()
+
+            current = self.controller.current_playback()
+
+            active_device_id = None
+
+            if current is not None:
+                device = current.get(
+                    "device",
+                    {}
+                )
+
+                active_device_id = device.get(
+                    "id"
+                )
+
+            self.dashboard.player_controls_card.update_devices(
+                devices,
+                active_device_id
+            )
+
+            self.status_bar.set_message(
+                f"Devices • {len(devices)} available"
+            )
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Device Error",
+                str(error)
+            )
+
+            self.status_bar.set_message(
+                "Failed to refresh devices"
+            )
+
+    def transfer_playback_to_selected_device(self, index=None):
+
+        try:
+            device_id = self.dashboard.player_controls_card.selected_device_id()
+
+            if not device_id:
+                return
+
+            result = self.controller.transfer_playback(
+                device_id
+            )
+
+            self.status_bar.set_message(
+                result["message"]
+            )
+
+            self.refresh()
+
+            self.refresh_devices()
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Device Transfer Error",
+                str(error)
+            )
+
+            self.status_bar.set_message(
+                "Failed to transfer playback"
+            )
+
     def toggle_playback(self):
 
         try:
@@ -585,7 +682,7 @@ class MainWindow(QMainWindow):
     def set_volume_from_slider(self):
 
         try:
-            volume = self.dashboard.current_song_card.volume_slider.value()
+            volume = self.dashboard.player_controls_card.volume_slider.value()
 
             result = self.controller.set_volume(
                 volume

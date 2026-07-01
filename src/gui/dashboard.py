@@ -1,9 +1,14 @@
 from PySide6.QtWidgets import (
     QWidget,
     QGridLayout,
+    QVBoxLayout,
+    QScrollArea,
 )
 
+from PySide6.QtCore import Qt
+
 from gui.current_song_card import CurrentSongCard
+from gui.player_controls_card import PlayerControlsCard
 from gui.playlist_card import PlaylistCard
 from gui.shuffle_panel import ShufflePanel
 from gui.preview_panel import PreviewPanel
@@ -14,23 +19,37 @@ class Dashboard(QWidget):
     def __init__(self):
         super().__init__()
 
-        layout = QGridLayout(self)
+        root_layout = QVBoxLayout(self)
+        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.setSpacing(0)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarAlwaysOff
+        )
+
+        content = QWidget()
+
+        layout = QGridLayout(content)
 
         layout.setContentsMargins(25, 25, 25, 25)
 
         layout.setHorizontalSpacing(24)
 
-        layout.setVerticalSpacing(24)
-        # Make both columns equal width
-        # Give the left column more room
+        layout.setVerticalSpacing(28)
+
         layout.setColumnStretch(0, 3)
         layout.setColumnStretch(1, 2)
 
-        # Keep both rows equal height
-        layout.setRowStretch(0, 1)
-        layout.setRowStretch(1, 1)
+        layout.setRowStretch(0, 0)
+        layout.setRowStretch(1, 0)
+        layout.setRowStretch(2, 1)
 
         self.current_song_card = CurrentSongCard()
+
+        self.player_controls_card = PlayerControlsCard()
 
         self.playlist_card = PlaylistCard()
 
@@ -38,7 +57,6 @@ class Dashboard(QWidget):
 
         self.preview_panel = PreviewPanel()
 
-        # Top row
         layout.addWidget(
             self.current_song_card,
             0,
@@ -46,32 +64,31 @@ class Dashboard(QWidget):
         )
 
         layout.addWidget(
-            self.playlist_card,
+            self.player_controls_card,
             0,
             1
         )
 
-        # Bottom row
         layout.addWidget(
-            self.shuffle_panel,
+            self.playlist_card,
             1,
             0
         )
 
         layout.addWidget(
-            self.preview_panel,
+            self.shuffle_panel,
             1,
             1
         )
 
-        # Analytics placeholder
-        #
-        # Future:
-        #
-        # layout.addWidget(
-        #     self.analytics_panel,
-        #     2,
-        #     0,
-        #     1,
-        #     2
-        # )
+        layout.addWidget(
+            self.preview_panel,
+            2,
+            0,
+            1,
+            2
+        )
+
+        scroll.setWidget(content)
+
+        root_layout.addWidget(scroll)

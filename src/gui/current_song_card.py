@@ -4,7 +4,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QPushButton,
     QSlider,
-    QComboBox,
 )
 
 from PySide6.QtCore import Qt
@@ -29,7 +28,7 @@ class CurrentSongCard(Card):
 
         super().__init__("Currently Playing")
 
-        self.setMinimumHeight(420)
+        self.setMinimumHeight(360)
 
         self.current_image_url = ""
 
@@ -37,11 +36,11 @@ class CurrentSongCard(Card):
 
         body = QHBoxLayout()
 
-        body.setSpacing(25)
+        body.setSpacing(30)
 
         self.cover = QLabel()
 
-        self.cover.setFixedSize(220, 220)
+        self.cover.setFixedSize(240, 240)
 
         body.addWidget(
             self.cover,
@@ -50,13 +49,15 @@ class CurrentSongCard(Card):
 
         info = QVBoxLayout()
 
-        info.setSpacing(10)
+        info.setSpacing(12)
 
         self.song = QLabel()
 
+        self.song.setWordWrap(True)
+
         self.song.setStyleSheet("""
-            font-size:28px;
-            font-weight:700;
+            font-size:30px;
+            font-weight:800;
         """)
 
         self.artist = QLabel()
@@ -67,12 +68,12 @@ class CurrentSongCard(Card):
 
         self.album = QLabel()
 
+        self.album.setWordWrap(True)
+
         self.album.setStyleSheet("""
             color:#AAAAAA;
             font-size:14px;
         """)
-
-        # ---------- Seek Slider ----------
 
         self.progress_slider = QSlider(Qt.Horizontal)
         self.progress_slider.setRange(0, 0)
@@ -82,15 +83,16 @@ class CurrentSongCard(Card):
 
         self.time.setStyleSheet("""
             color:#AAAAAA;
+            font-size:11pt;
         """)
 
         self.progress_slider.valueChanged.connect(
             self.update_seek_time_label
         )
 
-        # ---------- Main Playback Controls ----------
-
         controls = QHBoxLayout()
+
+        controls.setSpacing(12)
 
         self.previous_button = QPushButton("⏮ Previous")
         self.previous_button.setObjectName("SecondaryButton")
@@ -103,51 +105,6 @@ class CurrentSongCard(Card):
         controls.addWidget(self.previous_button)
         controls.addWidget(self.play_pause_button)
         controls.addWidget(self.next_button)
-
-        # ---------- Extra Playback Controls ----------
-
-        volume_row = QHBoxLayout()
-
-        volume_title = QLabel("Volume")
-        volume_title.setStyleSheet(
-            "color:#A0A0A0; font-size:10pt;"
-        )
-
-        self.volume_slider = QSlider(Qt.Horizontal)
-        self.volume_slider.setRange(0, 100)
-        self.volume_slider.setValue(50)
-
-        self.volume_value = QLabel("50%")
-        self.volume_value.setFixedWidth(45)
-        self.volume_value.setAlignment(
-            Qt.AlignRight | Qt.AlignVCenter
-        )
-        self.volume_value.setStyleSheet(
-            "color:#A0A0A0; font-size:10pt;"
-        )
-
-        volume_row.addWidget(volume_title)
-        volume_row.addWidget(self.volume_slider, 1)
-        volume_row.addWidget(self.volume_value)
-
-        mode_row = QHBoxLayout()
-
-        self.shuffle_button = QPushButton("Shuffle: Off")
-        self.shuffle_button.setObjectName("SecondaryButton")
-
-        self.repeat_combo = QComboBox()
-        self.repeat_combo.addItems([
-            "Repeat Off",
-            "Repeat Track",
-            "Repeat Playlist",
-        ])
-
-        mode_row.addWidget(self.shuffle_button)
-        mode_row.addWidget(self.repeat_combo)
-
-        self.volume_slider.valueChanged.connect(
-            self.update_volume_label
-        )
 
         self.meta = QLabel()
 
@@ -164,7 +121,7 @@ class CurrentSongCard(Card):
 
         info.addWidget(self.album)
 
-        info.addSpacing(15)
+        info.addSpacing(20)
 
         info.addWidget(self.progress_slider)
 
@@ -172,25 +129,15 @@ class CurrentSongCard(Card):
 
         info.addLayout(controls)
 
-        info.addLayout(volume_row)
-
-        info.addLayout(mode_row)
-
-        info.addSpacing(10)
+        info.addSpacing(12)
 
         info.addWidget(self.meta)
 
         info.addStretch()
 
-        body.addLayout(info)
+        body.addLayout(info, 1)
 
         self.layout.addLayout(body)
-
-    def update_volume_label(self, value):
-
-        self.volume_value.setText(
-            f"{value}%"
-        )
 
     def update_seek_time_label(self, value):
 
@@ -224,18 +171,6 @@ class CurrentSongCard(Card):
 
             self.play_pause_button.setText("Play")
 
-            self.shuffle_button.setText("Shuffle: Off")
-
-            self.volume_slider.blockSignals(True)
-            self.volume_slider.setValue(0)
-            self.volume_slider.blockSignals(False)
-
-            self.volume_value.setText("0%")
-
-            self.repeat_combo.blockSignals(True)
-            self.repeat_combo.setCurrentText("Repeat Off")
-            self.repeat_combo.blockSignals(False)
-
             return
 
         track = current["item"]
@@ -265,8 +200,8 @@ class CurrentSongCard(Card):
 
                     self.cover.setPixmap(
                         pixmap.scaled(
-                            220,
-                            220,
+                            240,
+                            240,
                             Qt.KeepAspectRatio,
                             Qt.SmoothTransformation
                         )
@@ -309,51 +244,6 @@ class CurrentSongCard(Card):
             self.play_pause_button.setText("Pause")
         else:
             self.play_pause_button.setText("Play")
-
-        device = current.get("device", {})
-
-        volume_percent = device.get(
-            "volume_percent",
-            0
-        )
-
-        if volume_percent is None:
-            volume_percent = 0
-
-        self.volume_slider.blockSignals(True)
-        self.volume_slider.setValue(
-            volume_percent
-        )
-        self.volume_slider.blockSignals(False)
-
-        self.volume_value.setText(
-            f"{volume_percent}%"
-        )
-
-        if current.get("shuffle_state"):
-            self.shuffle_button.setText("Shuffle: On")
-        else:
-            self.shuffle_button.setText("Shuffle: Off")
-
-        repeat_state = current.get(
-            "repeat_state",
-            "off"
-        )
-
-        repeat_label = {
-            "off": "Repeat Off",
-            "track": "Repeat Track",
-            "context": "Repeat Playlist",
-        }.get(
-            repeat_state,
-            "Repeat Off"
-        )
-
-        self.repeat_combo.blockSignals(True)
-        self.repeat_combo.setCurrentText(
-            repeat_label
-        )
-        self.repeat_combo.blockSignals(False)
 
         explicit = (
             "🅴 Explicit"
