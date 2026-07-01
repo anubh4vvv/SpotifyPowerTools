@@ -33,6 +33,7 @@ from services.player_service import (
     set_volume as set_volume_service,
     toggle_shuffle as toggle_shuffle_service,
     set_repeat_mode as set_repeat_mode_service,
+    seek_to_position as seek_to_position_service,
 )
 
 
@@ -229,6 +230,16 @@ class SpotifyController:
         )
 
         return self._preview[:10]
+
+    def seek_to_position(self, position_ms):
+        """
+        Seeks to a position in the current Spotify track.
+        """
+
+        return seek_to_position_service(
+            self.sp,
+            position_ms
+        )
 
     def set_volume(self, volume_percent):
         """

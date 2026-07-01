@@ -169,6 +169,10 @@ class MainWindow(QMainWindow):
             self.set_volume_from_slider
         )
 
+        self.dashboard.current_song_card.progress_slider.sliderReleased.connect(
+            self.seek_from_progress_slider
+        )
+
         self.dashboard.current_song_card.shuffle_button.clicked.connect(
             self.toggle_shuffle
         )
@@ -533,6 +537,29 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(
                 self,
                 "Playback Error",
+                str(error)
+            )
+
+    def seek_from_progress_slider(self):
+
+        try:
+            position_ms = self.dashboard.current_song_card.progress_slider.value()
+
+            result = self.controller.seek_to_position(
+                position_ms
+            )
+
+            self.status_bar.set_message(
+                result["message"]
+            )
+
+            self.refresh()
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Seek Error",
                 str(error)
             )
 

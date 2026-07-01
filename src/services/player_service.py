@@ -126,3 +126,29 @@ def set_repeat_mode(sp, repeat_state):
         "repeat_state": repeat_state,
         "message": labels[repeat_state],
     }
+
+
+def seek_to_position(sp, position_ms):
+    """
+    Seeks to a position in the current Spotify track.
+    """
+
+    position_ms = int(position_ms)
+
+    position_ms = max(
+        0,
+        position_ms
+    )
+
+    sp.seek_track(
+        position_ms
+    )
+
+    seconds = position_ms // 1000
+    minutes = seconds // 60
+    seconds %= 60
+
+    return {
+        "position_ms": position_ms,
+        "message": f"Seeked to {minutes}:{seconds:02d}",
+    }

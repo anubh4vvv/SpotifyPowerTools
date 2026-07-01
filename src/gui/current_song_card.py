@@ -2,7 +2,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QHBoxLayout,
     QVBoxLayout,
-    QProgressBar,
     QPushButton,
     QSlider,
     QComboBox,
@@ -33,6 +32,8 @@ class CurrentSongCard(Card):
         self.setMinimumHeight(420)
 
         self.current_image_url = ""
+
+        self.duration_ms = 0
 
         body = QHBoxLayout()
 
@@ -71,17 +72,21 @@ class CurrentSongCard(Card):
             font-size:14px;
         """)
 
-        self.progress = QProgressBar()
+        # ---------- Seek Slider ----------
 
-        self.progress.setTextVisible(False)
-
-        self.progress.setFixedHeight(8)
+        self.progress_slider = QSlider(Qt.Horizontal)
+        self.progress_slider.setRange(0, 0)
+        self.progress_slider.setFixedHeight(18)
 
         self.time = QLabel("0:00 / 0:00")
 
         self.time.setStyleSheet("""
             color:#AAAAAA;
         """)
+
+        self.progress_slider.valueChanged.connect(
+            self.update_seek_time_label
+        )
 
         # ---------- Main Playback Controls ----------
 
@@ -161,7 +166,7 @@ class CurrentSongCard(Card):
 
         info.addSpacing(15)
 
-        info.addWidget(self.progress)
+        info.addWidget(self.progress_slider)
 
         info.addWidget(self.time)
 
@@ -187,6 +192,12 @@ class CurrentSongCard(Card):
             f"{value}%"
         )
 
+    def update_seek_time_label(self, value):
+
+        self.time.setText(
+            f"{format_time(value)} / {format_time(self.duration_ms)}"
+        )
+
     def update_song(self, current):
 
         if current is None:
@@ -200,7 +211,12 @@ class CurrentSongCard(Card):
 
             self.current_image_url = ""
 
-            self.progress.setValue(0)
+            self.duration_ms = 0
+
+            self.progress_slider.blockSignals(True)
+            self.progress_slider.setRange(0, 0)
+            self.progress_slider.setValue(0)
+            self.progress_slider.blockSignals(False)
 
             self.time.setText("0:00 / 0:00")
 
@@ -260,15 +276,34 @@ class CurrentSongCard(Card):
 
         duration = track["duration_ms"]
 
-        progress = current["progress_ms"]
-
-        self.progress.setMaximum(duration)
-
-        self.progress.setValue(progress)
-
-        self.time.setText(
-            f"{format_time(progress)} / {format_time(duration)}"
+        progress = current.get(
+            "progress_ms",
+            0
         )
+
+        if progress is None:
+            progress = 0
+
+        self.duration_ms = duration
+
+        if not self.progress_slider.isSliderDown():
+
+            self.progress_slider.blockSignals(True)
+
+            self.progress_slider.setRange(
+                0,
+                duration
+            )
+
+            self.progress_slider.setValue(
+                progress
+            )
+
+            self.progress_slider.blockSignals(False)
+
+            self.time.setText(
+                f"{format_time(progress)} / {format_time(duration)}"
+            )
 
         if current.get("is_playing"):
             self.play_pause_button.setText("Pause")
