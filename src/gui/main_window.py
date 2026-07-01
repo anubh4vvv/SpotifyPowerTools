@@ -23,6 +23,7 @@ from gui.app_status_bar import AppStatusBar
 from gui.styles import APP_STYLE
 from gui.settings_page import SettingsPage
 from gui.queue_page import QueuePage
+from gui.search_page import SearchPage
 
 from controllers.spotify_controller import SpotifyController
 
@@ -30,6 +31,7 @@ from workers.preview_worker import PreviewWorker
 from workers.queue_shuffle_worker import QueueShuffleWorker
 from workers.cleaner_worker import CleanerWorker
 from workers.queue_view_worker import QueueViewWorker
+from workers.search_worker import SearchWorker
 
 class MainWindow(QMainWindow):
 
@@ -49,6 +51,9 @@ class MainWindow(QMainWindow):
 
         self.queue_view_thread = None
         self.queue_view_worker = None
+
+        self.search_thread = None
+        self.search_worker = None
 
         self.setWindowTitle("Spotify Power Tools")
         self.resize(1600, 950)
@@ -76,6 +81,7 @@ class MainWindow(QMainWindow):
         self.analytics_page = AnalyticsPage()
         self.duplicates_page = DuplicatesPage()
         self.queue_page = QueuePage()
+        self.search_page = SearchPage()
         self.settings_page = SettingsPage()
         self.about_page = AboutPage()
 
@@ -83,6 +89,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.analytics_page)
         self.stack.addWidget(self.duplicates_page)
         self.stack.addWidget(self.queue_page)
+        self.stack.addWidget(self.search_page)
         self.stack.addWidget(self.settings_page)
         self.stack.addWidget(self.about_page)
 
@@ -113,6 +120,10 @@ class MainWindow(QMainWindow):
 
         self.sidebar.queue_btn.clicked.connect(
             self.show_queue
+        )
+
+        self.sidebar.search_btn.clicked.connect(
+            self.show_search
         )
 
         self.sidebar.duplicates_btn.clicked.connect(
@@ -151,6 +162,14 @@ class MainWindow(QMainWindow):
 
         self.queue_page.refresh_button.clicked.connect(
             self.refresh_queue_page
+        )
+
+        self.search_page.search_requested.connect(
+            self.search_tracks
+        )
+
+        self.search_page.add_to_queue_requested.connect(
+            self.add_search_result_to_queue
         )
 
         self.dashboard.current_song_card.previous_button.clicked.connect(
@@ -268,6 +287,116 @@ class MainWindow(QMainWindow):
         )
 
         self.refresh_queue_page()
+
+    def show_search(self):
+
+        self.stack.setCurrentWidget(
+            self.search_page
+        )
+
+        self.status_bar.set_message(
+            "Search Spotify"
+        )
+
+    def search_tracks(self, query):
+
+        self.search_page.set_loading(True)
+
+        self.status_bar.set_message(
+            f"Searching Spotify for '{query}'..."
+        )
+
+        self.search_thread = QThread()
+
+        self.search_worker = SearchWorker(
+            self.controller,
+            query,
+            limit=10
+        )
+
+        self.search_worker.moveToThread(
+            self.search_thread
+        )
+
+        self.search_thread.started.connect(
+            self.search_worker.run
+        )
+
+        self.search_worker.finished.connect(
+            self.search_finished
+        )
+
+        self.search_worker.error.connect(
+            self.search_error
+        )
+
+        self.search_worker.finished.connect(
+            self.search_thread.quit
+        )
+
+        self.search_thread.finished.connect(
+            self.search_thread.deleteLater
+        )
+
+        self.search_thread.start()
+
+    def search_finished(self, songs):
+
+        self.search_page.set_loading(False)
+
+        self.search_page.show_results(
+            songs
+        )
+
+        self.status_bar.set_message(
+            f"Search complete • {len(songs)} results"
+        )
+
+    def search_error(self, message):
+
+        self.search_page.set_loading(False)
+
+        QMessageBox.critical(
+            self,
+            "Search Error",
+            message
+        )
+
+        self.status_bar.set_message(
+            "Search failed"
+        )
+
+    def add_search_result_to_queue(self, song):
+
+        try:
+            result = self.controller.add_song_to_queue(
+                song
+            )
+
+            self.status_bar.set_message(
+                result["message"]
+            )
+
+            QMessageBox.information(
+                self,
+                "Added to Queue",
+                (
+                    f"Added to Spotify queue:\n\n"
+                    f"{result['song_name']} — {result['artist']}"
+                )
+            )
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Queue Error",
+                str(error)
+            )
+
+            self.status_bar.set_message(
+                "Failed to add song to queue"
+            )
 
     def refresh_queue_page(self):
 

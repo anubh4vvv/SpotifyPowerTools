@@ -41,6 +41,11 @@ from services.device_service import (
     transfer_playback as transfer_playback_service,
 )
 
+from services.search_service import (
+    search_tracks as search_tracks_service,
+    add_song_to_queue as add_song_to_queue_service,
+)
+
 
 class SpotifyController:
 
@@ -307,6 +312,27 @@ class SpotifyController:
             self.preview_shuffle()
 
         return self._shuffled
+
+    def search_tracks(self, query, limit=10):
+        """
+        Searches Spotify tracks.
+        """
+
+        return search_tracks_service(
+            self.sp,
+            query,
+            limit=limit
+        )
+
+    def add_song_to_queue(self, song):
+        """
+        Adds one searched song to Spotify queue.
+        """
+
+        return add_song_to_queue_service(
+            self.sp,
+            song
+        )
 
     def queue_smart_shuffle(self, limit=DEFAULT_QUEUE_LIMIT, settings=None):
         """
