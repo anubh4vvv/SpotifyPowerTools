@@ -55,6 +55,8 @@ class MainWindow(QMainWindow):
         self.current_track_id = None
         self.current_track_metadata = {}
 
+        self.current_track_rating = 0
+
         self.search_thread = None
         self.search_worker = None
 
@@ -185,6 +187,10 @@ class MainWindow(QMainWindow):
 
         self.dashboard.current_song_card.next_button.clicked.connect(
             self.next_song
+        )
+
+        self.dashboard.current_song_card.rating_changed.connect(
+            self.set_song_rating
         )
 
         self.dashboard.player_controls_card.volume_slider.sliderReleased.connect(
@@ -629,6 +635,37 @@ class MainWindow(QMainWindow):
             "Settings saved"
         )
 
+    def update_current_track_rating(self, current):
+
+        if current is None:
+            self.current_track_rating = 0
+
+            return
+
+        track = current.get(
+            "item"
+        )
+
+        if track is None:
+            self.current_track_rating = 0
+
+            return
+
+        track_id = (
+                track.get("id")
+                or track.get("uri")
+                or ""
+        )
+
+        if not track_id:
+            self.current_track_rating = 0
+
+            return
+
+        self.current_track_rating = self.controller.get_song_rating(
+            track_id
+        )
+
     def update_current_track_metadata(self, current):
 
         if current is None:
@@ -673,10 +710,6 @@ class MainWindow(QMainWindow):
 
         except Exception as error:
 
-            print(
-                "Track metadata error:",
-                error
-            )
 
             self.current_track_metadata = {}
 
@@ -693,11 +726,7 @@ class MainWindow(QMainWindow):
                 current
             )
 
-            self.update_current_track_metadata(
-                current
-            )
-
-            self.update_current_track_metadata(
+            self.update_current_track_rating(
                 current
             )
 
@@ -712,7 +741,12 @@ class MainWindow(QMainWindow):
 
             self.dashboard.current_song_card.update_song(
                 current,
-                self.current_track_metadata
+                self.current_track_metadata,
+                self.current_track_rating
+            )
+
+            self.dashboard.player_controls_card.update_playback_state(
+                current
             )
 
             current_page = self.stack.currentWidget()
@@ -796,6 +830,46 @@ class MainWindow(QMainWindow):
                 self,
                 "Playback Error",
                 str(error)
+            )
+
+    def set_song_rating(self, track_id, rating, song_name, artist):
+
+        try:
+            result = self.controller.set_song_rating(
+                track_id,
+                rating,
+                song_name,
+                artist
+            )
+
+            self.current_track_rating = result["rating"]
+
+            self.dashboard.current_song_card.update_rating(
+                result["rating"]
+            )
+
+            if result["rating"] == 0:
+
+                self.status_bar.set_message(
+                    f"Rating cleared • {song_name}"
+                )
+
+            else:
+
+                self.status_bar.set_message(
+                    f"Rated {song_name} • {result['rating']}/5"
+                )
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Rating Error",
+                str(error)
+            )
+
+            self.status_bar.set_message(
+                "Failed to save rating"
             )
 
     def seek_from_progress_slider(self):

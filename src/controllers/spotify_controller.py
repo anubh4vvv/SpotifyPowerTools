@@ -50,6 +50,11 @@ from services.track_metadata_service import (
     get_track_metadata as get_track_metadata_service,
 )
 
+from services.rating_service import (
+    get_song_rating as get_song_rating_service,
+    set_song_rating as set_song_rating_service,
+)
+
 class SpotifyController:
 
     def __init__(self):
@@ -69,6 +74,27 @@ class SpotifyController:
 
     def current_playback(self):
         return self.sp.current_playback()
+
+    def get_song_rating(self, track_id):
+        """
+        Gets locally saved rating for one song.
+        """
+
+        return get_song_rating_service(
+            track_id
+        )
+
+    def set_song_rating(self, track_id, rating, song_name="", artist=""):
+        """
+        Saves local rating for one song.
+        """
+
+        return set_song_rating_service(
+            track_id,
+            rating,
+            song_name,
+            artist
+        )
 
     def get_track_metadata(self, track):
         """
