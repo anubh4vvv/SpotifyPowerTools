@@ -214,6 +214,10 @@ class MainWindow(QMainWindow):
 
     def show_dashboard(self):
 
+        self.sidebar.set_active_button(
+            self.sidebar.dashboard_btn
+        )
+
         self.stack.setCurrentWidget(
             self.dashboard
         )
@@ -223,6 +227,10 @@ class MainWindow(QMainWindow):
         )
 
     def show_smart_shuffle(self):
+
+        self.sidebar.set_active_button(
+            self.sidebar.shuffle_btn
+        )
 
         self.stack.setCurrentWidget(
             self.dashboard
@@ -237,6 +245,10 @@ class MainWindow(QMainWindow):
         )
 
     def show_analytics(self):
+
+        self.sidebar.set_active_button(
+            self.sidebar.analytics_btn
+        )
 
         self.stack.setCurrentWidget(
             self.analytics_page
@@ -260,6 +272,10 @@ class MainWindow(QMainWindow):
 
     def show_duplicates(self):
 
+        self.sidebar.set_active_button(
+            self.sidebar.duplicates_btn
+        )
+
         self.stack.setCurrentWidget(
             self.duplicates_page
         )
@@ -282,6 +298,10 @@ class MainWindow(QMainWindow):
 
     def show_queue(self):
 
+        self.sidebar.set_active_button(
+            self.sidebar.queue_btn
+        )
+
         self.stack.setCurrentWidget(
             self.queue_page
         )
@@ -289,6 +309,10 @@ class MainWindow(QMainWindow):
         self.refresh_queue_page()
 
     def show_search(self):
+
+        self.sidebar.set_active_button(
+            self.sidebar.search_btn
+        )
 
         self.stack.setCurrentWidget(
             self.search_page
@@ -564,6 +588,10 @@ class MainWindow(QMainWindow):
 
     def show_settings(self):
 
+        self.sidebar.set_active_button(
+            self.sidebar.settings_btn
+        )
+
         self.settings_page.load_from_saved()
 
         self.stack.setCurrentWidget(
@@ -575,6 +603,10 @@ class MainWindow(QMainWindow):
         )
 
     def show_about(self):
+
+        self.sidebar.set_active_button(
+            self.sidebar.about_btn
+        )
 
         self.stack.setCurrentWidget(
             self.about_page

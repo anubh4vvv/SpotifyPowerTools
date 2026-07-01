@@ -15,6 +15,8 @@ class Sidebar(QFrame):
         self.setObjectName("Sidebar")
         self.setFixedWidth(240)
 
+        self.buttons = []
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(22, 28, 22, 24)
         layout.setSpacing(12)
@@ -58,10 +60,41 @@ class Sidebar(QFrame):
 
         layout.addWidget(version)
 
+        self.set_active_button(
+            self.dashboard_btn
+        )
+
     def make_button(self, text):
 
         button = QPushButton(text)
         button.setObjectName("SidebarButton")
         button.setCursor(Qt.PointingHandCursor)
 
+        self.buttons.append(
+            button
+        )
+
         return button
+
+    def set_active_button(self, active_button):
+
+        for button in self.buttons:
+
+            if button == active_button:
+
+                button.setStyleSheet("""
+                    QPushButton#SidebarButton {
+                        background:#1DB954;
+                        color:#000000;
+                        border:none;
+                        border-radius:10px;
+                        padding:12px 14px;
+                        text-align:left;
+                        font-size:11pt;
+                        font-weight:800;
+                    }
+                """)
+
+            else:
+
+                button.setStyleSheet("")
