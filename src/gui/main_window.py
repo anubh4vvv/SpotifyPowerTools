@@ -22,12 +22,14 @@ from gui.header import Header
 from gui.app_status_bar import AppStatusBar
 from gui.styles import APP_STYLE
 from gui.settings_page import SettingsPage
+from gui.queue_page import QueuePage
 
 from controllers.spotify_controller import SpotifyController
 
 from workers.preview_worker import PreviewWorker
 from workers.queue_shuffle_worker import QueueShuffleWorker
 from workers.cleaner_worker import CleanerWorker
+from workers.queue_view_worker import QueueViewWorker
 
 class MainWindow(QMainWindow):
 
@@ -44,6 +46,9 @@ class MainWindow(QMainWindow):
 
         self.cleaner_thread = None
         self.cleaner_worker = None
+
+        self.queue_view_thread = None
+        self.queue_view_worker = None
 
         self.setWindowTitle("Spotify Power Tools")
         self.resize(1600, 950)
@@ -70,12 +75,14 @@ class MainWindow(QMainWindow):
         self.dashboard = Dashboard()
         self.analytics_page = AnalyticsPage()
         self.duplicates_page = DuplicatesPage()
+        self.queue_page = QueuePage()
         self.settings_page = SettingsPage()
         self.about_page = AboutPage()
 
         self.stack.addWidget(self.dashboard)
         self.stack.addWidget(self.analytics_page)
         self.stack.addWidget(self.duplicates_page)
+        self.stack.addWidget(self.queue_page)
         self.stack.addWidget(self.settings_page)
         self.stack.addWidget(self.about_page)
 
@@ -102,6 +109,10 @@ class MainWindow(QMainWindow):
 
         self.sidebar.analytics_btn.clicked.connect(
             self.show_analytics
+        )
+
+        self.sidebar.queue_btn.clicked.connect(
+            self.show_queue
         )
 
         self.sidebar.duplicates_btn.clicked.connect(
@@ -136,6 +147,22 @@ class MainWindow(QMainWindow):
 
         self.dashboard.shuffle_panel.apply_button.clicked.connect(
             self.queue_shuffle
+        )
+
+        self.queue_page.refresh_button.clicked.connect(
+            self.refresh_queue_page
+        )
+
+        self.dashboard.current_song_card.previous_button.clicked.connect(
+            self.previous_song
+        )
+
+        self.dashboard.current_song_card.play_pause_button.clicked.connect(
+            self.toggle_playback
+        )
+
+        self.dashboard.current_song_card.next_button.clicked.connect(
+            self.next_song
         )
 
     def show_dashboard(self):
@@ -205,6 +232,81 @@ class MainWindow(QMainWindow):
             self.status_bar.set_message(
                 "Duplicates • No playlist currently playing"
             )
+
+    def show_queue(self):
+
+        self.stack.setCurrentWidget(
+            self.queue_page
+        )
+
+        self.refresh_queue_page()
+
+    def refresh_queue_page(self):
+
+        self.queue_page.set_loading(True)
+
+        self.status_bar.set_message(
+            "Loading Spotify queue..."
+        )
+
+        self.queue_view_thread = QThread()
+
+        self.queue_view_worker = QueueViewWorker(
+            self.controller,
+            limit=25
+        )
+
+        self.queue_view_worker.moveToThread(
+            self.queue_view_thread
+        )
+
+        self.queue_view_thread.started.connect(
+            self.queue_view_worker.run
+        )
+
+        self.queue_view_worker.finished.connect(
+            self.queue_view_finished
+        )
+
+        self.queue_view_worker.error.connect(
+            self.queue_view_error
+        )
+
+        self.queue_view_worker.finished.connect(
+            self.queue_view_thread.quit
+        )
+
+        self.queue_view_thread.finished.connect(
+            self.queue_view_thread.deleteLater
+        )
+
+        self.queue_view_thread.start()
+
+    def queue_view_finished(self, queue_data):
+
+        self.queue_page.set_loading(False)
+
+        self.queue_page.update_queue(
+            queue_data
+        )
+
+        self.status_bar.set_message(
+            f"Queue • Showing {len(queue_data['queue'])} upcoming songs"
+        )
+
+    def queue_view_error(self, message):
+
+        self.queue_page.set_loading(False)
+
+        QMessageBox.critical(
+            self,
+            "Queue Error",
+            message
+        )
+
+        self.status_bar.set_message(
+            "Failed to load Spotify queue"
+        )
 
     def create_cleaned_playlist(self):
 
@@ -382,6 +484,63 @@ class MainWindow(QMainWindow):
 
             self.status_bar.set_message(
                 f"Error: {error}"
+            )
+
+    def previous_song(self):
+
+        try:
+            self.controller.previous_song()
+
+            self.status_bar.set_message(
+                "Skipped to previous song"
+            )
+
+            self.refresh()
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Playback Error",
+                str(error)
+            )
+
+    def next_song(self):
+
+        try:
+            self.controller.next_song()
+
+            self.status_bar.set_message(
+                "Skipped to next song"
+            )
+
+            self.refresh()
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Playback Error",
+                str(error)
+            )
+
+    def toggle_playback(self):
+
+        try:
+            result = self.controller.toggle_playback()
+
+            self.status_bar.set_message(
+                result["message"]
+            )
+
+            self.refresh()
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Playback Error",
+                str(error)
             )
 
     def preview_shuffle(self):

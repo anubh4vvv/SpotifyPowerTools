@@ -3,6 +3,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
     QProgressBar,
+    QPushButton,
 )
 
 from PySide6.QtCore import Qt
@@ -27,7 +28,9 @@ class CurrentSongCard(Card):
 
         super().__init__("Currently Playing")
 
-        self.setMinimumHeight(300)
+        self.setMinimumHeight(340)
+
+        self.current_image_url = ""
 
         body = QHBoxLayout()
 
@@ -35,7 +38,7 @@ class CurrentSongCard(Card):
 
         self.cover = QLabel()
 
-        self.cover.setFixedSize(220,220)
+        self.cover.setFixedSize(220, 220)
 
         body.addWidget(
             self.cover,
@@ -78,6 +81,20 @@ class CurrentSongCard(Card):
             color:#AAAAAA;
         """)
 
+        controls = QHBoxLayout()
+
+        self.previous_button = QPushButton("⏮ Previous")
+        self.previous_button.setObjectName("SecondaryButton")
+
+        self.play_pause_button = QPushButton("Pause")
+
+        self.next_button = QPushButton("Next ⏭")
+        self.next_button.setObjectName("SecondaryButton")
+
+        controls.addWidget(self.previous_button)
+        controls.addWidget(self.play_pause_button)
+        controls.addWidget(self.next_button)
+
         self.meta = QLabel()
 
         self.meta.setStyleSheet("""
@@ -99,6 +116,8 @@ class CurrentSongCard(Card):
 
         info.addWidget(self.time)
 
+        info.addLayout(controls)
+
         info.addSpacing(10)
 
         info.addWidget(self.meta)
@@ -110,6 +129,7 @@ class CurrentSongCard(Card):
         self.layout.addLayout(body)
 
     def update_song(self, current):
+
         if current is None:
             self.song.setText("Nothing Playing")
 
@@ -119,11 +139,15 @@ class CurrentSongCard(Card):
 
             self.cover.clear()
 
+            self.current_image_url = ""
+
             self.progress.setValue(0)
 
             self.time.setText("0:00 / 0:00")
 
             self.meta.clear()
+
+            self.play_pause_button.setText("Play")
 
             return
 
@@ -139,18 +163,29 @@ class CurrentSongCard(Card):
             track["album"]["name"]
         )
 
-        pixmap = load_pixmap(
-            track["album"]["images"][0]["url"]
-        )
+        images = track["album"].get("images", [])
 
-        self.cover.setPixmap(
-            pixmap.scaled(
-                220,
-                220,
-                Qt.KeepAspectRatio,
-                Qt.SmoothTransformation
-            )
-        )
+        if images:
+            image_url = images[0]["url"]
+
+            if image_url != self.current_image_url:
+
+                pixmap = load_pixmap(
+                    image_url
+                )
+
+                if not pixmap.isNull():
+
+                    self.cover.setPixmap(
+                        pixmap.scaled(
+                            220,
+                            220,
+                            Qt.KeepAspectRatio,
+                            Qt.SmoothTransformation
+                        )
+                    )
+
+                    self.current_image_url = image_url
 
         duration = track["duration_ms"]
 
@@ -163,6 +198,11 @@ class CurrentSongCard(Card):
         self.time.setText(
             f"{format_time(progress)} / {format_time(duration)}"
         )
+
+        if current.get("is_playing"):
+            self.play_pause_button.setText("Pause")
+        else:
+            self.play_pause_button.setText("Play")
 
         explicit = (
             "🅴 Explicit"

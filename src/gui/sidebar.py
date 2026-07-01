@@ -34,6 +34,7 @@ class Sidebar(QFrame):
 
         self.dashboard_btn = self.make_button("🏠  Dashboard")
         self.shuffle_btn = self.make_button("🔀  Smart Shuffle")
+        self.queue_btn = self.make_button("🎧  Queue")
         self.analytics_btn = self.make_button("📊  Analytics")
         self.duplicates_btn = self.make_button("🔍  Duplicates")
         self.settings_btn = self.make_button("⚙  Settings")
@@ -41,11 +42,12 @@ class Sidebar(QFrame):
 
         layout.addWidget(self.dashboard_btn)
         layout.addWidget(self.shuffle_btn)
+        layout.addWidget(self.queue_btn)
         layout.addWidget(self.analytics_btn)
         layout.addWidget(self.duplicates_btn)
         layout.addWidget(self.settings_btn)
         layout.addWidget(self.about_btn)
-
+        
         layout.addStretch()
 
         version = QLabel("Version 1.0.0")

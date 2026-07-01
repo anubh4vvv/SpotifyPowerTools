@@ -19,11 +19,18 @@ from services.temporary_playlist import (
 from services.queue_service import (
     queue_songs,
     DEFAULT_QUEUE_LIMIT,
+    get_user_queue as get_user_queue_service,
 )
 
 from services.settings_service import load_settings
 
 from shuffle.reshuffler import smart_shuffle
+
+from services.player_service import (
+    previous_song as previous_song_service,
+    next_song as next_song_service,
+    toggle_playback as toggle_playback_service,
+)
 
 
 class SpotifyController:
@@ -354,6 +361,43 @@ class SpotifyController:
             self.sp,
             playlist,
             tracks
+        )
+
+    def previous_song(self):
+        """
+        Skips to the previous Spotify track.
+        """
+
+        previous_song_service(
+            self.sp
+        )
+
+    def next_song(self):
+        """
+        Skips to the next Spotify track.
+        """
+
+        next_song_service(
+            self.sp
+        )
+
+    def toggle_playback(self):
+        """
+        Toggles Spotify playback between play and pause.
+        """
+
+        return toggle_playback_service(
+            self.sp
+        )
+
+    def get_user_queue(self, limit=50):
+        """
+        Returns the user's current Spotify queue.
+        """
+
+        return get_user_queue_service(
+            self.sp,
+            limit=limit
         )
 
     def refresh_playlist(self):
