@@ -94,12 +94,12 @@ class CurrentSongCard(Card):
 
         controls.setSpacing(12)
 
-        self.previous_button = QPushButton("⏮ Previous")
+        self.previous_button = QPushButton("Previous")
         self.previous_button.setObjectName("SecondaryButton")
 
         self.play_pause_button = QPushButton("Pause")
 
-        self.next_button = QPushButton("Next ⏭")
+        self.next_button = QPushButton("Next")
         self.next_button.setObjectName("SecondaryButton")
 
         controls.addWidget(self.previous_button)
@@ -246,7 +246,7 @@ class CurrentSongCard(Card):
             self.play_pause_button.setText("Play")
 
         explicit = (
-            "🅴 Explicit"
+            "Explicit"
             if track.get("explicit", False)
             else "Clean"
         )
