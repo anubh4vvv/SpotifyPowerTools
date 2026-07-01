@@ -165,6 +165,18 @@ class MainWindow(QMainWindow):
             self.next_song
         )
 
+        self.dashboard.current_song_card.volume_slider.sliderReleased.connect(
+            self.set_volume_from_slider
+        )
+
+        self.dashboard.current_song_card.shuffle_button.clicked.connect(
+            self.toggle_shuffle
+        )
+
+        self.dashboard.current_song_card.repeat_combo.currentTextChanged.connect(
+            self.set_repeat_mode
+        )
+
     def show_dashboard(self):
 
         self.stack.setCurrentWidget(
@@ -540,6 +552,78 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(
                 self,
                 "Playback Error",
+                str(error)
+            )
+
+    def set_volume_from_slider(self):
+
+        try:
+            volume = self.dashboard.current_song_card.volume_slider.value()
+
+            result = self.controller.set_volume(
+                volume
+            )
+
+            self.status_bar.set_message(
+                result["message"]
+            )
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Volume Error",
+                str(error)
+            )
+
+    def toggle_shuffle(self):
+
+        try:
+            result = self.controller.toggle_shuffle()
+
+            self.status_bar.set_message(
+                result["message"]
+            )
+
+            self.refresh()
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Shuffle Error",
+                str(error)
+            )
+
+    def set_repeat_mode(self, text):
+
+        try:
+            state_map = {
+                "Repeat Off": "off",
+                "Repeat Track": "track",
+                "Repeat Playlist": "context",
+            }
+
+            repeat_state = state_map.get(
+                text,
+                "off"
+            )
+
+            result = self.controller.set_repeat_mode(
+                repeat_state
+            )
+
+            self.status_bar.set_message(
+                result["message"]
+            )
+
+            self.refresh()
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Repeat Error",
                 str(error)
             )
 

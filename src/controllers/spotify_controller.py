@@ -30,6 +30,9 @@ from services.player_service import (
     previous_song as previous_song_service,
     next_song as next_song_service,
     toggle_playback as toggle_playback_service,
+    set_volume as set_volume_service,
+    toggle_shuffle as toggle_shuffle_service,
+    set_repeat_mode as set_repeat_mode_service,
 )
 
 
@@ -226,6 +229,35 @@ class SpotifyController:
         )
 
         return self._preview[:10]
+
+    def set_volume(self, volume_percent):
+        """
+        Sets Spotify playback volume.
+        """
+
+        return set_volume_service(
+            self.sp,
+            volume_percent
+        )
+
+    def toggle_shuffle(self):
+        """
+        Toggles Spotify shuffle mode.
+        """
+
+        return toggle_shuffle_service(
+            self.sp
+        )
+
+    def set_repeat_mode(self, repeat_state):
+        """
+        Sets Spotify repeat mode.
+        """
+
+        return set_repeat_mode_service(
+            self.sp,
+            repeat_state
+        )
 
     def get_preview(self):
         return self._preview
