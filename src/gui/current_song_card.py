@@ -145,7 +145,13 @@ class CurrentSongCard(Card):
             f"{format_time(value)} / {format_time(self.duration_ms)}"
         )
 
-    def update_song(self, current):
+    def update_song(self, current, track_metadata=None):
+
+        if track_metadata is None:
+            track_metadata = {}
+
+        if track_metadata is None:
+            track_metadata = {}
 
         if current is None:
             self.song.setText("Nothing Playing")
@@ -255,8 +261,28 @@ class CurrentSongCard(Card):
 
         year = release[:4] if release else "Unknown"
 
-        popularity = track.get("popularity", "N/A")
+        popularity = track_metadata.get(
+            "popularity"
+        )
+
+        if popularity is None:
+            popularity = track.get(
+                "popularity"
+            )
+
+        if popularity is None:
+            popularity = "Unavailable"
+
+        meta_parts = [
+            explicit,
+            year,
+        ]
+
+        if popularity != "Unavailable":
+            meta_parts.append(
+                f"Popularity {popularity}"
+            )
 
         self.meta.setText(
-            f"{explicit}   •   {year}   •   Popularity {popularity}"
+            "   •   ".join(meta_parts)
         )

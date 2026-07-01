@@ -52,6 +52,9 @@ class MainWindow(QMainWindow):
         self.queue_view_thread = None
         self.queue_view_worker = None
 
+        self.current_track_id = None
+        self.current_track_metadata = {}
+
         self.search_thread = None
         self.search_worker = None
 
@@ -626,6 +629,57 @@ class MainWindow(QMainWindow):
             "Settings saved"
         )
 
+    def update_current_track_metadata(self, current):
+
+        if current is None:
+            self.current_track_id = None
+            self.current_track_metadata = {}
+
+            return
+
+        track = current.get(
+            "item"
+        )
+
+        if track is None:
+            self.current_track_id = None
+            self.current_track_metadata = {}
+
+            return
+
+        track_key = (
+                track.get("id")
+                or track.get("uri")
+                or track.get("name")
+        )
+
+        if not track_key:
+            self.current_track_id = None
+            self.current_track_metadata = {}
+
+            return
+
+        if track_key == self.current_track_id:
+            return
+
+        self.current_track_id = track_key
+
+        try:
+            self.current_track_metadata = self.controller.get_track_metadata(
+                track
+            )
+
+
+
+        except Exception as error:
+
+            print(
+                "Track metadata error:",
+                error
+            )
+
+            self.current_track_metadata = {}
+
     def refresh(self):
 
         try:
@@ -635,12 +689,30 @@ class MainWindow(QMainWindow):
                 current is not None
             )
 
-            self.dashboard.current_song_card.update_song(
+            self.update_current_track_metadata(
                 current
             )
 
-            self.dashboard.player_controls_card.update_playback_state(
+            self.update_current_track_metadata(
                 current
+            )
+
+            self.update_current_track_metadata(
+                current
+            )
+
+            if current is not None and current.get("item") is not None:
+
+                popularity = self.current_track_metadata.get(
+                    "popularity"
+                )
+
+                if popularity is not None and popularity != "Unavailable":
+                    current["item"]["popularity"] = popularity
+
+            self.dashboard.current_song_card.update_song(
+                current,
+                self.current_track_metadata
             )
 
             current_page = self.stack.currentWidget()

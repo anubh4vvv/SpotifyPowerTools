@@ -46,6 +46,9 @@ from services.search_service import (
     add_song_to_queue as add_song_to_queue_service,
 )
 
+from services.track_metadata_service import (
+    get_track_metadata as get_track_metadata_service,
+)
 
 class SpotifyController:
 
@@ -66,6 +69,16 @@ class SpotifyController:
 
     def current_playback(self):
         return self.sp.current_playback()
+
+    def get_track_metadata(self, track):
+        """
+        Returns cached full Spotify metadata for one track.
+        """
+
+        return get_track_metadata_service(
+            self.sp,
+            track
+        )
 
     def _playlist_id_from_playback(self, current):
 
