@@ -16,7 +16,7 @@ class PreviewRow(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setFixedHeight(62)
+        self.setFixedHeight(92)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(12, 8, 12, 8)
@@ -28,19 +28,19 @@ class PreviewRow(QWidget):
             Qt.AlignCenter
         )
         self.index_label.setStyleSheet(
-            "color:#1DB954; font-size:10pt; font-weight:800;"
+            "color:#1DB954; font-size:10pt; font-weight:900;"
         )
 
         self.cover = QLabel()
-        self.cover.setFixedSize(44, 44)
+        self.cover.setFixedSize(52, 52)
 
         text_layout = QVBoxLayout()
         text_layout.setContentsMargins(0, 0, 0, 0)
-        text_layout.setSpacing(2)
+        text_layout.setSpacing(3)
 
         self.song_label = QLabel("")
         self.song_label.setStyleSheet(
-            "color:#FFFFFF; font-size:11pt; font-weight:700;"
+            "color:#FFFFFF; font-size:11pt; font-weight:800;"
         )
 
         self.artist_label = QLabel("")
@@ -48,8 +48,15 @@ class PreviewRow(QWidget):
             "color:#A0A0A0; font-size:10pt;"
         )
 
+        self.reason_label = QLabel("")
+        self.reason_label.setWordWrap(True)
+        self.reason_label.setStyleSheet(
+            "color:#1DB954; font-size:9.5pt; font-weight:600;"
+        )
+
         text_layout.addWidget(self.song_label)
         text_layout.addWidget(self.artist_label)
+        text_layout.addWidget(self.reason_label)
 
         layout.addWidget(self.index_label)
         layout.addWidget(self.cover)
@@ -59,11 +66,28 @@ class PreviewRow(QWidget):
             PreviewRow {
                 background:#151518;
                 border:1px solid #2A2A2D;
-                border-radius:10px;
+                border-radius:12px;
+            }
+
+            PreviewRow:hover {
+                border:1px solid #1DB954;
+                background:#1B1B20;
             }
         """)
 
-    def update_song(self, index, song):
+    def update_item(self, index, item):
+
+        if isinstance(item, dict):
+            song = item.get("song")
+            score = item.get("score", 0)
+            reasons = item.get("reasons", [])
+        else:
+            song = item
+            score = None
+            reasons = []
+
+        if song is None:
+            return
 
         self.index_label.setText(
             str(index)
@@ -77,6 +101,19 @@ class PreviewRow(QWidget):
             song.artist
         )
 
+        reason_text = self.format_reasons(
+            score,
+            reasons
+        )
+
+        self.reason_label.setText(
+            reason_text
+        )
+
+        self.reason_label.setToolTip(
+            reason_text
+        )
+
         if song.image_url:
 
             pixmap = load_pixmap(
@@ -87,8 +124,8 @@ class PreviewRow(QWidget):
 
                 self.cover.setPixmap(
                     pixmap.scaled(
-                        44,
-                        44,
+                        52,
+                        52,
                         Qt.KeepAspectRatioByExpanding,
                         Qt.SmoothTransformation
                     )
@@ -97,6 +134,34 @@ class PreviewRow(QWidget):
                 return
 
         self.cover.clear()
+
+    def format_reasons(self, score, reasons):
+
+        cleaned_reasons = []
+
+        for reason in reasons:
+
+            if reason not in cleaned_reasons:
+                cleaned_reasons.append(
+                    reason
+                )
+
+        cleaned_reasons = cleaned_reasons[:3]
+
+        if not cleaned_reasons:
+
+            cleaned_reasons = [
+                "Smart shuffle selection"
+            ]
+
+        reason_text = " • ".join(
+            cleaned_reasons
+        )
+
+        if score is None:
+            return reason_text
+
+        return f"Score {score} • {reason_text}"
 
 
 class PreviewPanel(Card):
@@ -157,19 +222,19 @@ class PreviewPanel(Card):
         self.empty_label.hide()
 
         self.helper_label.setText(
-            f"Previewing {len(tracks)} songs that will be added to your Spotify queue."
+            f"Previewing {len(tracks)} songs with shuffle explanations."
         )
 
-        for index, song in enumerate(
+        for index, item in enumerate(
             tracks,
             start=1
         ):
 
             row = PreviewRow()
 
-            row.update_song(
+            row.update_item(
                 index,
-                song
+                item
             )
 
             self.rows.append(row)

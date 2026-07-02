@@ -16,6 +16,9 @@ def score_song(candidate, context, rng, settings=None):
     Returns:
         total_score
         reasons
+
+    reasons are intentionally human-readable so the UI can explain
+    why a song was selected.
     """
 
     resolved_settings = resolve_shuffle_settings(
@@ -38,9 +41,7 @@ def score_song(candidate, context, rng, settings=None):
 
     total_score = random_points * random_weight
 
-    reasons = [
-        f"{random_points:+} × {random_weight} = {total_score:+.1f} Random factor"
-    ]
+    reasons = []
 
     for result in results:
 
@@ -48,8 +49,19 @@ def score_song(candidate, context, rng, settings=None):
 
         total_score += weighted_score
 
+        if result.weight == 0:
+            continue
+
+        if result.score == 0:
+            continue
+
         reasons.append(
-            f"{result.score:+} × {result.weight} = {weighted_score:+.1f} {result.reason}"
+            result.reason
+        )
+
+    if not reasons:
+        reasons.append(
+            "Neutral shuffle pick"
         )
 
     return total_score, reasons

@@ -24,7 +24,10 @@ from services.queue_service import (
 
 from services.settings_service import load_settings
 
-from shuffle.reshuffler import smart_shuffle
+from shuffle.reshuffler import (
+    smart_shuffle,
+    smart_shuffle_with_explanations,
+)
 
 from services.player_service import (
     previous_song as previous_song_service,
@@ -72,6 +75,7 @@ class SpotifyController:
 
         self._preview = []
         self._shuffled = []
+        self._preview_explanations = []
 
         # Used to detect stale preview data
         self._current_context_key = None
@@ -186,6 +190,7 @@ class SpotifyController:
 
         self._preview = []
         self._shuffled = []
+        self._preview_explanations = []
         self._preview_context_key = None
         self._preview_settings_key = None
 
@@ -294,19 +299,26 @@ class SpotifyController:
             limit=50
         )
 
-        shuffled = smart_shuffle(
+        shuffled_items = smart_shuffle_with_explanations(
             tracks,
             index,
             settings=shuffle_settings
         )
 
-        self._shuffled = shuffled
-        self._preview = shuffled[1:]
+        self._shuffled = [
+            item["song"]
+            for item in shuffled_items
+        ]
+
+        self._preview = self._shuffled[1:]
+
+        self._preview_explanations = shuffled_items[1:]
 
         self._preview_context_key = self._make_context_key(
             current,
             playlist
         )
+
         self._preview_settings_key = self._make_settings_key(
             shuffle_settings
         )
@@ -315,7 +327,7 @@ class SpotifyController:
             shuffle_settings.get("queue_size", 10)
         )
 
-        return self._preview[:preview_limit]
+        return self._preview_explanations[:preview_limit]
 
     def seek_to_position(self, position_ms):
         """
