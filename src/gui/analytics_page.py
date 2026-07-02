@@ -13,6 +13,9 @@ from gui.stat_tile import StatTile
 from gui.bar_chart_card import BarChartCard
 from gui.health_score_card import HealthScoreCard
 
+from gui.playlist_doctor_card import PlaylistDoctorCard
+from services.playlist_doctor_service import diagnose_playlist
+
 from services.analytics_service import calculate_playlist_analytics
 
 
@@ -92,6 +95,12 @@ class AnalyticsPage(QWidget):
 
         layout.addWidget(
             self.health_visual_card
+        )
+
+        self.playlist_doctor_card = PlaylistDoctorCard()
+
+        layout.addWidget(
+            self.playlist_doctor_card
         )
 
         # ---------- Chart Cards ----------
@@ -220,6 +229,14 @@ class AnalyticsPage(QWidget):
             analytics["health_status"],
             analytics["duplicate_count"],
             analytics["diversity_score"]
+        )
+
+        diagnosis = diagnose_playlist(
+            analytics
+        )
+
+        self.playlist_doctor_card.update_diagnosis(
+            diagnosis
         )
 
         self.top_artists_chart.set_data(
