@@ -53,6 +53,7 @@ from services.track_metadata_service import (
 from services.rating_service import (
     get_song_rating as get_song_rating_service,
     set_song_rating as set_song_rating_service,
+    load_ratings as load_ratings_service,
 )
 
 class SpotifyController:
@@ -261,6 +262,11 @@ class SpotifyController:
         shuffle_settings = self._resolve_settings(
             settings
         )
+
+        shuffle_settings = shuffle_settings.copy()
+
+        shuffle_settings["ratings"] = load_ratings_service()
+        
         shuffled = smart_shuffle(
             tracks,
             index,

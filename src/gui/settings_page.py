@@ -54,6 +54,7 @@ class SettingsPage(QWidget):
             "Discovery",
             "Album",
             "Random",
+            "Weighted",
             "Custom"
         ])
 

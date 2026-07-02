@@ -2,6 +2,7 @@ BALANCED_PROFILE = {
     "artist_weight": 2.0,
     "album_weight": 1.0,
     "random_weight": 1.0,
+    "rating_weight": 0.0,
     "artist_spacing": 5,
     "album_spacing": 3,
 }
@@ -10,6 +11,7 @@ DISCOVERY_PROFILE = {
     "artist_weight": 3.5,
     "album_weight": 2.0,
     "random_weight": 0.8,
+    "rating_weight": 0.3,
     "artist_spacing": 8,
     "album_spacing": 5,
 }
@@ -18,6 +20,7 @@ ALBUM_PROFILE = {
     "artist_weight": 1.0,
     "album_weight": 0.3,
     "random_weight": 0.9,
+    "rating_weight": 0.2,
     "artist_spacing": 3,
     "album_spacing": 1,
 }
@@ -26,8 +29,18 @@ RANDOM_PROFILE = {
     "artist_weight": 0.4,
     "album_weight": 0.2,
     "random_weight": 3.0,
+    "rating_weight": 0.0,
     "artist_spacing": 1,
     "album_spacing": 1,
+}
+
+WEIGHTED_PROFILE = {
+    "artist_weight": 1.0,
+    "album_weight": 0.4,
+    "random_weight": 0.3,
+    "rating_weight": 5.0,
+    "artist_spacing": 3,
+    "album_spacing": 2,
 }
 
 
@@ -36,6 +49,7 @@ PROFILES = {
     "Discovery": DISCOVERY_PROFILE,
     "Album": ALBUM_PROFILE,
     "Random": RANDOM_PROFILE,
+    "Weighted": WEIGHTED_PROFILE,
 }
 
 
@@ -45,6 +59,31 @@ def clamp(value, minimum, maximum):
         minimum,
         min(maximum, value)
     )
+
+
+def preserve_extra_settings(resolved_settings, original_settings):
+    """
+    Keeps extra data passed into the shuffle engine.
+
+    Important:
+    profile resolution should not delete runtime data like:
+    - ratings
+    - queue size
+    - future listening history
+    - future skip history
+    """
+
+    extra_keys = [
+        "ratings",
+        "queue_size",
+    ]
+
+    for key in extra_keys:
+
+        if key in original_settings:
+            resolved_settings[key] = original_settings[key]
+
+    return resolved_settings
 
 
 def resolve_shuffle_settings(settings=None):
@@ -60,7 +99,13 @@ def resolve_shuffle_settings(settings=None):
         and "artist_spacing" in settings
         and "album_spacing" in settings
     ):
-        return settings.copy()
+
+        resolved_settings = settings.copy()
+
+        return preserve_extra_settings(
+            resolved_settings,
+            settings
+        )
 
     profile = settings.get(
         "shuffle_profile",
@@ -68,7 +113,13 @@ def resolve_shuffle_settings(settings=None):
     )
 
     if profile in PROFILES and profile != "Custom":
-        return PROFILES[profile].copy()
+
+        resolved_settings = PROFILES[profile].copy()
+
+        return preserve_extra_settings(
+            resolved_settings,
+            settings
+        )
 
     artist_value = int(
         settings.get("artist_weight", 50)
@@ -100,10 +151,16 @@ def resolve_shuffle_settings(settings=None):
         100
     )
 
-    return {
+    resolved_settings = {
         "artist_weight": round(artist_value / 25, 2),
         "album_weight": round(album_value / 50, 2),
         "random_weight": round(max(0.1, randomness_value / 50), 2),
+        "rating_weight": 1.5,
         "artist_spacing": 2 + artist_value // 20,
         "album_spacing": 1 + album_value // 25,
     }
+
+    return preserve_extra_settings(
+        resolved_settings,
+        settings
+    )

@@ -27,6 +27,7 @@ class ShufflePanel(Card):
             "Discovery",
             "Album",
             "Random",
+            "Weighted",
             "Custom"
         ])
 

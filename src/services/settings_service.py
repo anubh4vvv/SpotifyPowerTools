@@ -19,6 +19,7 @@ VALID_PROFILES = [
     "Discovery",
     "Album",
     "Random",
+    "Weighted",
     "Custom",
 ]
 
