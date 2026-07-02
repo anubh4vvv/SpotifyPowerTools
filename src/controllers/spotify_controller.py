@@ -56,6 +56,11 @@ from services.rating_service import (
     load_ratings as load_ratings_service,
 )
 
+from services.listening_history_service import (
+    record_played_track as record_played_track_service,
+    get_recent_track_keys as get_recent_track_keys_service,
+)
+
 class SpotifyController:
 
     def __init__(self):
@@ -83,6 +88,24 @@ class SpotifyController:
 
         return get_song_rating_service(
             track_id
+        )
+
+    def record_played_track(self, track):
+        """
+        Saves a played track to local listening history.
+        """
+
+        return record_played_track_service(
+            track
+        )
+
+    def get_recent_track_keys(self, limit=50):
+        """
+        Returns recently played local track keys.
+        """
+
+        return get_recent_track_keys_service(
+            limit=limit
         )
 
     def set_song_rating(self, track_id, rating, song_name="", artist=""):
@@ -266,7 +289,11 @@ class SpotifyController:
         shuffle_settings = shuffle_settings.copy()
 
         shuffle_settings["ratings"] = load_ratings_service()
-        
+
+        shuffle_settings["recent_track_keys"] = self.get_recent_track_keys(
+            limit=50
+        )
+
         shuffled = smart_shuffle(
             tracks,
             index,

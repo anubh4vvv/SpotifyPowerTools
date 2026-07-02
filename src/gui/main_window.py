@@ -57,6 +57,8 @@ class MainWindow(QMainWindow):
 
         self.current_track_rating = 0
 
+        self.last_history_track_key = None
+
         self.search_thread = None
         self.search_worker = None
 
@@ -635,6 +637,43 @@ class MainWindow(QMainWindow):
             "Settings saved"
         )
 
+    def record_listening_history(self, current):
+
+        if current is None:
+            return
+
+        if not current.get("is_playing"):
+            return
+
+        track = current.get(
+            "item"
+        )
+
+        if track is None:
+            return
+
+        track_key = (
+                track.get("id")
+                or track.get("uri")
+                or ""
+        )
+
+        if not track_key:
+            return
+
+        if track_key == self.last_history_track_key:
+            return
+
+        self.last_history_track_key = track_key
+
+        try:
+            self.controller.record_played_track(
+                track
+            )
+
+        except Exception:
+            pass
+
     def update_current_track_rating(self, current):
 
         if current is None:
@@ -723,6 +762,10 @@ class MainWindow(QMainWindow):
             )
 
             self.update_current_track_metadata(
+                current
+            )
+
+            self.record_listening_history(
                 current
             )
 

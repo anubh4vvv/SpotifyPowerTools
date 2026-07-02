@@ -43,5 +43,35 @@
         "rating": 5,
         "song_name": "Century",
         "artist": "EsDeeKid"
+    },
+    "52hm7o5MPKymBUmSJadwve": {
+        "rating": 4,
+        "song_name": "Her Majesty - Takes 1-3",
+        "artist": "The Beatles"
+    },
+    "0mEdbdeRFQwBhN4xfyIeUM": {
+        "rating": 3,
+        "song_name": "Can't Tell Me Nothing",
+        "artist": "Kanye West"
+    },
+    "5Ld85m0tR7ipmpVT6vDXUV": {
+        "rating": 3,
+        "song_name": "Ae Mere Zohra Jabeen",
+        "artist": "Manna Dey"
+    },
+    "1kcV2LJxt5v0s2cEGtEJ5i": {
+        "rating": 3,
+        "song_name": "Phir Se Ud Chala",
+        "artist": "Mohit Chauhan"
+    },
+    "3vpLBt35y9gLu2Xv59PXLg": {
+        "rating": 4,
+        "song_name": "Made In Japan",
+        "artist": "Buck Owens"
+    },
+    "6ZoCBDOB308GqUdt2AJrV2": {
+        "rating": 3,
+        "song_name": "Dildaara (Stand By Me)",
+        "artist": "Vishal-Shekhar"
     }
 }
