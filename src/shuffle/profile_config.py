@@ -3,7 +3,7 @@ BALANCED_PROFILE = {
     "album_weight": 1.0,
     "random_weight": 1.0,
     "rating_weight": 0.0,
-    "history_weight": 0.8,
+    "history_weight": 1.0,
     "artist_spacing": 5,
     "album_spacing": 3,
 }
@@ -13,7 +13,7 @@ DISCOVERY_PROFILE = {
     "album_weight": 2.0,
     "random_weight": 0.8,
     "rating_weight": 0.3,
-    "history_weight": 1.5,
+    "history_weight": 1.8,
     "artist_spacing": 8,
     "album_spacing": 5,
 }
@@ -23,7 +23,7 @@ ALBUM_PROFILE = {
     "album_weight": 0.3,
     "random_weight": 0.9,
     "rating_weight": 0.2,
-    "history_weight": 0.4,
+    "history_weight": 0.5,
     "artist_spacing": 3,
     "album_spacing": 1,
 }
@@ -43,7 +43,7 @@ WEIGHTED_PROFILE = {
     "album_weight": 0.4,
     "random_weight": 0.3,
     "rating_weight": 5.0,
-    "history_weight": 1.2,
+    "history_weight": 1.6,
     "artist_spacing": 3,
     "album_spacing": 2,
 }
@@ -74,13 +74,14 @@ def preserve_extra_settings(resolved_settings, original_settings):
     profile resolution should not delete runtime data like:
     - ratings
     - queue size
-    - future listening history
-    - future skip history
+    - recent listening history
+    - advanced listening memory
     """
 
     extra_keys = [
         "ratings",
         "recent_track_keys",
+        "listening_memory",
         "queue_size",
     ]
 
@@ -162,7 +163,7 @@ def resolve_shuffle_settings(settings=None):
         "album_weight": round(album_value / 50, 2),
         "random_weight": round(max(0.1, randomness_value / 50), 2),
         "rating_weight": 1.5,
-        "history_weight": 0.8,
+        "history_weight": 1.0,
         "artist_spacing": 2 + artist_value // 20,
         "album_spacing": 1 + album_value // 25,
     }

@@ -8,25 +8,128 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = PROJECT_ROOT / "data"
 HISTORY_FILE = DATA_DIR / "listening_history.json"
 
-MAX_HISTORY_ITEMS = 500
+MAX_HISTORY_ITEMS = 1000
+
+FINISH_COMPLETION_THRESHOLD = 0.85
+FINISH_NEAR_END_MS = 15000
+SKIP_COMPLETION_THRESHOLD = 0.50
+SKIP_PLAYED_MS_THRESHOLD = 30000
+
+
+def utc_now():
+
+    return datetime.now(
+        timezone.utc
+    ).isoformat()
+
+
+def empty_history():
+
+    return {
+        "version": 2,
+        "events": [],
+        "tracks": {},
+    }
 
 
 def load_history():
 
     if not HISTORY_FILE.exists():
-        return []
+        return empty_history()
 
     try:
         with open(HISTORY_FILE, "r", encoding="utf-8") as file:
             data = json.load(file)
 
-        if isinstance(data, list):
-            return data
-
-        return []
+        return normalize_history(
+            data
+        )
 
     except Exception:
-        return []
+        return empty_history()
+
+
+def normalize_history(data):
+    """
+    Supports both:
+    - old list-based history
+    - new dict-based listening memory
+    """
+
+    if isinstance(data, dict):
+
+        data.setdefault(
+            "version",
+            2
+        )
+
+        data.setdefault(
+            "events",
+            []
+        )
+
+        data.setdefault(
+            "tracks",
+            {}
+        )
+
+        return data
+
+    if isinstance(data, list):
+
+        history = empty_history()
+
+        for event in data:
+
+            if not isinstance(event, dict):
+                continue
+
+            track_key = (
+                event.get("track_key")
+                or event.get("track_id")
+                or event.get("track_uri")
+            )
+
+            if not track_key:
+                continue
+
+            metadata = {
+                "track_key": track_key,
+                "track_id": event.get("track_id", ""),
+                "track_uri": event.get("track_uri", ""),
+                "song_name": event.get("song_name", "Unknown Song"),
+                "artist": event.get("artist", "Unknown Artist"),
+                "album": event.get("album", "Unknown Album"),
+            }
+
+            stats = ensure_track_stats(
+                history,
+                metadata
+            )
+
+            stats["play_count"] += 1
+            stats["last_played_at"] = event.get(
+                "played_at",
+                utc_now()
+            )
+            stats["last_event"] = "started"
+
+            history["events"].append({
+                "type": "started",
+                "track_key": track_key,
+                "track_id": metadata["track_id"],
+                "track_uri": metadata["track_uri"],
+                "song_name": metadata["song_name"],
+                "artist": metadata["artist"],
+                "album": metadata["album"],
+                "created_at": stats["last_played_at"],
+            })
+
+        history["events"] = history["events"][-MAX_HISTORY_ITEMS:]
+
+        return history
+
+    return empty_history()
 
 
 def save_history(history):
@@ -56,63 +159,346 @@ def get_track_key(track):
     )
 
 
-def record_played_track(track):
-
-    track_key = get_track_key(
-        track
-    )
-
-    if not track_key:
-        return None
+def get_artist_name(track):
 
     artists = track.get(
         "artists",
         []
     )
 
-    artist_name = "Unknown Artist"
+    if not artists:
+        return "Unknown Artist"
 
-    if artists:
-        artist_name = artists[0].get(
-            "name",
-            "Unknown Artist"
-        )
+    return artists[0].get(
+        "name",
+        "Unknown Artist"
+    )
+
+
+def get_track_metadata(track):
 
     album = track.get(
         "album",
         {}
     )
 
-    event = {
+    return {
+        "track_key": get_track_key(track),
         "track_id": track.get("id", ""),
         "track_uri": track.get("uri", ""),
-        "track_key": track_key,
         "song_name": track.get("name", "Unknown Song"),
-        "artist": artist_name,
+        "artist": get_artist_name(track),
         "album": album.get("name", "Unknown Album"),
-        "played_at": datetime.now(timezone.utc).isoformat(),
     }
 
-    history = load_history()
 
-    if history:
+def ensure_track_stats(history, metadata):
 
-        last_event = history[-1]
+    track_key = metadata["track_key"]
 
-        if last_event.get("track_key") == track_key:
-            return last_event
+    tracks = history.setdefault(
+        "tracks",
+        {}
+    )
 
-    history.append(
+    if track_key not in tracks:
+
+        tracks[track_key] = {
+            "track_key": track_key,
+            "track_id": metadata.get("track_id", ""),
+            "track_uri": metadata.get("track_uri", ""),
+            "song_name": metadata.get("song_name", "Unknown Song"),
+            "artist": metadata.get("artist", "Unknown Artist"),
+            "album": metadata.get("album", "Unknown Album"),
+            "play_count": 0,
+            "finish_count": 0,
+            "skip_count": 0,
+            "replay_count": 0,
+            "total_played_ms": 0,
+            "last_played_at": "",
+            "last_finished_at": "",
+            "last_skipped_at": "",
+            "last_replayed_at": "",
+            "last_event": "",
+        }
+
+    else:
+
+        tracks[track_key]["track_id"] = metadata.get(
+            "track_id",
+            tracks[track_key].get("track_id", "")
+        )
+
+        tracks[track_key]["track_uri"] = metadata.get(
+            "track_uri",
+            tracks[track_key].get("track_uri", "")
+        )
+
+        tracks[track_key]["song_name"] = metadata.get(
+            "song_name",
+            tracks[track_key].get("song_name", "Unknown Song")
+        )
+
+        tracks[track_key]["artist"] = metadata.get(
+            "artist",
+            tracks[track_key].get("artist", "Unknown Artist")
+        )
+
+        tracks[track_key]["album"] = metadata.get(
+            "album",
+            tracks[track_key].get("album", "Unknown Album")
+        )
+
+    return tracks[track_key]
+
+
+def append_event(history, event):
+
+    history.setdefault(
+        "events",
+        []
+    )
+
+    history["events"].append(
         event
     )
 
-    history = history[-MAX_HISTORY_ITEMS:]
+    history["events"] = history["events"][-MAX_HISTORY_ITEMS:]
+
+
+def was_recently_started(history, track_key, limit=20):
+
+    checked = 0
+
+    for event in reversed(history.get("events", [])):
+
+        if event.get("type") != "started":
+            continue
+
+        checked += 1
+
+        if event.get("track_key") == track_key:
+            return True
+
+        if checked >= limit:
+            break
+
+    return False
+
+
+def record_track_started(track, previous_track_key=None):
+    """
+    Records that a track started playing.
+
+    This updates:
+    - play_count
+    - replay_count
+    - last_played_at
+    """
+
+    if track is None:
+        return None
+
+    metadata = get_track_metadata(
+        track
+    )
+
+    track_key = metadata["track_key"]
+
+    if not track_key:
+        return None
+
+    history = load_history()
+
+    stats = ensure_track_stats(
+        history,
+        metadata
+    )
+
+    now = utc_now()
+
+    recently_started = was_recently_started(
+        history,
+        track_key,
+        limit=20
+    )
+
+    stats["play_count"] += 1
+    stats["last_played_at"] = now
+    stats["last_event"] = "started"
+
+    if recently_started or previous_track_key == track_key:
+
+        stats["replay_count"] += 1
+        stats["last_replayed_at"] = now
+        stats["last_event"] = "replayed"
+
+        event_type = "replayed"
+
+    else:
+
+        event_type = "started"
+
+    event = {
+        "type": event_type,
+        "track_key": track_key,
+        "track_id": metadata["track_id"],
+        "track_uri": metadata["track_uri"],
+        "song_name": metadata["song_name"],
+        "artist": metadata["artist"],
+        "album": metadata["album"],
+        "created_at": now,
+        "previous_track_key": previous_track_key or "",
+    }
+
+    append_event(
+        history,
+        event
+    )
 
     save_history(
         history
     )
 
     return event
+
+
+def finalize_track_play(
+    track_key,
+    duration_ms=0,
+    max_progress_ms=0,
+    last_progress_ms=0,
+    played_ms=0
+):
+    """
+    Finalizes the previous track when playback moves to another song.
+
+    Decides whether the previous track was:
+    - finished
+    - skipped
+    - partial
+    """
+
+    if not track_key:
+        return None
+
+    history = load_history()
+
+    tracks = history.setdefault(
+        "tracks",
+        {}
+    )
+
+    if track_key not in tracks:
+        return None
+
+    stats = tracks[track_key]
+
+    duration_ms = int(
+        duration_ms or 0
+    )
+
+    max_progress_ms = int(
+        max_progress_ms or 0
+    )
+
+    last_progress_ms = int(
+        last_progress_ms or 0
+    )
+
+    played_ms = int(
+        played_ms or 0
+    )
+
+    completion_ratio = 0
+
+    if duration_ms > 0:
+
+        completion_ratio = max_progress_ms / duration_ms
+
+    near_end = (
+        duration_ms > 0
+        and duration_ms - max_progress_ms <= FINISH_NEAR_END_MS
+    )
+
+    finished = (
+        completion_ratio >= FINISH_COMPLETION_THRESHOLD
+        or near_end
+    )
+
+    skipped = (
+        not finished
+        and (
+            completion_ratio < SKIP_COMPLETION_THRESHOLD
+            or played_ms < SKIP_PLAYED_MS_THRESHOLD
+        )
+    )
+
+    now = utc_now()
+
+    stats["total_played_ms"] = int(
+        stats.get("total_played_ms", 0)
+    ) + max(played_ms, 0)
+
+    if finished:
+
+        event_type = "finished"
+        stats["finish_count"] += 1
+        stats["last_finished_at"] = now
+        stats["last_event"] = "finished"
+
+    elif skipped:
+
+        event_type = "skipped"
+        stats["skip_count"] += 1
+        stats["last_skipped_at"] = now
+        stats["last_event"] = "skipped"
+
+    else:
+
+        event_type = "partial"
+        stats["last_event"] = "partial"
+
+    event = {
+        "type": event_type,
+        "track_key": track_key,
+        "song_name": stats.get("song_name", "Unknown Song"),
+        "artist": stats.get("artist", "Unknown Artist"),
+        "album": stats.get("album", "Unknown Album"),
+        "duration_ms": duration_ms,
+        "max_progress_ms": max_progress_ms,
+        "last_progress_ms": last_progress_ms,
+        "played_ms": played_ms,
+        "completion_ratio": round(
+            completion_ratio,
+            3
+        ),
+        "created_at": now,
+    }
+
+    append_event(
+        history,
+        event
+    )
+
+    save_history(
+        history
+    )
+
+    return event
+
+
+def record_played_track(track):
+    """
+    Backward-compatible function.
+
+    Older code can still call this, but new code should use
+    record_track_started + finalize_track_play.
+    """
+
+    return record_track_started(
+        track
+    )
 
 
 def get_recent_track_keys(limit=50):
@@ -123,7 +509,7 @@ def get_recent_track_keys(limit=50):
 
     seen = set()
 
-    for event in reversed(history):
+    for event in reversed(history.get("events", [])):
 
         track_key = (
             event.get("track_key")
@@ -149,3 +535,49 @@ def get_recent_track_keys(limit=50):
             break
 
     return recent_keys
+
+
+def get_listening_memory_map():
+
+    history = load_history()
+
+    return history.get(
+        "tracks",
+        {}
+    )
+
+
+def calculate_track_rates(stats):
+
+    play_count = int(
+        stats.get("play_count", 0)
+    )
+
+    finish_count = int(
+        stats.get("finish_count", 0)
+    )
+
+    skip_count = int(
+        stats.get("skip_count", 0)
+    )
+
+    if play_count <= 0:
+        return {
+            "skip_rate": 0,
+            "completion_rate": 0,
+        }
+
+    skip_rate = round(
+        skip_count / play_count,
+        3
+    )
+
+    completion_rate = round(
+        finish_count / play_count,
+        3
+    )
+
+    return {
+        "skip_rate": skip_rate,
+        "completion_rate": completion_rate,
+    }

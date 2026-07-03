@@ -61,7 +61,10 @@ from services.rating_service import (
 
 from services.listening_history_service import (
     record_played_track as record_played_track_service,
+    record_track_started as record_track_started_service,
+    finalize_track_play as finalize_track_play_service,
     get_recent_track_keys as get_recent_track_keys_service,
+    get_listening_memory_map as get_listening_memory_map_service,
 )
 
 class SpotifyController:
@@ -96,12 +99,49 @@ class SpotifyController:
 
     def record_played_track(self, track):
         """
-        Saves a played track to local listening history.
+        Backward-compatible played-track logger.
         """
 
         return record_played_track_service(
             track
         )
+
+    def record_track_started(self, track, previous_track_key=None):
+        """
+        Saves a track-start event to local listening memory.
+        """
+
+        return record_track_started_service(
+            track,
+            previous_track_key=previous_track_key
+        )
+
+    def finalize_track_play(
+            self,
+            track_key,
+            duration_ms=0,
+            max_progress_ms=0,
+            last_progress_ms=0,
+            played_ms=0
+    ):
+        """
+        Finalizes the previous track as finished, skipped, or partial.
+        """
+
+        return finalize_track_play_service(
+            track_key,
+            duration_ms=duration_ms,
+            max_progress_ms=max_progress_ms,
+            last_progress_ms=last_progress_ms,
+            played_ms=played_ms
+        )
+
+    def get_listening_memory_map(self):
+        """
+        Returns advanced listening memory stats by track key.
+        """
+
+        return get_listening_memory_map_service()
 
     def get_recent_track_keys(self, limit=50):
         """
@@ -298,6 +338,8 @@ class SpotifyController:
         shuffle_settings["recent_track_keys"] = self.get_recent_track_keys(
             limit=50
         )
+
+        shuffle_settings["listening_memory"] = self.get_listening_memory_map()
 
         shuffled_items = smart_shuffle_with_explanations(
             tracks,

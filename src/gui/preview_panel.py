@@ -16,7 +16,7 @@ class PreviewRow(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setFixedHeight(92)
+        self.setFixedHeight(118)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(12, 8, 12, 8)
@@ -146,7 +146,38 @@ class PreviewRow(QWidget):
                     reason
                 )
 
-        cleaned_reasons = cleaned_reasons[:3]
+        priority_reasons = []
+
+        priority_keywords = [
+            "Recently skipped",
+            "High skip percentage",
+            "Moderate skip percentage",
+            "Played very recently",
+            "Played recently",
+            "Recently finished",
+            "Often replayed",
+            "Strong completion rate",
+            "Not recently played",
+            "No listening memory",
+        ]
+
+        for keyword in priority_keywords:
+
+            for reason in cleaned_reasons:
+
+                if keyword in reason and reason not in priority_reasons:
+                    priority_reasons.append(
+                        reason
+                    )
+
+        for reason in cleaned_reasons:
+
+            if reason not in priority_reasons:
+                priority_reasons.append(
+                    reason
+                )
+
+        cleaned_reasons = priority_reasons[:5]
 
         if not cleaned_reasons:
 

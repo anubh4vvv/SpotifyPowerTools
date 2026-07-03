@@ -1,4 +1,5 @@
 import webbrowser
+import time
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -57,7 +58,12 @@ class MainWindow(QMainWindow):
 
         self.current_track_rating = 0
 
-        self.last_history_track_key = None
+        self.history_active_track_key = None
+        self.history_active_duration_ms = 0
+        self.history_active_max_progress_ms = 0
+        self.history_active_last_progress_ms = 0
+        self.history_active_started_at = None
+        self.history_previous_track_key = None
 
         self.search_thread = None
         self.search_worker = None
@@ -661,14 +667,130 @@ class MainWindow(QMainWindow):
         if not track_key:
             return
 
-        if track_key == self.last_history_track_key:
+        progress_ms = current.get(
+            "progress_ms",
+            0
+        )
+
+        if progress_ms is None:
+            progress_ms = 0
+
+        duration_ms = track.get(
+            "duration_ms",
+            0
+        )
+
+        if duration_ms is None:
+            duration_ms = 0
+
+        now = time.monotonic()
+
+        # First track seen by the memory engine
+        if self.history_active_track_key is None:
+
+            self.history_active_track_key = track_key
+            self.history_active_duration_ms = duration_ms
+            self.history_active_max_progress_ms = progress_ms
+            self.history_active_last_progress_ms = progress_ms
+            self.history_active_started_at = now
+
+            try:
+                self.controller.record_track_started(
+                    track,
+                    previous_track_key=self.history_previous_track_key
+                )
+
+            except Exception:
+                pass
+
             return
 
-        self.last_history_track_key = track_key
+        # Same track is still playing
+        if track_key == self.history_active_track_key:
+
+            # Detect repeat-track behavior:
+            # progress drops from near the end back near the beginning.
+            progress_dropped = (
+                    self.history_active_last_progress_ms - progress_ms
+            )
+
+            repeated_same_track = (
+                    duration_ms > 0
+                    and progress_dropped > 10000
+                    and self.history_active_last_progress_ms > duration_ms * 0.70
+                    and progress_ms < duration_ms * 0.25
+            )
+
+            if repeated_same_track:
+
+                played_ms = int(
+                    (now - self.history_active_started_at) * 1000
+                )
+
+                try:
+                    self.controller.finalize_track_play(
+                        self.history_active_track_key,
+                        duration_ms=self.history_active_duration_ms,
+                        max_progress_ms=self.history_active_max_progress_ms,
+                        last_progress_ms=self.history_active_last_progress_ms,
+                        played_ms=played_ms
+                    )
+
+                    self.controller.record_track_started(
+                        track,
+                        previous_track_key=self.history_active_track_key
+                    )
+
+                except Exception:
+                    pass
+
+                self.history_previous_track_key = self.history_active_track_key
+                self.history_active_track_key = track_key
+                self.history_active_duration_ms = duration_ms
+                self.history_active_max_progress_ms = progress_ms
+                self.history_active_last_progress_ms = progress_ms
+                self.history_active_started_at = now
+
+                return
+
+            self.history_active_max_progress_ms = max(
+                self.history_active_max_progress_ms,
+                progress_ms
+            )
+
+            self.history_active_last_progress_ms = progress_ms
+
+            return
+
+        # Song changed: finalize previous track, then start new track.
+        played_ms = int(
+            (now - self.history_active_started_at) * 1000
+        )
 
         try:
-            self.controller.record_played_track(
-                track
+            self.controller.finalize_track_play(
+                self.history_active_track_key,
+                duration_ms=self.history_active_duration_ms,
+                max_progress_ms=self.history_active_max_progress_ms,
+                last_progress_ms=self.history_active_last_progress_ms,
+                played_ms=played_ms
+            )
+
+        except Exception:
+            pass
+
+        self.history_previous_track_key = self.history_active_track_key
+
+        self.history_active_track_key = track_key
+        self.history_active_duration_ms = duration_ms
+        self.history_active_max_progress_ms = progress_ms
+        self.history_active_last_progress_ms = progress_ms
+        self.history_active_started_at = now
+
+        try:
+            self.controller.record_track_started(
+                track,
+                previous_track_key=self.history_previous_track_key
             )
 
         except Exception:
