@@ -16,6 +16,7 @@ from gui.playlist_doctor_card import PlaylistDoctorCard
 from gui.rating_recommendations_card import RatingRecommendationsCard
 from gui.visual_balance_card import VisualBalanceCard
 from gui.dominance_breakdown_card import DominanceBreakdownCard
+from gui.listening_analytics_card import ListeningAnalyticsCard
 
 from services.playlist_doctor_service import (
     diagnose_playlist,
@@ -51,7 +52,7 @@ class AnalyticsPage(QWidget):
         title.setObjectName("SectionTitle")
 
         subtitle = QLabel(
-            "Understand the health, balance, structure, and rating intelligence of the playlist you are currently listening to."
+            "Understand the health, balance, structure, rating intelligence, and listening memory of the playlist you are currently listening to."
         )
         subtitle.setStyleSheet(
             "color:#A0A0A0; font-size:11pt;"
@@ -143,6 +144,12 @@ class AnalyticsPage(QWidget):
             self.rating_recommendations_card
         )
 
+        self.listening_analytics_card = ListeningAnalyticsCard()
+
+        layout.addWidget(
+            self.listening_analytics_card
+        )
+
         # ---------- Chart Cards ----------
 
         charts_grid = QGridLayout()
@@ -214,10 +221,23 @@ class AnalyticsPage(QWidget):
         return label
 
     def update_analytics(self, playlist, tracks):
+        """
+        Fallback direct updater.
+
+        MainWindow can now use update_from_analytics() with cached analytics
+        to avoid recalculating every time.
+        """
 
         analytics = calculate_playlist_analytics(
             tracks
         )
+
+        self.update_from_analytics(
+            playlist,
+            analytics
+        )
+
+    def update_from_analytics(self, playlist, analytics):
 
         self.total_songs.set_value(
             analytics["total_songs"]
@@ -322,6 +342,10 @@ class AnalyticsPage(QWidget):
             rating_recommendations
         )
 
+        self.listening_analytics_card.update_listening_analytics(
+            analytics["listening_analytics"]
+        )
+
         self.top_artists_chart.set_data(
             analytics["top_artists"]
         )
@@ -374,7 +398,11 @@ class AnalyticsPage(QWidget):
 
         lines = []
 
-        for index, item in enumerate(duplicates, start=1):
+        for index, item in enumerate(
+            duplicates,
+            start=1
+        ):
+
             name, duplicate_count = item
 
             lines.append(
@@ -426,14 +454,18 @@ class AnalyticsPage(QWidget):
         top_tracks = analytics["top_rated_tracks"]
 
         if not top_tracks:
+
             lines.append(
                 "No rated songs yet."
             )
+
         else:
+
             for index, item in enumerate(
-                    top_tracks,
-                    start=1
+                top_tracks,
+                start=1
             ):
+
                 lines.append(
                     f"{index}. {item['name']} - {item['artist']} "
                     f"({item['rating']}/5)"
@@ -445,14 +477,18 @@ class AnalyticsPage(QWidget):
         low_tracks = analytics["low_rated_tracks"]
 
         if not low_tracks:
+
             lines.append(
                 "No low-rated songs found."
             )
+
         else:
+
             for index, item in enumerate(
-                    low_tracks,
-                    start=1
+                low_tracks,
+                start=1
             ):
+
                 lines.append(
                     f"{index}. {item['name']} - {item['artist']} "
                     f"({item['rating']}/5)"

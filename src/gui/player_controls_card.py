@@ -19,9 +19,12 @@ class PlayerControlsCard(Card):
 
         self.setMinimumHeight(360)
 
-        self.layout.setSpacing(18)
+        self.last_volume_percent = None
+        self.last_shuffle_state = None
+        self.last_repeat_state = None
+        self.last_devices_signature = None
 
-        # ---------- Volume ----------
+        self.layout.setSpacing(18)
 
         volume_title = QLabel("Volume")
         volume_title.setStyleSheet(
@@ -46,8 +49,6 @@ class PlayerControlsCard(Card):
         volume_row.addWidget(self.volume_slider, 1)
         volume_row.addWidget(self.volume_value)
 
-        # ---------- Shuffle / Repeat ----------
-
         mode_title = QLabel("Playback Mode")
         mode_title.setStyleSheet(
             "color:#DADADA; font-size:12pt; font-weight:700;"
@@ -67,8 +68,6 @@ class PlayerControlsCard(Card):
 
         mode_row.addWidget(self.shuffle_button)
         mode_row.addWidget(self.repeat_combo)
-
-        # ---------- Device ----------
 
         device_title = QLabel("Spotify Device")
         device_title.setStyleSheet(
@@ -104,21 +103,14 @@ class PlayerControlsCard(Card):
 
         self.layout.addWidget(volume_title)
         self.layout.addLayout(volume_row)
-
         self.layout.addSpacing(8)
-
         self.layout.addWidget(mode_title)
         self.layout.addLayout(mode_row)
-
         self.layout.addSpacing(8)
-
         self.layout.addWidget(device_title)
         self.layout.addLayout(device_row)
-
         self.layout.addSpacing(8)
-
         self.layout.addWidget(self.helper_label)
-
         self.layout.addStretch()
 
     def update_volume_label(self, value):
@@ -131,25 +123,41 @@ class PlayerControlsCard(Card):
 
         return self.device_combo.currentData()
 
+    def reset_playback_state(self):
+
+        if (
+            self.last_volume_percent == 0
+            and self.last_shuffle_state is False
+            and self.last_repeat_state == "off"
+        ):
+            return
+
+        self.last_volume_percent = 0
+        self.last_shuffle_state = False
+        self.last_repeat_state = "off"
+
+        self.shuffle_button.setText("Shuffle: Off")
+
+        self.volume_slider.blockSignals(True)
+        self.volume_slider.setValue(0)
+        self.volume_slider.blockSignals(False)
+
+        self.volume_value.setText("0%")
+
+        self.repeat_combo.blockSignals(True)
+        self.repeat_combo.setCurrentText("Repeat Off")
+        self.repeat_combo.blockSignals(False)
+
     def update_playback_state(self, current):
 
         if current is None:
-
-            self.shuffle_button.setText("Shuffle: Off")
-
-            self.volume_slider.blockSignals(True)
-            self.volume_slider.setValue(0)
-            self.volume_slider.blockSignals(False)
-
-            self.volume_value.setText("0%")
-
-            self.repeat_combo.blockSignals(True)
-            self.repeat_combo.setCurrentText("Repeat Off")
-            self.repeat_combo.blockSignals(False)
-
+            self.reset_playback_state()
             return
 
-        device = current.get("device", {})
+        device = current.get(
+            "device",
+            {}
+        )
 
         volume_percent = device.get(
             "volume_percent",
@@ -159,51 +167,91 @@ class PlayerControlsCard(Card):
         if volume_percent is None:
             volume_percent = 0
 
-        if not self.volume_slider.isSliderDown():
+        if (
+            volume_percent != self.last_volume_percent
+            and not self.volume_slider.isSliderDown()
+        ):
+
+            self.last_volume_percent = volume_percent
 
             self.volume_slider.blockSignals(True)
-
             self.volume_slider.setValue(
                 volume_percent
             )
-
             self.volume_slider.blockSignals(False)
 
             self.volume_value.setText(
                 f"{volume_percent}%"
             )
 
-        if current.get("shuffle_state"):
-            self.shuffle_button.setText("Shuffle: On")
-        else:
-            self.shuffle_button.setText("Shuffle: Off")
+        shuffle_state = bool(
+            current.get("shuffle_state")
+        )
+
+        if shuffle_state != self.last_shuffle_state:
+
+            self.last_shuffle_state = shuffle_state
+
+            if shuffle_state:
+                self.shuffle_button.setText("Shuffle: On")
+            else:
+                self.shuffle_button.setText("Shuffle: Off")
 
         repeat_state = current.get(
             "repeat_state",
             "off"
         )
 
-        repeat_label = {
-            "off": "Repeat Off",
-            "track": "Repeat Track",
-            "context": "Repeat Playlist",
-        }.get(
-            repeat_state,
-            "Repeat Off"
-        )
+        if repeat_state != self.last_repeat_state:
 
-        self.repeat_combo.blockSignals(True)
+            self.last_repeat_state = repeat_state
 
-        self.repeat_combo.setCurrentText(
-            repeat_label
-        )
+            repeat_label = {
+                "off": "Repeat Off",
+                "track": "Repeat Track",
+                "context": "Repeat Playlist",
+            }.get(
+                repeat_state,
+                "Repeat Off"
+            )
 
-        self.repeat_combo.blockSignals(False)
+            self.repeat_combo.blockSignals(True)
+            self.repeat_combo.setCurrentText(
+                repeat_label
+            )
+            self.repeat_combo.blockSignals(False)
+
+    def make_devices_signature(self, devices, active_device_id):
+
+        signature = []
+
+        for device in devices:
+
+            signature.append((
+                device.get("id", ""),
+                device.get("name", ""),
+                device.get("type", ""),
+                bool(device.get("is_active", False)),
+                active_device_id,
+            ))
+
+        return tuple(signature)
 
     def update_devices(self, devices, active_device_id=None):
 
-        self.device_combo.blockSignals(True)
+        devices = devices or []
 
+        signature = self.make_devices_signature(
+            devices,
+            active_device_id
+        )
+
+        if signature == self.last_devices_signature:
+            return
+
+        self.last_devices_signature = signature
+
+        self.device_combo.blockSignals(True)
         self.device_combo.clear()
 
         if not devices:
@@ -214,7 +262,6 @@ class PlayerControlsCard(Card):
             )
 
             self.device_combo.setEnabled(False)
-
             self.device_combo.blockSignals(False)
 
             return

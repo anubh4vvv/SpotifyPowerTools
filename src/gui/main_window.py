@@ -34,6 +34,9 @@ from workers.cleaner_worker import CleanerWorker
 from workers.queue_view_worker import QueueViewWorker
 from workers.search_worker import SearchWorker
 
+from services.analytics_service import calculate_playlist_analytics
+from services.duplicate_service import analyze_duplicates
+
 class MainWindow(QMainWindow):
 
     def __init__(self):
@@ -71,6 +74,10 @@ class MainWindow(QMainWindow):
         self.cached_tracks = []
         self.last_playlist_refresh_at = 0
         self.playlist_refresh_interval = 8
+
+        self.analytics_cache = {}
+        self.duplicates_cache = {}
+        self.max_page_cache_items = 10
 
         self.search_thread = None
         self.search_worker = None
@@ -300,15 +307,6 @@ class MainWindow(QMainWindow):
             0,
             self.load_analytics_page
         )
-
-        if playlist is not None:
-            self.status_bar.set_message(
-                f"Analytics • {playlist['name']}"
-            )
-        else:
-            self.status_bar.set_message(
-                "Analytics • No playlist currently playing"
-            )
 
     def show_duplicates(self):
 
@@ -659,6 +657,72 @@ class MainWindow(QMainWindow):
             "Settings saved"
         )
 
+    def trim_page_cache(self, cache):
+
+        while len(cache) > self.max_page_cache_items:
+            oldest_key = next(iter(cache))
+            del cache[oldest_key]
+
+    def make_playlist_cache_key(self, playlist, tracks):
+
+        tracks = tracks or []
+
+        if playlist is None:
+            return (
+                "none",
+                0
+            )
+
+        return (
+            playlist.get("id", ""),
+            playlist.get("snapshot_id", ""),
+            len(tracks),
+        )
+
+    def get_cached_analytics(self, playlist, tracks):
+
+        cache_key = self.make_playlist_cache_key(
+            playlist,
+            tracks
+        )
+
+        if cache_key in self.analytics_cache:
+            return self.analytics_cache[cache_key]
+
+        analytics = calculate_playlist_analytics(
+            tracks
+        )
+
+        self.analytics_cache[cache_key] = analytics
+
+        self.trim_page_cache(
+            self.analytics_cache
+        )
+
+        return analytics
+
+    def get_cached_duplicates(self, playlist, tracks):
+
+        cache_key = self.make_playlist_cache_key(
+            playlist,
+            tracks
+        )
+
+        if cache_key in self.duplicates_cache:
+            return self.duplicates_cache[cache_key]
+
+        analysis = analyze_duplicates(
+            tracks
+        )
+
+        self.duplicates_cache[cache_key] = analysis
+
+        self.trim_page_cache(
+            self.duplicates_cache
+        )
+
+        return analysis
+
     def update_cached_playlist(self, force=False):
 
         now = time.monotonic()
@@ -717,9 +781,14 @@ class MainWindow(QMainWindow):
         playlist = self.cached_playlist
         tracks = self.cached_tracks
 
-        self.analytics_page.update_analytics(
+        analytics = self.get_cached_analytics(
             playlist,
             tracks
+        )
+
+        self.analytics_page.update_from_analytics(
+            playlist,
+            analytics
         )
 
         if playlist is not None:
@@ -739,9 +808,14 @@ class MainWindow(QMainWindow):
         playlist = self.cached_playlist
         tracks = self.cached_tracks
 
-        self.duplicates_page.update_duplicates(
+        analysis = self.get_cached_duplicates(
             playlist,
             tracks
+        )
+
+        self.duplicates_page.update_from_analysis(
+            playlist,
+            analysis
         )
 
         if playlist is not None:

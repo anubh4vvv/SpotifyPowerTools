@@ -581,3 +581,159 @@ def calculate_track_rates(stats):
         "skip_rate": skip_rate,
         "completion_rate": completion_rate,
     }
+def make_listening_item(stats):
+
+    rates = calculate_track_rates(
+        stats
+    )
+
+    skip_rate_percent = round(
+        rates["skip_rate"] * 100,
+        1
+    )
+
+    completion_rate_percent = round(
+        rates["completion_rate"] * 100,
+        1
+    )
+
+    return {
+        "track_key": stats.get("track_key", ""),
+        "song_name": stats.get("song_name", "Unknown Song"),
+        "artist": stats.get("artist", "Unknown Artist"),
+        "album": stats.get("album", "Unknown Album"),
+        "play_count": int(stats.get("play_count", 0)),
+        "finish_count": int(stats.get("finish_count", 0)),
+        "skip_count": int(stats.get("skip_count", 0)),
+        "replay_count": int(stats.get("replay_count", 0)),
+        "skip_rate": skip_rate_percent,
+        "completion_rate": completion_rate_percent,
+        "last_played_at": stats.get("last_played_at", ""),
+        "last_finished_at": stats.get("last_finished_at", ""),
+        "last_skipped_at": stats.get("last_skipped_at", ""),
+        "last_replayed_at": stats.get("last_replayed_at", ""),
+        "last_event": stats.get("last_event", ""),
+    }
+
+
+def get_listening_analytics(limit=5):
+
+    history = load_history()
+
+    memory = history.get(
+        "tracks",
+        {}
+    )
+
+    items = [
+        make_listening_item(stats)
+        for stats in memory.values()
+    ]
+
+    total_known_songs = len(
+        items
+    )
+
+    total_plays = sum(
+        item["play_count"]
+        for item in items
+    )
+
+    total_finishes = sum(
+        item["finish_count"]
+        for item in items
+    )
+
+    total_skips = sum(
+        item["skip_count"]
+        for item in items
+    )
+
+    total_replays = sum(
+        item["replay_count"]
+        for item in items
+    )
+
+    if total_plays > 0:
+        global_skip_rate = round(
+            (total_skips / total_plays) * 100,
+            1
+        )
+        global_completion_rate = round(
+            (total_finishes / total_plays) * 100,
+            1
+        )
+    else:
+        global_skip_rate = 0
+        global_completion_rate = 0
+
+    most_replayed = sorted(
+        [
+            item
+            for item in items
+            if item["replay_count"] > 0
+        ],
+        key=lambda item: item["replay_count"],
+        reverse=True
+    )[:limit]
+
+    most_skipped = sorted(
+        [
+            item
+            for item in items
+            if item["skip_count"] > 0
+        ],
+        key=lambda item: item["skip_count"],
+        reverse=True
+    )[:limit]
+
+    best_completion = sorted(
+        [
+            item
+            for item in items
+            if item["play_count"] >= 2
+        ],
+        key=lambda item: (
+            item["completion_rate"],
+            item["finish_count"]
+        ),
+        reverse=True
+    )[:limit]
+
+    worst_skip_rate = sorted(
+        [
+            item
+            for item in items
+            if item["play_count"] >= 2
+        ],
+        key=lambda item: (
+            item["skip_rate"],
+            item["skip_count"]
+        ),
+        reverse=True
+    )[:limit]
+
+    recently_finished = sorted(
+        [
+            item
+            for item in items
+            if item["last_finished_at"]
+        ],
+        key=lambda item: item["last_finished_at"],
+        reverse=True
+    )[:limit]
+
+    return {
+        "total_known_songs": total_known_songs,
+        "total_plays": total_plays,
+        "total_finishes": total_finishes,
+        "total_skips": total_skips,
+        "total_replays": total_replays,
+        "global_skip_rate": global_skip_rate,
+        "global_completion_rate": global_completion_rate,
+        "most_replayed": most_replayed,
+        "most_skipped": most_skipped,
+        "best_completion": best_completion,
+        "worst_skip_rate": worst_skip_rate,
+        "recently_finished": recently_finished,
+    }

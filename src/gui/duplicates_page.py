@@ -129,6 +129,13 @@ class DuplicatesPage(QWidget):
             tracks
         )
 
+        self.update_from_analysis(
+            playlist,
+            analysis
+        )
+
+    def update_from_analysis(self, playlist, analysis):
+
         self.total_songs.set_value(
             analysis["total_songs"]
         )

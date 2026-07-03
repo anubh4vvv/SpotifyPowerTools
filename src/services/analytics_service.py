@@ -2,6 +2,7 @@ from collections import Counter
 from math import log2
 
 from services.rating_service import calculate_rating_analytics
+from services.listening_history_service import get_listening_analytics
 
 
 def format_duration(total_ms):
@@ -108,7 +109,10 @@ def get_duplicate_tracks(tracks):
     display_names = {}
 
     for song in tracks:
-        key = get_track_key(song)
+
+        key = get_track_key(
+            song
+        )
 
         key_counter[key] += 1
 
@@ -117,7 +121,9 @@ def get_duplicate_tracks(tracks):
     duplicates = []
 
     for key, count in key_counter.items():
+
         if count > 1:
+
             duplicates.append(
                 (
                     display_names[key],
@@ -134,14 +140,19 @@ def get_duplicate_tracks(tracks):
 
 
 def get_oldest_and_newest_tracks(tracks):
+
     valid_tracks = []
 
     for song in tracks:
+
         if not song.release_year:
             continue
 
         try:
-            year = int(song.release_year)
+            year = int(
+                song.release_year
+            )
+
         except ValueError:
             continue
 
@@ -196,6 +207,7 @@ def calculate_health_score(
     artist_penalty = 0
 
     if top_artist_percentage > 25:
+
         artist_penalty = min(
             (top_artist_percentage - 25) * 0.8,
             20
@@ -204,6 +216,7 @@ def calculate_health_score(
     album_penalty = 0
 
     if top_album_percentage > 20:
+
         album_penalty = min(
             (top_album_percentage - 20) * 0.7,
             15
@@ -212,6 +225,7 @@ def calculate_health_score(
     diversity_penalty = 0
 
     if diversity_score < 35:
+
         diversity_penalty = min(
             (35 - diversity_score) * 0.6,
             20
@@ -231,6 +245,7 @@ def calculate_health_score(
 
 
 def get_health_status(score):
+
     if score >= 85:
         return "Excellent"
 
@@ -243,56 +258,69 @@ def get_health_status(score):
     return "Needs Work"
 
 
+def get_empty_analytics():
+    """
+    Returns a full empty analytics object.
+
+    Keeping this separate prevents missing-key errors in the GUI.
+    """
+
+    return {
+        "total_songs": 0,
+        "unique_artists": 0,
+        "unique_albums": 0,
+        "explicit_songs": 0,
+        "clean_songs": 0,
+        "explicit_percentage": 0,
+        "average_popularity": 0,
+        "total_duration": "0h 0m",
+        "average_song_length": "0m 0s",
+        "diversity_score": 0,
+        "artist_entropy_score": 0,
+        "artist_entropy_bits": 0,
+        "album_entropy_score": 0,
+        "album_entropy_bits": 0,
+        "average_rating": 0,
+        "rated_songs": 0,
+        "unrated_songs": 0,
+        "rated_percentage": 0,
+        "unrated_percentage": 0,
+        "five_star_songs": 0,
+        "low_rated_songs": 0,
+        "top_rated_tracks": [],
+        "low_rated_tracks": [],
+        "rating_distribution": [],
+        "listening_analytics": get_listening_analytics(),
+        "health_score": 0,
+        "health_status": "No Data",
+        "duplicate_count": 0,
+        "unique_duplicate_tracks": 0,
+        "duplicate_tracks": [],
+        "top_artist_name": "N/A",
+        "top_artist_count": 0,
+        "top_artist_percentage": 0,
+        "top_album_name": "N/A",
+        "top_album_count": 0,
+        "top_album_percentage": 0,
+        "oldest_song": "N/A",
+        "oldest_year": "N/A",
+        "newest_song": "N/A",
+        "newest_year": "N/A",
+        "top_artists": [],
+        "top_albums": [],
+        "release_years": [],
+    }
+
+
 def calculate_playlist_analytics(tracks):
     """
     Calculates useful analytics from a list of Song objects.
     """
 
+    tracks = tracks or []
+
     if not tracks:
-        return {
-            "total_songs": 0,
-            "unique_artists": 0,
-            "unique_albums": 0,
-            "explicit_songs": 0,
-            "clean_songs": 0,
-            "explicit_percentage": 0,
-            "average_popularity": 0,
-            "total_duration": "0h 0m",
-            "average_song_length": "0m 0s",
-            "diversity_score": 0,
-            "artist_entropy_score": 0,
-            "artist_entropy_bits": 0,
-            "album_entropy_score": 0,
-            "album_entropy_bits": 0,
-            "average_rating": 0,
-            "rated_songs": 0,
-            "unrated_songs": 0,
-            "rated_percentage": 0,
-            "unrated_percentage": 0,
-            "five_star_songs": 0,
-            "low_rated_songs": 0,
-            "top_rated_tracks": [],
-            "low_rated_tracks": [],
-            "rating_distribution": [],
-            "health_score": 0,
-            "health_status": "No Data",
-            "duplicate_count": 0,
-            "unique_duplicate_tracks": 0,
-            "duplicate_tracks": [],
-            "top_artist_name": "N/A",
-            "top_artist_count": 0,
-            "top_artist_percentage": 0,
-            "top_album_name": "N/A",
-            "top_album_count": 0,
-            "top_album_percentage": 0,
-            "oldest_song": "N/A",
-            "oldest_year": "N/A",
-            "newest_song": "N/A",
-            "newest_year": "N/A",
-            "top_artists": [],
-            "top_albums": [],
-            "release_years": [],
-        }
+        return get_empty_analytics()
 
     total_songs = len(tracks)
 
@@ -306,8 +334,13 @@ def calculate_playlist_analytics(tracks):
         for song in tracks
     ]
 
-    artist_counter = Counter(artists)
-    album_counter = Counter(albums)
+    artist_counter = Counter(
+        artists
+    )
+
+    album_counter = Counter(
+        albums
+    )
 
     top_artist_name, top_artist_count = artist_counter.most_common(1)[0]
     top_album_name, top_album_count = album_counter.most_common(1)[0]
@@ -323,7 +356,9 @@ def calculate_playlist_analytics(tracks):
     )
 
     explicit_count = sum(
-        1 for song in tracks if song.explicit
+        1
+        for song in tracks
+        if song.explicit
     )
 
     clean_count = total_songs - explicit_count
@@ -340,11 +375,14 @@ def calculate_playlist_analytics(tracks):
     ]
 
     if popularity_values:
+
         average_popularity = round(
             sum(popularity_values) / len(popularity_values),
             1
         )
+
     else:
+
         average_popularity = 0
 
     total_duration_ms = sum(
@@ -379,6 +417,8 @@ def calculate_playlist_analytics(tracks):
         tracks
     )
 
+    listening_analytics = get_listening_analytics()
+
     years = [
         song.release_year
         for song in tracks
@@ -399,16 +439,22 @@ def calculate_playlist_analytics(tracks):
     )
 
     if oldest is None:
+
         oldest_song = "N/A"
         oldest_year = "N/A"
+
     else:
+
         oldest_year, oldest_track = oldest
         oldest_song = f"{oldest_track.name} - {oldest_track.artist}"
 
     if newest is None:
+
         newest_song = "N/A"
         newest_year = "N/A"
+
     else:
+
         newest_year, newest_track = newest
         newest_song = f"{newest_track.name} - {newest_track.artist}"
 
@@ -448,6 +494,7 @@ def calculate_playlist_analytics(tracks):
         "top_rated_tracks": rating_analytics["top_rated_tracks"],
         "low_rated_tracks": rating_analytics["low_rated_tracks"],
         "rating_distribution": rating_analytics["rating_distribution"],
+        "listening_analytics": listening_analytics,
         "health_score": health_score,
         "health_status": health_status,
         "duplicate_count": duplicate_count,

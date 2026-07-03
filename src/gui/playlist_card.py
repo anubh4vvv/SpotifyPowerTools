@@ -14,54 +14,53 @@ class PlaylistCard(Card):
 
         self.setMinimumHeight(300)
 
-        grid = QGridLayout()
+        self.last_cache_key = None
 
+        grid = QGridLayout()
         grid.setSpacing(15)
 
         self.song_tile = StatTile("Songs")
-
         self.artist_tile = StatTile("Artists")
-
         self.album_tile = StatTile("Albums")
-
         self.duration_tile = StatTile("Duration")
 
-        grid.addWidget(
-            self.song_tile,
-            0,
-            0
-        )
-
-        grid.addWidget(
-            self.artist_tile,
-            0,
-            1
-        )
-
-        grid.addWidget(
-            self.album_tile,
-            1,
-            0
-        )
-
-        grid.addWidget(
-            self.duration_tile,
-            1,
-            1
-        )
+        grid.addWidget(self.song_tile, 0, 0)
+        grid.addWidget(self.artist_tile, 0, 1)
+        grid.addWidget(self.album_tile, 1, 0)
+        grid.addWidget(self.duration_tile, 1, 1)
 
         self.layout.addLayout(grid)
 
+    def make_cache_key(self, playlist, tracks):
+
+        if playlist is None:
+            return ("none", 0)
+
+        return (
+            playlist.get("id", ""),
+            playlist.get("snapshot_id", ""),
+            len(tracks or []),
+        )
+
     def update_playlist(self, playlist, tracks):
+
+        tracks = tracks or []
+
+        cache_key = self.make_cache_key(
+            playlist,
+            tracks
+        )
+
+        if cache_key == self.last_cache_key:
+            return
+
+        self.last_cache_key = cache_key
 
         if playlist is None:
 
             self.song_tile.set_value("--")
-
             self.artist_tile.set_value("--")
-
             self.album_tile.set_value("--")
-
             self.duration_tile.set_value("--")
 
             return

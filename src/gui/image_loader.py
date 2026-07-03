@@ -1,10 +1,21 @@
 import requests
 
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 
 
-# Cache for downloaded album artwork
 _IMAGE_CACHE = {}
+_SCALED_IMAGE_CACHE = {}
+
+MAX_IMAGE_CACHE_ITEMS = 250
+MAX_SCALED_CACHE_ITEMS = 500
+
+
+def trim_cache(cache, max_items):
+
+    while len(cache) > max_items:
+        oldest_key = next(iter(cache))
+        del cache[oldest_key]
 
 
 def load_pixmap(url):
@@ -16,12 +27,10 @@ def load_pixmap(url):
     if not url:
         return QPixmap()
 
-    # Already cached?
     if url in _IMAGE_CACHE:
         return _IMAGE_CACHE[url]
 
     try:
-
         response = requests.get(
             url,
             timeout=5
@@ -30,30 +39,83 @@ def load_pixmap(url):
         response.raise_for_status()
 
         pixmap = QPixmap()
-
-        pixmap.loadFromData(response.content)
+        pixmap.loadFromData(
+            response.content
+        )
 
         _IMAGE_CACHE[url] = pixmap
+
+        trim_cache(
+            _IMAGE_CACHE,
+            MAX_IMAGE_CACHE_ITEMS
+        )
 
         return pixmap
 
     except Exception:
-
         return QPixmap()
 
 
-def clear_image_cache():
+def load_scaled_pixmap(
+    url,
+    width,
+    height,
+    aspect_mode=Qt.KeepAspectRatio,
+    transform_mode=Qt.SmoothTransformation
+):
     """
-    Clears every cached image.
-    Useful if we ever implement a Refresh Cache button.
+    Loads and scales a pixmap once.
+
+    This avoids repeatedly scaling the same album artwork.
     """
 
+    if not url:
+        return QPixmap()
+
+    cache_key = (
+        url,
+        int(width),
+        int(height),
+        str(aspect_mode),
+        str(transform_mode),
+    )
+
+    if cache_key in _SCALED_IMAGE_CACHE:
+        return _SCALED_IMAGE_CACHE[cache_key]
+
+    pixmap = load_pixmap(
+        url
+    )
+
+    if pixmap.isNull():
+        return QPixmap()
+
+    scaled = pixmap.scaled(
+        width,
+        height,
+        aspect_mode,
+        transform_mode
+    )
+
+    _SCALED_IMAGE_CACHE[cache_key] = scaled
+
+    trim_cache(
+        _SCALED_IMAGE_CACHE,
+        MAX_SCALED_CACHE_ITEMS
+    )
+
+    return scaled
+
+
+def clear_image_cache():
+
     _IMAGE_CACHE.clear()
+    _SCALED_IMAGE_CACHE.clear()
 
 
 def cache_size():
-    """
-    Returns number of cached images.
-    """
 
-    return len(_IMAGE_CACHE)
+    return {
+        "original": len(_IMAGE_CACHE),
+        "scaled": len(_SCALED_IMAGE_CACHE),
+    }
