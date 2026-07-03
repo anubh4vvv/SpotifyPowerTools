@@ -27,6 +27,7 @@ def diagnose_playlist(analytics):
     top_artist_percentage = analytics["top_artist_percentage"]
     top_album_percentage = analytics["top_album_percentage"]
     explicit_percentage = analytics["explicit_percentage"]
+
     artist_entropy_score = analytics.get(
         "artist_entropy_score",
         0
@@ -263,4 +264,122 @@ def diagnose_playlist(analytics):
         "strengths": strengths,
         "warnings": warnings,
         "suggestions": suggestions,
+    }
+
+
+def get_rating_recommendations(analytics):
+    """
+    Gives focused recommendations based only on local song ratings.
+    """
+
+    total_songs = analytics.get(
+        "total_songs",
+        0
+    )
+
+    rated_songs = analytics.get(
+        "rated_songs",
+        0
+    )
+
+    unrated_songs = analytics.get(
+        "unrated_songs",
+        0
+    )
+
+    rated_percentage = analytics.get(
+        "rated_percentage",
+        0
+    )
+
+    unrated_percentage = analytics.get(
+        "unrated_percentage",
+        0
+    )
+
+    average_rating = analytics.get(
+        "average_rating",
+        0
+    )
+
+    five_star_songs = analytics.get(
+        "five_star_songs",
+        0
+    )
+
+    low_rated_songs = analytics.get(
+        "low_rated_songs",
+        0
+    )
+
+    recommendations = []
+
+    if total_songs == 0:
+        return {
+            "summary": "No rating data available yet.",
+            "recommendations": [
+                "Start playing a playlist and rate songs from the Currently Playing card."
+            ],
+        }
+
+    if rated_songs == 0:
+        return {
+            "summary": "This playlist has not been rated yet.",
+            "recommendations": [
+                "Rate at least 10 songs to make Weighted Shuffle useful.",
+                "Start with your favorite and least favorite songs.",
+                "Use 5 stars for songs you want boosted and 1-2 stars for songs you want pushed down.",
+            ],
+        }
+
+    if rated_percentage < 20:
+        summary = "Rating coverage is still low."
+    elif rated_percentage < 50:
+        summary = "Rating coverage is decent, but Weighted Shuffle can get smarter."
+    else:
+        summary = "Rating coverage is strong enough for reliable Weighted Shuffle."
+
+    if rated_percentage < 20:
+        recommendations.append(
+            "Rate more songs before relying heavily on Weighted Shuffle."
+        )
+
+    if unrated_percentage >= 50:
+        recommendations.append(
+            f"{unrated_songs} songs are still unrated. Rate more songs to improve personalization."
+        )
+
+    if five_star_songs < 5:
+        recommendations.append(
+            "Add more 5-star ratings so the app knows your strongest favorites."
+        )
+
+    if low_rated_songs > 0:
+        recommendations.append(
+            f"{low_rated_songs} low-rated songs are in this playlist. Consider removing them or letting Weighted Shuffle push them down."
+        )
+
+    if average_rating >= 4 and rated_percentage >= 30:
+        recommendations.append(
+            "This playlist matches your taste well. Weighted Shuffle is a good profile to use."
+        )
+
+    if average_rating < 3 and rated_songs >= 5:
+        recommendations.append(
+            "Average rating is low. This playlist may need cleanup or better song selection."
+        )
+
+    if rated_percentage >= 50 and five_star_songs >= 5:
+        recommendations.append(
+            "You have enough rating data for strong personalized shuffle behavior."
+        )
+
+    if not recommendations:
+        recommendations.append(
+            "Keep rating songs as you listen to make the app smarter over time."
+        )
+
+    return {
+        "summary": summary,
+        "recommendations": recommendations,
     }

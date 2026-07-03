@@ -12,9 +12,13 @@ from gui.card import Card
 from gui.stat_tile import StatTile
 from gui.bar_chart_card import BarChartCard
 from gui.health_score_card import HealthScoreCard
-
 from gui.playlist_doctor_card import PlaylistDoctorCard
-from services.playlist_doctor_service import diagnose_playlist
+from gui.rating_recommendations_card import RatingRecommendationsCard
+
+from services.playlist_doctor_service import (
+    diagnose_playlist,
+    get_rating_recommendations,
+)
 
 from services.analytics_service import calculate_playlist_analytics
 
@@ -45,7 +49,7 @@ class AnalyticsPage(QWidget):
         title.setObjectName("SectionTitle")
 
         subtitle = QLabel(
-            "Understand the health, balance, and structure of the playlist you are currently listening to."
+            "Understand the health, balance, structure, and rating intelligence of the playlist you are currently listening to."
         )
         subtitle.setStyleSheet(
             "color:#A0A0A0; font-size:11pt;"
@@ -74,10 +78,12 @@ class AnalyticsPage(QWidget):
         self.average_song_length = StatTile("Avg Length")
         self.explicit_songs = StatTile("Explicit")
         self.clean_songs = StatTile("Clean")
+
         self.artist_entropy = StatTile("Artist Entropy")
         self.album_entropy = StatTile("Album Entropy")
         self.average_rating = StatTile("Avg Rating")
         self.rated_songs = StatTile("Rated")
+
         self.unrated_songs = StatTile("Unrated")
         self.five_star_songs = StatTile("5-Star")
 
@@ -95,6 +101,7 @@ class AnalyticsPage(QWidget):
         stats_grid.addWidget(self.average_song_length, 2, 1)
         stats_grid.addWidget(self.explicit_songs, 2, 2)
         stats_grid.addWidget(self.clean_songs, 2, 3)
+
         stats_grid.addWidget(self.artist_entropy, 3, 0)
         stats_grid.addWidget(self.album_entropy, 3, 1)
         stats_grid.addWidget(self.average_rating, 3, 2)
@@ -104,6 +111,9 @@ class AnalyticsPage(QWidget):
         stats_grid.addWidget(self.five_star_songs, 4, 1)
 
         layout.addLayout(stats_grid)
+
+        # ---------- Smart Cards ----------
+
         self.health_visual_card = HealthScoreCard()
 
         layout.addWidget(
@@ -116,6 +126,12 @@ class AnalyticsPage(QWidget):
             self.playlist_doctor_card
         )
 
+        self.rating_recommendations_card = RatingRecommendationsCard()
+
+        layout.addWidget(
+            self.rating_recommendations_card
+        )
+
         # ---------- Chart Cards ----------
 
         charts_grid = QGridLayout()
@@ -125,12 +141,15 @@ class AnalyticsPage(QWidget):
         self.top_albums_chart = BarChartCard("Top Albums")
         self.release_years_chart = BarChartCard("Release Years")
         self.clean_explicit_chart = BarChartCard("Clean vs Explicit")
+        self.rating_distribution_chart = BarChartCard("Rating Distribution")
 
         charts_grid.addWidget(self.top_artists_chart, 0, 0)
         charts_grid.addWidget(self.top_albums_chart, 0, 1)
 
         charts_grid.addWidget(self.release_years_chart, 1, 0)
         charts_grid.addWidget(self.clean_explicit_chart, 1, 1)
+
+        charts_grid.addWidget(self.rating_distribution_chart, 2, 0, 1, 2)
 
         layout.addLayout(charts_grid)
 
@@ -283,6 +302,14 @@ class AnalyticsPage(QWidget):
             diagnosis
         )
 
+        rating_recommendations = get_rating_recommendations(
+            analytics
+        )
+
+        self.rating_recommendations_card.update_recommendations(
+            rating_recommendations
+        )
+
         self.top_artists_chart.set_data(
             analytics["top_artists"]
         )
@@ -305,6 +332,10 @@ class AnalyticsPage(QWidget):
                 analytics["explicit_songs"]
             ),
         ])
+
+        self.rating_distribution_chart.set_data(
+            analytics["rating_distribution"]
+        )
 
         self.duplicates_label.setText(
             self.format_duplicate_list(
