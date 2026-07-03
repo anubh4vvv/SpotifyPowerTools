@@ -65,6 +65,13 @@ class MainWindow(QMainWindow):
         self.history_active_started_at = None
         self.history_previous_track_key = None
 
+        self.last_current_playback = None
+
+        self.cached_playlist = None
+        self.cached_tracks = []
+        self.last_playlist_refresh_at = 0
+        self.playlist_refresh_interval = 8
+
         self.search_thread = None
         self.search_worker = None
 
@@ -165,6 +172,15 @@ class MainWindow(QMainWindow):
         self.timer.timeout.connect(self.refresh)
         self.timer.start(1000)
 
+        self.slow_timer = QTimer(self)
+        self.slow_timer.timeout.connect(self.slow_refresh)
+        self.slow_timer.start(8000)
+
+        QTimer.singleShot(
+            300,
+            self.slow_refresh
+        )
+
         self.dashboard.shuffle_panel.preview_button.clicked.connect(
             self.preview_shuffle
         )
@@ -243,6 +259,11 @@ class MainWindow(QMainWindow):
             "Dashboard"
         )
 
+        QTimer.singleShot(
+            0,
+            self.load_dashboard_playlist
+        )
+
     def show_smart_shuffle(self):
 
         self.sidebar.set_active_button(
@@ -271,11 +292,13 @@ class MainWindow(QMainWindow):
             self.analytics_page
         )
 
-        playlist, tracks = self.controller.current_playlist()
+        self.status_bar.set_message(
+            "Analytics • Loading..."
+        )
 
-        self.analytics_page.update_analytics(
-            playlist,
-            tracks
+        QTimer.singleShot(
+            0,
+            self.load_analytics_page
         )
 
         if playlist is not None:
@@ -297,21 +320,14 @@ class MainWindow(QMainWindow):
             self.duplicates_page
         )
 
-        playlist, tracks = self.controller.current_playlist()
-
-        self.duplicates_page.update_duplicates(
-            playlist,
-            tracks
+        self.status_bar.set_message(
+            "Duplicates • Loading..."
         )
 
-        if playlist is not None:
-            self.status_bar.set_message(
-                f"Duplicates • {playlist['name']}"
-            )
-        else:
-            self.status_bar.set_message(
-                "Duplicates • No playlist currently playing"
-            )
+        QTimer.singleShot(
+            0,
+            self.load_duplicates_page
+        )
 
     def show_queue(self):
 
@@ -643,6 +659,151 @@ class MainWindow(QMainWindow):
             "Settings saved"
         )
 
+    def update_cached_playlist(self, force=False):
+
+        now = time.monotonic()
+
+        cache_is_fresh = (
+                self.last_playlist_refresh_at > 0
+                and now - self.last_playlist_refresh_at < self.playlist_refresh_interval
+        )
+
+        if not force and cache_is_fresh:
+            return self.cached_playlist, self.cached_tracks
+
+        current = self.last_current_playback
+
+        if current is None:
+            self.cached_playlist = None
+            self.cached_tracks = []
+            self.last_playlist_refresh_at = now
+
+            return self.cached_playlist, self.cached_tracks
+
+        playlist, tracks = self.controller.current_playlist(
+            current
+        )
+
+        self.cached_playlist = playlist
+        self.cached_tracks = tracks
+        self.last_playlist_refresh_at = now
+
+        return playlist, tracks
+
+    def update_dashboard_playlist_from_cache(self):
+
+        playlist = self.cached_playlist
+        tracks = self.cached_tracks
+
+        self.dashboard.playlist_card.update_playlist(
+            playlist,
+            tracks
+        )
+
+        if self.stack.currentWidget() != self.dashboard:
+            return
+
+        if playlist is not None:
+            self.status_bar.set_message(
+                f"Connected • Playlist: {playlist['name']} • {len(tracks)} songs"
+            )
+        else:
+            self.status_bar.set_message(
+                "Connected • No playlist currently playing"
+            )
+
+    def update_analytics_from_cache(self):
+
+        playlist = self.cached_playlist
+        tracks = self.cached_tracks
+
+        self.analytics_page.update_analytics(
+            playlist,
+            tracks
+        )
+
+        if playlist is not None:
+            self.status_bar.set_message(
+                f"Analytics • {playlist['name']}"
+            )
+        else:
+            self.status_bar.set_message(
+                "Analytics • No playlist currently playing"
+            )
+
+    def update_duplicates_from_cache(self):
+
+        if self.duplicates_page.is_busy:
+            return
+
+        playlist = self.cached_playlist
+        tracks = self.cached_tracks
+
+        self.duplicates_page.update_duplicates(
+            playlist,
+            tracks
+        )
+
+        if playlist is not None:
+            self.status_bar.set_message(
+                f"Duplicates • {playlist['name']}"
+            )
+        else:
+            self.status_bar.set_message(
+                "Duplicates • No playlist currently playing"
+            )
+
+    def load_dashboard_playlist(self):
+
+        self.update_cached_playlist(
+            force=False
+        )
+
+        self.update_dashboard_playlist_from_cache()
+
+    def load_analytics_page(self):
+
+        self.update_cached_playlist(
+            force=False
+        )
+
+        self.update_analytics_from_cache()
+
+    def load_duplicates_page(self):
+
+        self.update_cached_playlist(
+            force=False
+        )
+
+        self.update_duplicates_from_cache()
+
+    def slow_refresh(self):
+
+        try:
+            self.update_cached_playlist(
+                force=True
+            )
+
+            current_page = self.stack.currentWidget()
+
+            if current_page == self.dashboard:
+
+                self.update_dashboard_playlist_from_cache()
+
+            elif current_page == self.analytics_page:
+
+                self.update_analytics_from_cache()
+
+            elif current_page == self.duplicates_page:
+
+                self.update_duplicates_from_cache()
+
+        except Exception as error:
+
+            self.status_bar.set_message(
+                f"Slow refresh error: {error}"
+            )
+
     def record_listening_history(self, current):
 
         if current is None:
@@ -879,15 +1040,22 @@ class MainWindow(QMainWindow):
         try:
             current = self.controller.current_playback()
 
+            self.last_current_playback = current
+
             self.header.set_connected(
                 current is not None
             )
 
-            self.update_current_track_metadata(
+            self.record_listening_history(
                 current
             )
 
-            self.record_listening_history(
+            current_page = self.stack.currentWidget()
+
+            if current_page != self.dashboard:
+                return
+
+            self.update_current_track_metadata(
                 current
             )
 
@@ -914,42 +1082,10 @@ class MainWindow(QMainWindow):
                 current
             )
 
-            current_page = self.stack.currentWidget()
-
-            playlist, tracks = (
-                self.controller.current_playlist()
-            )
-
-            if current_page == self.dashboard:
-
-                self.dashboard.playlist_card.update_playlist(
-                    playlist,
-                    tracks
+            if current is None:
+                self.status_bar.set_message(
+                    "Spotify not currently playing"
                 )
-
-                if playlist is not None:
-                    self.status_bar.set_message(
-                        f"Connected • Playlist: {playlist['name']} • {len(tracks)} songs"
-                    )
-                else:
-                    self.status_bar.set_message(
-                        "Connected • No playlist currently playing"
-                    )
-
-            elif current_page == self.analytics_page:
-
-                self.analytics_page.update_analytics(
-                    playlist,
-                    tracks
-                )
-
-            elif current_page == self.duplicates_page:
-
-                if not self.duplicates_page.is_busy:
-                    self.duplicates_page.update_duplicates(
-                        playlist,
-                        tracks
-                    )
 
         except Exception as error:
 
@@ -970,6 +1106,11 @@ class MainWindow(QMainWindow):
 
             self.refresh()
 
+            QTimer.singleShot(
+                300,
+                self.slow_refresh
+            )
+
         except Exception as error:
 
             QMessageBox.critical(
@@ -988,6 +1129,11 @@ class MainWindow(QMainWindow):
             )
 
             self.refresh()
+
+            QTimer.singleShot(
+                300,
+                self.slow_refresh
+            )
 
         except Exception as error:
 
@@ -1143,6 +1289,11 @@ class MainWindow(QMainWindow):
 
             self.refresh()
 
+            QTimer.singleShot(
+                300,
+                self.slow_refresh
+            )
+
         except Exception as error:
 
             QMessageBox.critical(
@@ -1183,6 +1334,11 @@ class MainWindow(QMainWindow):
 
             self.refresh()
 
+            QTimer.singleShot(
+                300,
+                self.slow_refresh
+            )
+
         except Exception as error:
 
             QMessageBox.critical(
@@ -1214,6 +1370,11 @@ class MainWindow(QMainWindow):
             )
 
             self.refresh()
+
+            QTimer.singleShot(
+                300,
+                self.slow_refresh
+            )
 
         except Exception as error:
 

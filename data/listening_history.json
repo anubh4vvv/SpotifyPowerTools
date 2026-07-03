@@ -792,6 +792,65 @@
             "album": "Dizzy up the Girl",
             "created_at": "2026-07-03T10:36:45.108419+00:00",
             "previous_track_key": "6RUKPb4LETWmmr3iAEQktW"
+        },
+        {
+            "type": "finished",
+            "track_key": "6Qyc6fS4DsZjB2mRW9DsQs",
+            "song_name": "Iris",
+            "artist": "The Goo Goo Dolls",
+            "album": "Dizzy up the Girl",
+            "duration_ms": 289533,
+            "max_progress_ms": 288904,
+            "last_progress_ms": 288904,
+            "played_ms": 289323,
+            "completion_ratio": 0.998,
+            "created_at": "2026-07-03T10:41:34.430379+00:00"
+        },
+        {
+            "type": "replayed",
+            "track_key": "6Qyc6fS4DsZjB2mRW9DsQs",
+            "track_id": "6Qyc6fS4DsZjB2mRW9DsQs",
+            "track_uri": "spotify:track:6Qyc6fS4DsZjB2mRW9DsQs",
+            "song_name": "Iris",
+            "artist": "The Goo Goo Dolls",
+            "album": "Dizzy up the Girl",
+            "created_at": "2026-07-03T10:41:34.433113+00:00",
+            "previous_track_key": "6Qyc6fS4DsZjB2mRW9DsQs"
+        },
+        {
+            "type": "finished",
+            "track_key": "6Qyc6fS4DsZjB2mRW9DsQs",
+            "song_name": "Iris",
+            "artist": "The Goo Goo Dolls",
+            "album": "Dizzy up the Girl",
+            "duration_ms": 289533,
+            "max_progress_ms": 288609,
+            "last_progress_ms": 288550,
+            "played_ms": 290293,
+            "completion_ratio": 0.997,
+            "created_at": "2026-07-03T10:46:24.723801+00:00"
+        },
+        {
+            "type": "replayed",
+            "track_key": "6Qyc6fS4DsZjB2mRW9DsQs",
+            "track_id": "6Qyc6fS4DsZjB2mRW9DsQs",
+            "track_uri": "spotify:track:6Qyc6fS4DsZjB2mRW9DsQs",
+            "song_name": "Iris",
+            "artist": "The Goo Goo Dolls",
+            "album": "Dizzy up the Girl",
+            "created_at": "2026-07-03T10:46:24.726571+00:00",
+            "previous_track_key": "6Qyc6fS4DsZjB2mRW9DsQs"
+        },
+        {
+            "type": "replayed",
+            "track_key": "6Qyc6fS4DsZjB2mRW9DsQs",
+            "track_id": "6Qyc6fS4DsZjB2mRW9DsQs",
+            "track_uri": "spotify:track:6Qyc6fS4DsZjB2mRW9DsQs",
+            "song_name": "Iris",
+            "artist": "The Goo Goo Dolls",
+            "album": "Dizzy up the Girl",
+            "created_at": "2026-07-03T10:47:10.791642+00:00",
+            "previous_track_key": ""
         }
     ],
     "tracks": {
@@ -1414,16 +1473,16 @@
             "song_name": "Iris",
             "artist": "The Goo Goo Dolls",
             "album": "Dizzy up the Girl",
-            "play_count": 1,
-            "finish_count": 0,
+            "play_count": 4,
+            "finish_count": 2,
             "skip_count": 0,
-            "replay_count": 0,
-            "total_played_ms": 0,
-            "last_played_at": "2026-07-03T10:36:45.108419+00:00",
-            "last_finished_at": "",
+            "replay_count": 3,
+            "total_played_ms": 579616,
+            "last_played_at": "2026-07-03T10:47:10.791642+00:00",
+            "last_finished_at": "2026-07-03T10:46:24.723801+00:00",
             "last_skipped_at": "",
-            "last_replayed_at": "",
-            "last_event": "started"
+            "last_replayed_at": "2026-07-03T10:47:10.791642+00:00",
+            "last_event": "replayed"
         }
     }
 }
