@@ -27,6 +27,15 @@ def diagnose_playlist(analytics):
     top_artist_percentage = analytics["top_artist_percentage"]
     top_album_percentage = analytics["top_album_percentage"]
     explicit_percentage = analytics["explicit_percentage"]
+    artist_entropy_score = analytics.get(
+        "artist_entropy_score",
+        0
+    )
+
+    album_entropy_score = analytics.get(
+        "album_entropy_score",
+        0
+    )
 
     # ---------- Health Summary ----------
 
@@ -71,6 +80,16 @@ def diagnose_playlist(analytics):
             "Playlist includes a wide range of artists."
         )
 
+    if artist_entropy_score >= 75:
+        strengths.append(
+            f"Strong artist entropy at {artist_entropy_score}%."
+        )
+
+    if album_entropy_score >= 75:
+        strengths.append(
+            f"Strong album entropy at {album_entropy_score}%."
+        )
+
     if not strengths:
         strengths.append(
             "The playlist has enough data for deeper analysis."
@@ -96,6 +115,16 @@ def diagnose_playlist(analytics):
     if diversity_score < 35:
         warnings.append(
             f"Artist diversity is low at {diversity_score}%."
+        )
+
+    if artist_entropy_score < 55:
+        warnings.append(
+            f"Artist entropy is low at {artist_entropy_score}%."
+        )
+
+    if album_entropy_score < 55:
+        warnings.append(
+            f"Album entropy is low at {album_entropy_score}%."
         )
 
     if total_songs < 30:
@@ -142,6 +171,16 @@ def diagnose_playlist(analytics):
     if diversity_score < 35:
         suggestions.append(
             "Add more unique artists to improve playlist diversity."
+        )
+
+    if artist_entropy_score < 55:
+        suggestions.append(
+            "Add songs from underrepresented artists to make playback less predictable."
+        )
+
+    if album_entropy_score < 55:
+        suggestions.append(
+            "Add songs from more albums so the playlist feels less repetitive."
         )
 
     if total_songs < 30:

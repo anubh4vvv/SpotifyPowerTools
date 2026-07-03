@@ -1,4 +1,5 @@
 from collections import Counter
+from math import log2
 
 
 def format_duration(total_ms):
@@ -27,6 +28,53 @@ def safe_percentage(part, total):
         (part / total) * 100,
         1
     )
+
+
+def calculate_entropy_score(values):
+    """
+    Calculates normalized Shannon entropy from 0 to 100.
+
+    0 means very repetitive.
+    100 means evenly spread across categories.
+    """
+
+    if not values:
+        return 0, 0
+
+    counter = Counter(values)
+
+    total = len(values)
+
+    unique_count = len(counter)
+
+    if unique_count <= 1:
+        return 0, 0
+
+    entropy = 0
+
+    for count in counter.values():
+
+        probability = count / total
+
+        entropy -= probability * log2(
+            probability
+        )
+
+    max_entropy = log2(
+        unique_count
+    )
+
+    entropy_score = round(
+        (entropy / max_entropy) * 100,
+        1
+    )
+
+    entropy_bits = round(
+        entropy,
+        2
+    )
+
+    return entropy_score, entropy_bits
 
 
 def get_track_key(song):
@@ -210,6 +258,10 @@ def calculate_playlist_analytics(tracks):
             "total_duration": "0h 0m",
             "average_song_length": "0m 0s",
             "diversity_score": 0,
+            "artist_entropy_score": 0,
+            "artist_entropy_bits": 0,
+            "album_entropy_score": 0,
+            "album_entropy_bits": 0,
             "health_score": 0,
             "health_status": "No Data",
             "duplicate_count": 0,
@@ -303,6 +355,14 @@ def calculate_playlist_analytics(tracks):
         1
     )
 
+    artist_entropy_score, artist_entropy_bits = calculate_entropy_score(
+        artists
+    )
+
+    album_entropy_score, album_entropy_bits = calculate_entropy_score(
+        albums
+    )
+
     years = [
         song.release_year
         for song in tracks
@@ -358,6 +418,10 @@ def calculate_playlist_analytics(tracks):
         "total_duration": format_duration(total_duration_ms),
         "average_song_length": format_song_length(average_duration_ms),
         "diversity_score": diversity_score,
+        "artist_entropy_score": artist_entropy_score,
+        "artist_entropy_bits": artist_entropy_bits,
+        "album_entropy_score": album_entropy_score,
+        "album_entropy_bits": album_entropy_bits,
         "health_score": health_score,
         "health_status": health_status,
         "duplicate_count": duplicate_count,

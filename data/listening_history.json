@@ -196,5 +196,23 @@
         "artist": "Sukshinder Shinda",
         "album": "Moving & Grooving",
         "played_at": "2026-07-02T15:49:22.551616+00:00"
+    },
+    {
+        "track_id": "3hxIUxnT27p5WcmjGUXNwx",
+        "track_uri": "spotify:track:3hxIUxnT27p5WcmjGUXNwx",
+        "track_key": "3hxIUxnT27p5WcmjGUXNwx",
+        "song_name": "Shut up My Moms Calling",
+        "artist": "Hotel Ugly",
+        "album": "Shut up My Moms Calling",
+        "played_at": "2026-07-02T15:54:35.994796+00:00"
+    },
+    {
+        "track_id": "0MOpqmiPfNDRNpDLJlPIy4",
+        "track_uri": "spotify:track:0MOpqmiPfNDRNpDLJlPIy4",
+        "track_key": "0MOpqmiPfNDRNpDLJlPIy4",
+        "song_name": "Diet Mountain Dew",
+        "artist": "dreamsoda",
+        "album": "Diet Mountain Dew",
+        "played_at": "2026-07-03T09:42:05.765804+00:00"
     }
 ]

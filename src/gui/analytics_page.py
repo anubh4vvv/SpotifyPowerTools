@@ -74,6 +74,8 @@ class AnalyticsPage(QWidget):
         self.average_song_length = StatTile("Avg Length")
         self.explicit_songs = StatTile("Explicit")
         self.clean_songs = StatTile("Clean")
+        self.artist_entropy = StatTile("Artist Entropy")
+        self.album_entropy = StatTile("Album Entropy")
 
         stats_grid.addWidget(self.total_songs, 0, 0)
         stats_grid.addWidget(self.unique_artists, 0, 1)
@@ -89,6 +91,8 @@ class AnalyticsPage(QWidget):
         stats_grid.addWidget(self.average_song_length, 2, 1)
         stats_grid.addWidget(self.explicit_songs, 2, 2)
         stats_grid.addWidget(self.clean_songs, 2, 3)
+        stats_grid.addWidget(self.artist_entropy, 3, 0)
+        stats_grid.addWidget(self.album_entropy, 3, 1)
 
         layout.addLayout(stats_grid)
         self.health_visual_card = HealthScoreCard()
@@ -224,6 +228,14 @@ class AnalyticsPage(QWidget):
             analytics["clean_songs"]
         )
 
+        self.artist_entropy.set_value(
+            f"{analytics['artist_entropy_score']}%"
+        )
+
+        self.album_entropy.set_value(
+            f"{analytics['album_entropy_score']}%"
+        )
+
         self.health_visual_card.update_health(
             analytics["health_score"],
             analytics["health_status"],
@@ -306,7 +318,12 @@ class AnalyticsPage(QWidget):
             f"Top Album:\n"
             f"{analytics['top_album_name']}\n"
             f"{analytics['top_album_count']} songs "
-            f"({analytics['top_album_percentage']}%)"
+            f"({analytics['top_album_percentage']}%)\n\n"
+            f"Entropy:\n"
+            f"Artist Entropy: {analytics['artist_entropy_score']}% "
+            f"({analytics['artist_entropy_bits']} bits)\n"
+            f"Album Entropy: {analytics['album_entropy_score']}% "
+            f"({analytics['album_entropy_bits']} bits)"
         )
 
     def format_age_info(self, analytics):
