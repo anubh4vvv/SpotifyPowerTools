@@ -76,6 +76,10 @@ class AnalyticsPage(QWidget):
         self.clean_songs = StatTile("Clean")
         self.artist_entropy = StatTile("Artist Entropy")
         self.album_entropy = StatTile("Album Entropy")
+        self.average_rating = StatTile("Avg Rating")
+        self.rated_songs = StatTile("Rated")
+        self.unrated_songs = StatTile("Unrated")
+        self.five_star_songs = StatTile("5-Star")
 
         stats_grid.addWidget(self.total_songs, 0, 0)
         stats_grid.addWidget(self.unique_artists, 0, 1)
@@ -93,6 +97,11 @@ class AnalyticsPage(QWidget):
         stats_grid.addWidget(self.clean_songs, 2, 3)
         stats_grid.addWidget(self.artist_entropy, 3, 0)
         stats_grid.addWidget(self.album_entropy, 3, 1)
+        stats_grid.addWidget(self.average_rating, 3, 2)
+        stats_grid.addWidget(self.rated_songs, 3, 3)
+
+        stats_grid.addWidget(self.unrated_songs, 4, 0)
+        stats_grid.addWidget(self.five_star_songs, 4, 1)
 
         layout.addLayout(stats_grid)
         self.health_visual_card = HealthScoreCard()
@@ -133,10 +142,12 @@ class AnalyticsPage(QWidget):
         self.duplicates_card = Card("Duplicate Tracks")
         self.dominance_card = Card("Dominance")
         self.age_card = Card("Oldest / Newest")
+        self.rating_card = Card("Rating Insights")
 
         self.duplicates_label = self.make_text_label()
         self.dominance_label = self.make_text_label()
         self.age_label = self.make_text_label()
+        self.rating_label = self.make_text_label()
 
         self.duplicates_card.layout.addWidget(
             self.duplicates_label
@@ -150,9 +161,14 @@ class AnalyticsPage(QWidget):
             self.age_label
         )
 
+        self.rating_card.layout.addWidget(
+            self.rating_label
+        )
+
         insight_grid.addWidget(self.duplicates_card, 0, 0)
         insight_grid.addWidget(self.dominance_card, 0, 1)
         insight_grid.addWidget(self.age_card, 0, 2)
+        insight_grid.addWidget(self.rating_card, 1, 0, 1, 3)
 
         layout.addLayout(insight_grid)
         layout.addStretch()
@@ -236,6 +252,22 @@ class AnalyticsPage(QWidget):
             f"{analytics['album_entropy_score']}%"
         )
 
+        self.average_rating.set_value(
+            f"{analytics['average_rating']}/5"
+        )
+
+        self.rated_songs.set_value(
+            f"{analytics['rated_songs']} ({analytics['rated_percentage']}%)"
+        )
+
+        self.unrated_songs.set_value(
+            f"{analytics['unrated_songs']} ({analytics['unrated_percentage']}%)"
+        )
+
+        self.five_star_songs.set_value(
+            analytics["five_star_songs"]
+        )
+
         self.health_visual_card.update_health(
             analytics["health_score"],
             analytics["health_status"],
@@ -292,6 +324,12 @@ class AnalyticsPage(QWidget):
             )
         )
 
+        self.rating_label.setText(
+            self.format_rating_info(
+                analytics
+            )
+        )
+
     def format_duplicate_list(self, duplicates):
 
         if not duplicates:
@@ -335,4 +373,72 @@ class AnalyticsPage(QWidget):
             f"Newest:\n"
             f"{analytics['newest_song']}\n"
             f"Year: {analytics['newest_year']}"
+        )
+
+    def format_rating_info(self, analytics):
+
+        lines = []
+
+        lines.append(
+            f"Average Rating: {analytics['average_rating']}/5"
+        )
+
+        lines.append(
+            f"Rated Songs: {analytics['rated_songs']} "
+            f"({analytics['rated_percentage']}%)"
+        )
+
+        lines.append(
+            f"Unrated Songs: {analytics['unrated_songs']} "
+            f"({analytics['unrated_percentage']}%)"
+        )
+
+        lines.append(
+            f"5-Star Songs: {analytics['five_star_songs']}"
+        )
+
+        lines.append(
+            f"Low-Rated Songs: {analytics['low_rated_songs']}"
+        )
+
+        lines.append("")
+        lines.append("Top Rated:")
+
+        top_tracks = analytics["top_rated_tracks"]
+
+        if not top_tracks:
+            lines.append(
+                "No rated songs yet."
+            )
+        else:
+            for index, item in enumerate(
+                    top_tracks,
+                    start=1
+            ):
+                lines.append(
+                    f"{index}. {item['name']} - {item['artist']} "
+                    f"({item['rating']}/5)"
+                )
+
+        lines.append("")
+        lines.append("Low Rated:")
+
+        low_tracks = analytics["low_rated_tracks"]
+
+        if not low_tracks:
+            lines.append(
+                "No low-rated songs found."
+            )
+        else:
+            for index, item in enumerate(
+                    low_tracks,
+                    start=1
+            ):
+                lines.append(
+                    f"{index}. {item['name']} - {item['artist']} "
+                    f"({item['rating']}/5)"
+                )
+
+        return "\n".join(
+            lines
         )

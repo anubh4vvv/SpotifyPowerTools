@@ -1,7 +1,7 @@
 {
     "queue_size": 25,
-    "shuffle_profile": "Discovery",
-    "artist_weight": 80,
-    "album_weight": 63,
-    "randomness": 85
+    "shuffle_profile": "Weighted",
+    "artist_weight": 50,
+    "album_weight": 50,
+    "randomness": 50
 }

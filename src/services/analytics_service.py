@@ -1,6 +1,8 @@
 from collections import Counter
 from math import log2
 
+from services.rating_service import calculate_rating_analytics
+
 
 def format_duration(total_ms):
     total_seconds = total_ms // 1000
@@ -262,6 +264,16 @@ def calculate_playlist_analytics(tracks):
             "artist_entropy_bits": 0,
             "album_entropy_score": 0,
             "album_entropy_bits": 0,
+            "average_rating": 0,
+            "rated_songs": 0,
+            "unrated_songs": 0,
+            "rated_percentage": 0,
+            "unrated_percentage": 0,
+            "five_star_songs": 0,
+            "low_rated_songs": 0,
+            "top_rated_tracks": [],
+            "low_rated_tracks": [],
+            "rating_distribution": [],
             "health_score": 0,
             "health_status": "No Data",
             "duplicate_count": 0,
@@ -363,6 +375,10 @@ def calculate_playlist_analytics(tracks):
         albums
     )
 
+    rating_analytics = calculate_rating_analytics(
+        tracks
+    )
+
     years = [
         song.release_year
         for song in tracks
@@ -422,6 +438,16 @@ def calculate_playlist_analytics(tracks):
         "artist_entropy_bits": artist_entropy_bits,
         "album_entropy_score": album_entropy_score,
         "album_entropy_bits": album_entropy_bits,
+        "average_rating": rating_analytics["average_rating"],
+        "rated_songs": rating_analytics["rated_songs"],
+        "unrated_songs": rating_analytics["unrated_songs"],
+        "rated_percentage": rating_analytics["rated_percentage"],
+        "unrated_percentage": rating_analytics["unrated_percentage"],
+        "five_star_songs": rating_analytics["five_star_songs"],
+        "low_rated_songs": rating_analytics["low_rated_songs"],
+        "top_rated_tracks": rating_analytics["top_rated_tracks"],
+        "low_rated_tracks": rating_analytics["low_rated_tracks"],
+        "rating_distribution": rating_analytics["rating_distribution"],
         "health_score": health_score,
         "health_status": health_status,
         "duplicate_count": duplicate_count,

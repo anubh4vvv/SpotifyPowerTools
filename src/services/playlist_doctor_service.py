@@ -37,6 +37,31 @@ def diagnose_playlist(analytics):
         0
     )
 
+    rated_percentage = analytics.get(
+        "rated_percentage",
+        0
+    )
+
+    unrated_percentage = analytics.get(
+        "unrated_percentage",
+        0
+    )
+
+    average_rating = analytics.get(
+        "average_rating",
+        0
+    )
+
+    low_rated_songs = analytics.get(
+        "low_rated_songs",
+        0
+    )
+
+    five_star_songs = analytics.get(
+        "five_star_songs",
+        0
+    )
+
     # ---------- Health Summary ----------
 
     if health_score >= 85:
@@ -90,6 +115,21 @@ def diagnose_playlist(analytics):
             f"Strong album entropy at {album_entropy_score}%."
         )
 
+    if rated_percentage >= 40:
+        strengths.append(
+            f"{rated_percentage}% of this playlist has been rated."
+        )
+
+    if average_rating >= 4:
+        strengths.append(
+            f"Strong average rating of {average_rating}/5."
+        )
+
+    if five_star_songs > 0:
+        strengths.append(
+            f"{five_star_songs} five-star songs found."
+        )
+
     if not strengths:
         strengths.append(
             "The playlist has enough data for deeper analysis."
@@ -125,6 +165,16 @@ def diagnose_playlist(analytics):
     if album_entropy_score < 55:
         warnings.append(
             f"Album entropy is low at {album_entropy_score}%."
+        )
+
+    if unrated_percentage >= 70:
+        warnings.append(
+            f"{unrated_percentage}% of this playlist is still unrated."
+        )
+
+    if low_rated_songs > 0:
+        warnings.append(
+            f"{low_rated_songs} low-rated songs are still in this playlist."
         )
 
     if total_songs < 30:
@@ -181,6 +231,16 @@ def diagnose_playlist(analytics):
     if album_entropy_score < 55:
         suggestions.append(
             "Add songs from more albums so the playlist feels less repetitive."
+        )
+
+    if unrated_percentage >= 70:
+        suggestions.append(
+            "Rate more songs to improve Weighted Shuffle accuracy."
+        )
+
+    if low_rated_songs > 0:
+        suggestions.append(
+            "Consider removing or downranking low-rated songs."
         )
 
     if total_songs < 30:
