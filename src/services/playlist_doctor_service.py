@@ -269,7 +269,7 @@ def diagnose_playlist(analytics):
 
 def get_rating_recommendations(analytics):
     """
-    Gives focused recommendations based only on local song ratings.
+    Gives focused recommendations based on ratings and listening memory.
     """
 
     total_songs = analytics.get(
@@ -312,6 +312,31 @@ def get_rating_recommendations(analytics):
         0
     )
 
+    listening = analytics.get(
+        "listening_analytics",
+        {}
+    )
+
+    global_skip_rate = listening.get(
+        "global_skip_rate",
+        0
+    )
+
+    global_completion_rate = listening.get(
+        "global_completion_rate",
+        0
+    )
+
+    most_skipped = listening.get(
+        "most_skipped",
+        []
+    )
+
+    most_replayed = listening.get(
+        "most_replayed",
+        []
+    )
+
     recommendations = []
 
     if total_songs == 0:
@@ -329,15 +354,16 @@ def get_rating_recommendations(analytics):
                 "Rate at least 10 songs to make Weighted Shuffle useful.",
                 "Start with your favorite and least favorite songs.",
                 "Use 5 stars for songs you want boosted and 1-2 stars for songs you want pushed down.",
+                "Use Adaptive Shuffle after listening for a while so the app can learn skips and replays.",
             ],
         }
 
     if rated_percentage < 20:
         summary = "Rating coverage is still low."
     elif rated_percentage < 50:
-        summary = "Rating coverage is decent, but Weighted Shuffle can get smarter."
+        summary = "Rating coverage is decent, but personalization can get smarter."
     else:
-        summary = "Rating coverage is strong enough for reliable Weighted Shuffle."
+        summary = "Rating coverage is strong enough for reliable personalized shuffle."
 
     if rated_percentage < 20:
         recommendations.append(
@@ -356,17 +382,47 @@ def get_rating_recommendations(analytics):
 
     if low_rated_songs > 0:
         recommendations.append(
-            f"{low_rated_songs} low-rated songs are in this playlist. Consider removing them or letting Weighted Shuffle push them down."
+            f"{low_rated_songs} low-rated songs are in this playlist. Consider removing them or letting Weighted/Adaptive Shuffle push them down."
         )
 
     if average_rating >= 4 and rated_percentage >= 30:
         recommendations.append(
-            "This playlist matches your taste well. Weighted Shuffle is a good profile to use."
+            "This playlist matches your taste well. Weighted or Adaptive Shuffle is a good profile to use."
         )
 
     if average_rating < 3 and rated_songs >= 5:
         recommendations.append(
             "Average rating is low. This playlist may need cleanup or better song selection."
+        )
+
+    if global_skip_rate >= 35:
+        recommendations.append(
+            f"Your skip rate is high at {global_skip_rate}%. Adaptive Shuffle is recommended."
+        )
+
+    if global_completion_rate >= 70:
+        recommendations.append(
+            f"Your completion rate is strong at {global_completion_rate}%. Use this memory to guide ratings."
+        )
+
+    if most_skipped:
+        top_skipped = most_skipped[0]
+
+        recommendations.append(
+            (
+                f"You often skip '{top_skipped['song_name']}' by "
+                f"{top_skipped['artist']}. Consider rating it lower."
+            )
+        )
+
+    if most_replayed:
+        top_replayed = most_replayed[0]
+
+        recommendations.append(
+            (
+                f"You replay '{top_replayed['song_name']}' by "
+                f"{top_replayed['artist']} often. Consider rating it 5 stars."
+            )
         )
 
     if rated_percentage >= 50 and five_star_songs >= 5:

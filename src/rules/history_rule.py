@@ -53,7 +53,7 @@ def safe_rate(part, total):
 
 def history_score(candidate, context, settings=None):
     """
-    Smart Anti-Repeat v2.
+    Smart Anti-Repeat v3.
 
     Uses:
     - recent play position
@@ -61,6 +61,7 @@ def history_score(candidate, context, settings=None):
     - completion rate
     - replay count
     - last event
+    - Adaptive profile mode
     """
 
     if settings is None:
@@ -69,6 +70,10 @@ def history_score(candidate, context, settings=None):
     weight = settings.get(
         "history_weight",
         0
+    )
+
+    adaptive_mode = bool(
+        settings.get("adaptive_mode", False)
     )
 
     recent_track_keys = settings.get(
@@ -98,7 +103,10 @@ def history_score(candidate, context, settings=None):
 
     if recent_index is None:
 
-        score += 12
+        if adaptive_mode:
+            score += 22
+        else:
+            score += 12
 
         reasons.append(
             "Not recently played"
@@ -106,7 +114,10 @@ def history_score(candidate, context, settings=None):
 
     elif recent_index < 5:
 
-        score -= 150
+        if adaptive_mode:
+            score -= 190
+        else:
+            score -= 150
 
         reasons.append(
             "Played very recently"
@@ -114,7 +125,10 @@ def history_score(candidate, context, settings=None):
 
     elif recent_index < 15:
 
-        score -= 90
+        if adaptive_mode:
+            score -= 120
+        else:
+            score -= 90
 
         reasons.append(
             "Played recently"
@@ -122,7 +136,10 @@ def history_score(candidate, context, settings=None):
 
     else:
 
-        score -= 40
+        if adaptive_mode:
+            score -= 55
+        else:
+            score -= 40
 
         reasons.append(
             "Played in recent history"
@@ -163,15 +180,19 @@ def history_score(candidate, context, settings=None):
 
     if play_count == 0:
 
-        score += 15
-
-        reasons.append(
-            "No listening memory"
-        )
+        if adaptive_mode:
+            score += 35
+            reasons.append("Discovery boost")
+        else:
+            score += 15
+            reasons.append("No listening memory")
 
     if last_event == "skipped":
 
-        score -= 80
+        if adaptive_mode:
+            score -= 120
+        else:
+            score -= 80
 
         reasons.append(
             "Recently skipped"
@@ -179,15 +200,32 @@ def history_score(candidate, context, settings=None):
 
     elif last_event == "finished":
 
-        score -= 25
+        if adaptive_mode:
+            score -= 35
+        else:
+            score -= 25
 
         reasons.append(
             "Recently finished"
         )
 
+    elif last_event == "replayed":
+
+        if adaptive_mode:
+            score += 35
+        else:
+            score += 20
+
+        reasons.append(
+            "Recently replayed"
+        )
+
     if play_count >= 3 and skip_rate >= 0.60:
 
-        score -= 100
+        if adaptive_mode:
+            score -= 150
+        else:
+            score -= 100
 
         reasons.append(
             "High skip percentage"
@@ -195,7 +233,10 @@ def history_score(candidate, context, settings=None):
 
     elif play_count >= 3 and skip_rate >= 0.35:
 
-        score -= 45
+        if adaptive_mode:
+            score -= 70
+        else:
+            score -= 45
 
         reasons.append(
             "Moderate skip percentage"
@@ -203,7 +244,10 @@ def history_score(candidate, context, settings=None):
 
     if play_count >= 3 and completion_rate >= 0.70 and skip_rate <= 0.20:
 
-        score += 20
+        if adaptive_mode:
+            score += 40
+        else:
+            score += 20
 
         reasons.append(
             "Strong completion rate"
@@ -211,10 +255,26 @@ def history_score(candidate, context, settings=None):
 
     if replay_count >= 2 and skip_rate <= 0.25:
 
-        score += 25
+        if adaptive_mode:
+            score += 50
+        else:
+            score += 25
 
         reasons.append(
             "Often replayed"
+        )
+
+    if (
+        adaptive_mode
+        and play_count >= 5
+        and completion_rate >= 0.60
+        and skip_rate <= 0.10
+    ):
+
+        score += 20
+
+        reasons.append(
+            "Reliable favorite"
         )
 
     if not reasons:
@@ -224,7 +284,7 @@ def history_score(candidate, context, settings=None):
         )
 
     reason_text = " • ".join(
-        reasons[:3]
+        reasons[:4]
     )
 
     return RuleResult(

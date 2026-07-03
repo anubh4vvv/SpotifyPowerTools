@@ -37,6 +37,16 @@ from workers.search_worker import SearchWorker
 from services.analytics_service import calculate_playlist_analytics
 from services.duplicate_service import analyze_duplicates
 
+from services.listening_history_service import (
+    export_listening_memory as export_listening_memory_service,
+    clear_listening_memory as clear_listening_memory_service,
+)
+
+from gui.image_loader import (
+    clear_image_cache,
+    cache_size,
+)
+
 class MainWindow(QMainWindow):
 
     def __init__(self):
@@ -78,6 +88,7 @@ class MainWindow(QMainWindow):
         self.analytics_cache = {}
         self.duplicates_cache = {}
         self.max_page_cache_items = 10
+        self.analytics_cache_ttl = 20
 
         self.search_thread = None
         self.search_worker = None
@@ -167,6 +178,18 @@ class MainWindow(QMainWindow):
 
         self.settings_page.settings_saved.connect(
             self.apply_saved_settings
+        )
+
+        self.settings_page.memory_export_requested.connect(
+            self.export_listening_memory
+        )
+
+        self.settings_page.memory_clear_requested.connect(
+            self.clear_listening_memory
+        )
+
+        self.settings_page.image_cache_clear_requested.connect(
+            self.clear_album_art_cache
         )
 
         self.duplicates_page.clean_button.clicked.connect(
@@ -657,6 +680,116 @@ class MainWindow(QMainWindow):
             "Settings saved"
         )
 
+    def clear_analysis_caches(self):
+
+        self.analytics_cache.clear()
+        self.duplicates_cache.clear()
+
+    def export_listening_memory(self):
+
+        try:
+            export_path = export_listening_memory_service()
+
+            self.status_bar.set_message(
+                f"Listening memory exported: {export_path}"
+            )
+
+            QMessageBox.information(
+                self,
+                "Listening Memory Exported",
+                f"Exported listening memory to:\n\n{export_path}"
+            )
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Export Error",
+                str(error)
+            )
+
+            self.status_bar.set_message(
+                "Failed to export listening memory"
+            )
+
+    def clear_listening_memory(self):
+
+        reply = QMessageBox.question(
+            self,
+            "Clear Listening Memory",
+            (
+                "This will erase local listening memory, including skips, "
+                "finishes, replays, and streak data.\n\n"
+                "Spotify playlists and ratings will not be modified.\n\n"
+                "Continue?"
+            ),
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if reply != QMessageBox.Yes:
+            return
+
+        try:
+            clear_listening_memory_service()
+
+            self.clear_analysis_caches()
+
+            self.status_bar.set_message(
+                "Listening memory cleared"
+            )
+
+            QMessageBox.information(
+                self,
+                "Listening Memory Cleared",
+                "Local listening memory has been cleared."
+            )
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Clear Memory Error",
+                str(error)
+            )
+
+            self.status_bar.set_message(
+                "           Failed to clear listening memory"
+            )
+
+    def clear_album_art_cache(self):
+
+        try:
+            size_before = cache_size()
+
+            clear_image_cache()
+
+            self.status_bar.set_message(
+                "Album art cache cleared"
+            )
+
+            QMessageBox.information(
+                self,
+                "Album Art Cache Cleared",
+                (
+                    "Album art cache has been cleared.\n\n"
+                    f"Original images cleared: {size_before.get('original', 0)}\n"
+                    f"Scaled images cleared: {size_before.get('scaled', 0)}"
+                )
+            )
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Cache Error",
+                str(error)
+            )
+
+            self.status_bar.set_message(
+                "Failed to clear album art cache"
+            )
+
     def trim_page_cache(self, cache):
 
         while len(cache) > self.max_page_cache_items:
@@ -686,14 +819,27 @@ class MainWindow(QMainWindow):
             tracks
         )
 
-        if cache_key in self.analytics_cache:
-            return self.analytics_cache[cache_key]
+        now = time.monotonic()
+
+        cached = self.analytics_cache.get(
+            cache_key
+        )
+
+        if cached is not None:
+
+            age = now - cached["created_at"]
+
+            if age < self.analytics_cache_ttl:
+                return cached["analytics"]
 
         analytics = calculate_playlist_analytics(
             tracks
         )
 
-        self.analytics_cache[cache_key] = analytics
+        self.analytics_cache[cache_key] = {
+            "created_at": now,
+            "analytics": analytics,
+        }
 
         self.trim_page_cache(
             self.analytics_cache
@@ -1232,6 +1378,8 @@ class MainWindow(QMainWindow):
             self.dashboard.current_song_card.update_rating(
                 result["rating"]
             )
+
+            self.analytics_cache.clear()
 
             if result["rating"] == 0:
 

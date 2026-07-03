@@ -8,7 +8,7 @@ class ListeningAnalyticsCard(Card):
     def __init__(self):
         super().__init__("Listening Analytics")
 
-        self.setMinimumHeight(330)
+        self.setMinimumHeight(430)
 
         self.summary_label = QLabel("No listening memory yet.")
         self.summary_label.setWordWrap(True)
@@ -32,7 +32,7 @@ class ListeningAnalyticsCard(Card):
             self.details_label
         )
 
-    def format_items(self, title, items, value_key, suffix=""):
+    def format_items(self, title, items, value_key=None, suffix=""):
 
         lines = [
             title
@@ -49,14 +49,40 @@ class ListeningAnalyticsCard(Card):
             start=1
         ):
 
-            lines.append(
-                (
-                    f"  {index}. {item['song_name']} — {item['artist']} "
-                    f"({item[value_key]}{suffix})"
+            if value_key is None:
+
+                lines.append(
+                    (
+                        f"  {index}. {item['song_name']} — {item['artist']}"
+                    )
                 )
-            )
+
+            else:
+
+                lines.append(
+                    (
+                        f"  {index}. {item['song_name']} — {item['artist']} "
+                        f"({item[value_key]}{suffix})"
+                    )
+                )
 
         return lines
+
+    def format_streaks(self, streaks):
+
+        return [
+            "Listening Streaks:",
+            f"  Finished streak: {streaks.get('finished_streak', 0)} songs",
+            f"  Skip streak: {streaks.get('skip_streak', 0)} songs",
+            (
+                f"  Artist streak: {streaks.get('artist_streak_name', 'N/A')} "
+                f"x{streaks.get('artist_streak_count', 0)}"
+            ),
+            (
+                f"  Album streak: {streaks.get('album_streak_name', 'N/A')} "
+                f"x{streaks.get('album_streak_count', 0)}"
+            ),
+        ]
 
     def update_listening_analytics(self, data):
 
@@ -67,11 +93,6 @@ class ListeningAnalyticsCard(Card):
 
         total_plays = data.get(
             "total_plays",
-            0
-        )
-
-        total_skips = data.get(
-            "total_skips",
             0
         )
 
@@ -94,12 +115,61 @@ class ListeningAnalyticsCard(Card):
             (
                 f"{total_known_songs} remembered songs • "
                 f"{total_plays} plays • "
+                f"{total_replays} replays • "
                 f"{completion_rate}% completion • "
                 f"{skip_rate}% skip rate"
             )
         )
 
         lines = []
+
+        lines.extend(
+            self.format_streaks(
+                data.get("streaks", {})
+            )
+        )
+
+        lines.append("")
+
+        lines.extend(
+            self.format_items(
+                "Recently Played:",
+                data.get("recently_played", []),
+                None
+            )
+        )
+
+        lines.append("")
+
+        lines.extend(
+            self.format_items(
+                "Recently Skipped:",
+                data.get("recently_skipped", []),
+                None
+            )
+        )
+
+        lines.append("")
+
+        lines.extend(
+            self.format_items(
+                "Recently Finished:",
+                data.get("recently_finished", []),
+                None
+            )
+        )
+
+        lines.append("")
+
+        lines.extend(
+            self.format_items(
+                "Recently Replayed:",
+                data.get("recently_replayed", []),
+                None
+            )
+        )
+
+        lines.append("")
 
         lines.extend(
             self.format_items(
@@ -140,17 +210,6 @@ class ListeningAnalyticsCard(Card):
                 data.get("worst_skip_rate", []),
                 "skip_rate",
                 "%"
-            )
-        )
-
-        lines.append("")
-
-        lines.extend(
-            self.format_items(
-                "Recently Finished:",
-                data.get("recently_finished", []),
-                "finish_count",
-                " finishes"
             )
         )
 

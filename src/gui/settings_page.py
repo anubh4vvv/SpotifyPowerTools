@@ -25,6 +25,9 @@ from services.settings_service import (
 class SettingsPage(QWidget):
 
     settings_saved = Signal(dict)
+    memory_export_requested = Signal()
+    memory_clear_requested = Signal()
+    image_cache_clear_requested = Signal()
 
     def __init__(self):
         super().__init__()
@@ -52,6 +55,7 @@ class SettingsPage(QWidget):
         self.profile.addItems([
             "Balanced",
             "Discovery",
+            "Adaptive",
             "Album",
             "Random",
             "Weighted",
@@ -127,6 +131,29 @@ class SettingsPage(QWidget):
         self.card.layout.addWidget(self.message)
 
         layout.addWidget(self.card)
+        self.memory_card = Card("Memory Tools")
+
+        memory_help = QLabel(
+            "Manage local listening memory and album-art cache. This does not modify Spotify."
+        )
+        memory_help.setWordWrap(True)
+        memory_help.setStyleSheet(
+            "color:#A0A0A0; font-size:10.5pt;"
+        )
+
+        self.export_memory_button = QPushButton("Export Listening Memory")
+        self.clear_memory_button = QPushButton("Clear Listening Memory")
+        self.clear_cache_button = QPushButton("Clear Album Art Cache")
+
+        self.clear_memory_button.setObjectName("SecondaryButton")
+        self.clear_cache_button.setObjectName("SecondaryButton")
+
+        self.memory_card.layout.addWidget(memory_help)
+        self.memory_card.layout.addWidget(self.export_memory_button)
+        self.memory_card.layout.addWidget(self.clear_memory_button)
+        self.memory_card.layout.addWidget(self.clear_cache_button)
+
+        layout.addWidget(self.memory_card)
         layout.addStretch()
 
         self.artist_slider.valueChanged.connect(
@@ -147,6 +174,18 @@ class SettingsPage(QWidget):
 
         self.reset_button.clicked.connect(
             self.reset_to_defaults
+        )
+
+        self.export_memory_button.clicked.connect(
+            self.memory_export_requested.emit
+        )
+
+        self.clear_memory_button.clicked.connect(
+            self.memory_clear_requested.emit
+        )
+
+        self.clear_cache_button.clicked.connect(
+            self.image_cache_clear_requested.emit
         )
 
         self.load_from_saved()

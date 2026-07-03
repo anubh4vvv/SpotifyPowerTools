@@ -616,6 +616,111 @@ def make_listening_item(stats):
     }
 
 
+def make_event_item(event):
+
+    return {
+        "track_key": event.get("track_key", ""),
+        "song_name": event.get("song_name", "Unknown Song"),
+        "artist": event.get("artist", "Unknown Artist"),
+        "album": event.get("album", "Unknown Album"),
+        "type": event.get("type", ""),
+        "created_at": event.get("created_at", ""),
+    }
+
+
+def get_recent_events_by_type(events, event_type, limit=5):
+
+    results = []
+
+    for event in reversed(events):
+
+        if event.get("type") != event_type:
+            continue
+
+        results.append(
+            make_event_item(event)
+        )
+
+        if len(results) >= limit:
+            break
+
+    return results
+
+
+def calculate_listening_streaks(events):
+
+    final_events = [
+        event
+        for event in reversed(events)
+        if event.get("type") in ["finished", "skipped", "partial"]
+    ]
+
+    finished_streak = 0
+
+    for event in final_events:
+
+        if event.get("type") == "finished":
+            finished_streak += 1
+        else:
+            break
+
+    skip_streak = 0
+
+    for event in final_events:
+
+        if event.get("type") == "skipped":
+            skip_streak += 1
+        else:
+            break
+
+    start_events = [
+        event
+        for event in reversed(events)
+        if event.get("type") in ["started", "replayed"]
+    ]
+
+    artist_streak_name = "N/A"
+    artist_streak_count = 0
+
+    album_streak_name = "N/A"
+    album_streak_count = 0
+
+    if start_events:
+
+        artist_streak_name = start_events[0].get(
+            "artist",
+            "Unknown Artist"
+        )
+
+        album_streak_name = start_events[0].get(
+            "album",
+            "Unknown Album"
+        )
+
+        for event in start_events:
+
+            if event.get("artist") == artist_streak_name:
+                artist_streak_count += 1
+            else:
+                break
+
+        for event in start_events:
+
+            if event.get("album") == album_streak_name:
+                album_streak_count += 1
+            else:
+                break
+
+    return {
+        "finished_streak": finished_streak,
+        "skip_streak": skip_streak,
+        "artist_streak_name": artist_streak_name,
+        "artist_streak_count": artist_streak_count,
+        "album_streak_name": album_streak_name,
+        "album_streak_count": album_streak_count,
+    }
+
+
 def get_listening_analytics(limit=5):
 
     history = load_history()
@@ -623,6 +728,11 @@ def get_listening_analytics(limit=5):
     memory = history.get(
         "tracks",
         {}
+    )
+
+    events = history.get(
+        "events",
+        []
     )
 
     items = [
@@ -713,15 +823,41 @@ def get_listening_analytics(limit=5):
         reverse=True
     )[:limit]
 
-    recently_finished = sorted(
-        [
-            item
-            for item in items
-            if item["last_finished_at"]
-        ],
-        key=lambda item: item["last_finished_at"],
-        reverse=True
-    )[:limit]
+    recently_finished = get_recent_events_by_type(
+        events,
+        "finished",
+        limit=limit
+    )
+
+    recently_played = []
+
+    for event in reversed(events):
+
+        if event.get("type") not in ["started", "replayed"]:
+            continue
+
+        recently_played.append(
+            make_event_item(event)
+        )
+
+        if len(recently_played) >= limit:
+            break
+
+    recently_skipped = get_recent_events_by_type(
+        events,
+        "skipped",
+        limit=limit
+    )
+
+    recently_replayed = get_recent_events_by_type(
+        events,
+        "replayed",
+        limit=limit
+    )
+
+    streaks = calculate_listening_streaks(
+        events
+    )
 
     return {
         "total_known_songs": total_known_songs,
@@ -736,4 +872,47 @@ def get_listening_analytics(limit=5):
         "best_completion": best_completion,
         "worst_skip_rate": worst_skip_rate,
         "recently_finished": recently_finished,
+        "recently_played": recently_played,
+        "recently_skipped": recently_skipped,
+        "recently_replayed": recently_replayed,
+        "streaks": streaks,
     }
+
+
+def export_listening_memory():
+
+    history = load_history()
+
+    timestamp = datetime.now(
+        timezone.utc
+    ).strftime("%Y%m%d_%H%M%S")
+
+    DATA_DIR.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    export_file = DATA_DIR / f"listening_memory_export_{timestamp}.json"
+
+    with open(export_file, "w", encoding="utf-8") as file:
+        json.dump(
+            history,
+            file,
+            indent=4
+        )
+
+    return str(
+        export_file
+    )
+
+
+def clear_listening_memory():
+
+    save_history(
+        empty_history()
+    )
+
+    return str(
+        HISTORY_FILE
+    )
+    

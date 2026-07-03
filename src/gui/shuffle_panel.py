@@ -25,6 +25,7 @@ class ShufflePanel(Card):
         self.profile.addItems([
             "Balanced",
             "Discovery",
+            "Adaptive",
             "Album",
             "Random",
             "Weighted",

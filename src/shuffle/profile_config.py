@@ -4,6 +4,7 @@ BALANCED_PROFILE = {
     "random_weight": 1.0,
     "rating_weight": 0.0,
     "history_weight": 1.0,
+    "adaptive_mode": False,
     "artist_spacing": 5,
     "album_spacing": 3,
 }
@@ -14,8 +15,20 @@ DISCOVERY_PROFILE = {
     "random_weight": 0.8,
     "rating_weight": 0.3,
     "history_weight": 1.8,
+    "adaptive_mode": False,
     "artist_spacing": 8,
     "album_spacing": 5,
+}
+
+ADAPTIVE_PROFILE = {
+    "artist_weight": 2.4,
+    "album_weight": 1.2,
+    "random_weight": 0.7,
+    "rating_weight": 2.0,
+    "history_weight": 2.5,
+    "adaptive_mode": True,
+    "artist_spacing": 6,
+    "album_spacing": 3,
 }
 
 ALBUM_PROFILE = {
@@ -24,6 +37,7 @@ ALBUM_PROFILE = {
     "random_weight": 0.9,
     "rating_weight": 0.2,
     "history_weight": 0.5,
+    "adaptive_mode": False,
     "artist_spacing": 3,
     "album_spacing": 1,
 }
@@ -34,6 +48,7 @@ RANDOM_PROFILE = {
     "random_weight": 3.0,
     "rating_weight": 0.0,
     "history_weight": 0.0,
+    "adaptive_mode": False,
     "artist_spacing": 1,
     "album_spacing": 1,
 }
@@ -44,6 +59,7 @@ WEIGHTED_PROFILE = {
     "random_weight": 0.3,
     "rating_weight": 5.0,
     "history_weight": 1.6,
+    "adaptive_mode": False,
     "artist_spacing": 3,
     "album_spacing": 2,
 }
@@ -52,6 +68,7 @@ WEIGHTED_PROFILE = {
 PROFILES = {
     "Balanced": BALANCED_PROFILE,
     "Discovery": DISCOVERY_PROFILE,
+    "Adaptive": ADAPTIVE_PROFILE,
     "Album": ALBUM_PROFILE,
     "Random": RANDOM_PROFILE,
     "Weighted": WEIGHTED_PROFILE,
@@ -69,13 +86,6 @@ def clamp(value, minimum, maximum):
 def preserve_extra_settings(resolved_settings, original_settings):
     """
     Keeps extra data passed into the shuffle engine.
-
-    Important:
-    profile resolution should not delete runtime data like:
-    - ratings
-    - queue size
-    - recent listening history
-    - advanced listening memory
     """
 
     extra_keys = [
@@ -83,6 +93,7 @@ def preserve_extra_settings(resolved_settings, original_settings):
         "recent_track_keys",
         "listening_memory",
         "queue_size",
+        "adaptive_mode",
     ]
 
     for key in extra_keys:
@@ -164,6 +175,7 @@ def resolve_shuffle_settings(settings=None):
         "random_weight": round(max(0.1, randomness_value / 50), 2),
         "rating_weight": 1.5,
         "history_weight": 1.0,
+        "adaptive_mode": False,
         "artist_spacing": 2 + artist_value // 20,
         "album_spacing": 1 + album_value // 25,
     }
