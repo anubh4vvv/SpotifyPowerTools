@@ -14,6 +14,8 @@ from gui.bar_chart_card import BarChartCard
 from gui.health_score_card import HealthScoreCard
 from gui.playlist_doctor_card import PlaylistDoctorCard
 from gui.rating_recommendations_card import RatingRecommendationsCard
+from gui.visual_balance_card import VisualBalanceCard
+from gui.dominance_breakdown_card import DominanceBreakdownCard
 
 from services.playlist_doctor_service import (
     diagnose_playlist,
@@ -112,13 +114,22 @@ class AnalyticsPage(QWidget):
 
         layout.addLayout(stats_grid)
 
-        # ---------- Smart Cards ----------
+        # ---------- Visual Summary Cards ----------
+
+        visual_grid = QGridLayout()
+        visual_grid.setSpacing(20)
 
         self.health_visual_card = HealthScoreCard()
+        self.visual_balance_card = VisualBalanceCard()
+        self.dominance_breakdown_card = DominanceBreakdownCard()
 
-        layout.addWidget(
-            self.health_visual_card
-        )
+        visual_grid.addWidget(self.health_visual_card, 0, 0)
+        visual_grid.addWidget(self.visual_balance_card, 0, 1)
+        visual_grid.addWidget(self.dominance_breakdown_card, 1, 0, 1, 2)
+
+        layout.addLayout(visual_grid)
+
+        # ---------- Smart Recommendation Cards ----------
 
         self.playlist_doctor_card = PlaylistDoctorCard()
 
@@ -159,21 +170,15 @@ class AnalyticsPage(QWidget):
         insight_grid.setSpacing(20)
 
         self.duplicates_card = Card("Duplicate Tracks")
-        self.dominance_card = Card("Dominance")
         self.age_card = Card("Oldest / Newest")
         self.rating_card = Card("Rating Insights")
 
         self.duplicates_label = self.make_text_label()
-        self.dominance_label = self.make_text_label()
         self.age_label = self.make_text_label()
         self.rating_label = self.make_text_label()
 
         self.duplicates_card.layout.addWidget(
             self.duplicates_label
-        )
-
-        self.dominance_card.layout.addWidget(
-            self.dominance_label
         )
 
         self.age_card.layout.addWidget(
@@ -185,9 +190,8 @@ class AnalyticsPage(QWidget):
         )
 
         insight_grid.addWidget(self.duplicates_card, 0, 0)
-        insight_grid.addWidget(self.dominance_card, 0, 1)
-        insight_grid.addWidget(self.age_card, 0, 2)
-        insight_grid.addWidget(self.rating_card, 1, 0, 1, 3)
+        insight_grid.addWidget(self.age_card, 0, 1)
+        insight_grid.addWidget(self.rating_card, 1, 0, 1, 2)
 
         layout.addLayout(insight_grid)
         layout.addStretch()
@@ -294,6 +298,14 @@ class AnalyticsPage(QWidget):
             analytics["diversity_score"]
         )
 
+        self.visual_balance_card.update_balance(
+            analytics
+        )
+
+        self.dominance_breakdown_card.update_dominance(
+            analytics
+        )
+
         diagnosis = diagnose_playlist(
             analytics
         )
@@ -343,12 +355,6 @@ class AnalyticsPage(QWidget):
             )
         )
 
-        self.dominance_label.setText(
-            self.format_dominance(
-                analytics
-            )
-        )
-
         self.age_label.setText(
             self.format_age_info(
                 analytics
@@ -376,24 +382,6 @@ class AnalyticsPage(QWidget):
             )
 
         return "\n".join(lines)
-
-    def format_dominance(self, analytics):
-
-        return (
-            f"Top Artist:\n"
-            f"{analytics['top_artist_name']}\n"
-            f"{analytics['top_artist_count']} songs "
-            f"({analytics['top_artist_percentage']}%)\n\n"
-            f"Top Album:\n"
-            f"{analytics['top_album_name']}\n"
-            f"{analytics['top_album_count']} songs "
-            f"({analytics['top_album_percentage']}%)\n\n"
-            f"Entropy:\n"
-            f"Artist Entropy: {analytics['artist_entropy_score']}% "
-            f"({analytics['artist_entropy_bits']} bits)\n"
-            f"Album Entropy: {analytics['album_entropy_score']}% "
-            f"({analytics['album_entropy_bits']} bits)"
-        )
 
     def format_age_info(self, analytics):
 
