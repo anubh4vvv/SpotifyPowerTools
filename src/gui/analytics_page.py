@@ -18,6 +18,9 @@ from gui.visual_balance_card import VisualBalanceCard
 from gui.dominance_breakdown_card import DominanceBreakdownCard
 from gui.listening_analytics_card import ListeningAnalyticsCard
 from gui.playlist_intelligence_card import PlaylistIntelligenceCard
+from gui.analytics_hero_card import AnalyticsHeroCard
+from gui.wrapped_stat_card import WrappedStatCard
+from gui.badge_cloud_card import BadgeCloudCard
 
 from services.playlist_doctor_service import (
     diagnose_playlist,
@@ -64,6 +67,70 @@ class AnalyticsPage(QWidget):
 
         layout.addWidget(title)
         layout.addWidget(subtitle)
+
+        # ---------- Glow-Up Hero Section ----------
+
+        self.analytics_hero_card = AnalyticsHeroCard()
+
+        layout.addWidget(
+            self.analytics_hero_card
+        )
+
+        wrapped_grid = QGridLayout()
+        wrapped_grid.setSpacing(18)
+
+        self.top_artist_story_card = WrappedStatCard("Top Artist", "🎤")
+        self.most_replayed_story_card = WrappedStatCard("Most Replayed", "🔁")
+        self.most_skipped_story_card = WrappedStatCard("Most Skipped", "⏭️")
+        self.hidden_favorite_story_card = WrappedStatCard("Hidden Favorite", "💎")
+        self.playlist_villain_story_card = WrappedStatCard("Playlist Villain", "😈")
+        self.playlist_mvp_story_card = WrappedStatCard("Playlist MVP", "🏆")
+
+        wrapped_grid.addWidget(
+            self.top_artist_story_card,
+            0,
+            0
+        )
+
+        wrapped_grid.addWidget(
+            self.most_replayed_story_card,
+            0,
+            1
+        )
+
+        wrapped_grid.addWidget(
+            self.most_skipped_story_card,
+            0,
+            2
+        )
+
+        wrapped_grid.addWidget(
+            self.hidden_favorite_story_card,
+            1,
+            0
+        )
+
+        wrapped_grid.addWidget(
+            self.playlist_villain_story_card,
+            1,
+            1
+        )
+
+        wrapped_grid.addWidget(
+            self.playlist_mvp_story_card,
+            1,
+            2
+        )
+
+        layout.addLayout(
+            wrapped_grid
+        )
+
+        self.badge_cloud_card = BadgeCloudCard()
+
+        layout.addWidget(
+            self.badge_cloud_card
+        )
 
         # ---------- Main Stats ----------
 
@@ -255,6 +322,54 @@ class AnalyticsPage(QWidget):
         )
 
     def update_from_analytics(self, playlist, analytics):
+
+        glow = analytics.get(
+            "analytics_glow",
+            {}
+        )
+
+        intelligence = analytics.get(
+            "playlist_intelligence",
+            {}
+        )
+
+        self.analytics_hero_card.update_glow(
+            glow,
+            intelligence
+        )
+
+        wrapped_cards = glow.get(
+            "wrapped_cards",
+            {}
+        )
+
+        self.top_artist_story_card.update_card(
+            wrapped_cards.get("top_artist", {})
+        )
+
+        self.most_replayed_story_card.update_card(
+            wrapped_cards.get("most_replayed", {})
+        )
+
+        self.most_skipped_story_card.update_card(
+            wrapped_cards.get("most_skipped", {})
+        )
+
+        self.hidden_favorite_story_card.update_card(
+            wrapped_cards.get("hidden_favorite", {})
+        )
+
+        self.playlist_villain_story_card.update_card(
+            wrapped_cards.get("playlist_villain", {})
+        )
+
+        self.playlist_mvp_story_card.update_card(
+            wrapped_cards.get("playlist_mvp", {})
+        )
+
+        self.badge_cloud_card.update_badges(
+            glow.get("badges", [])
+        )
 
         self.total_songs.set_value(
             analytics["total_songs"]

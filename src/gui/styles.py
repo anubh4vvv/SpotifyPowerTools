@@ -14,6 +14,187 @@ QWidget{
     font-size:11pt;
 }
 
+/* ---------- Analytics Glow-Up ---------- */
+
+QFrame#AnalyticsHeroCard{
+    background:qlineargradient(
+        x1:0, y1:0,
+        x2:1, y2:1,
+        stop:0 #1DB954,
+        stop:0.35 #143B2A,
+        stop:0.7 #17171A,
+        stop:1 #101014
+    );
+    border:1px solid #38F28B;
+    border-radius:28px;
+}
+
+QLabel#HeroEyebrow{
+    color:#B8FFD2;
+    font-size:10pt;
+    font-weight:900;
+    letter-spacing:2px;
+}
+
+QLabel#HeroEmoji{
+    font-size:46pt;
+}
+
+QLabel#HeroPersonality{
+    color:#FFFFFF;
+    font-size:34pt;
+    font-weight:950;
+}
+
+QLabel#HeroSubtitle{
+    color:#E8FFEf;
+    font-size:13.5pt;
+    font-weight:650;
+}
+
+QLabel#HeroRecommended{
+    color:#000000;
+    background:#B8FFD2;
+    border-radius:12px;
+    padding:9px 13px;
+    font-size:11pt;
+    font-weight:900;
+}
+
+QLabel#AuraTitle{
+    color:#B8FFD2;
+    font-size:10pt;
+    font-weight:900;
+    letter-spacing:2px;
+}
+
+QLabel#AuraNumber{
+    color:#FFFFFF;
+    font-size:66pt;
+    font-weight:950;
+}
+
+QLabel#AuraStatus{
+    color:#E8FFEf;
+    font-size:14pt;
+    font-weight:900;
+}
+
+QProgressBar#AuraProgress{
+    background:rgba(255,255,255,0.20);
+    border:none;
+    border-radius:6px;
+}
+
+QProgressBar#AuraProgress::chunk{
+    background:#FFFFFF;
+    border-radius:6px;
+}
+
+QFrame#GlowMetric{
+    background:rgba(0,0,0,0.28);
+    border:1px solid rgba(255,255,255,0.18);
+    border-radius:18px;
+}
+
+QLabel#GlowMetricTitle{
+    color:#D8FFE4;
+    font-size:10.5pt;
+    font-weight:800;
+}
+
+QLabel#GlowMetricValue{
+    color:#FFFFFF;
+    font-size:20pt;
+    font-weight:950;
+}
+
+QProgressBar#GlowMetricProgress{
+    background:rgba(255,255,255,0.18);
+    border:none;
+    border-radius:5px;
+}
+
+QProgressBar#GlowMetricProgress::chunk{
+    background:#B8FFD2;
+    border-radius:5px;
+}
+
+/* ---------- Wrapped Cards ---------- */
+
+QFrame#WrappedStatCard{
+    background:qlineargradient(
+        x1:0, y1:0,
+        x2:1, y2:1,
+        stop:0 #19191D,
+        stop:0.55 #111114,
+        stop:1 #0C0C0F
+    );
+    border:1px solid #2F2F35;
+    border-radius:22px;
+}
+
+QFrame#WrappedStatCard:hover{
+    border:1px solid #1DB954;
+    background:qlineargradient(
+        x1:0, y1:0,
+        x2:1, y2:1,
+        stop:0 #203B2B,
+        stop:0.55 #151518,
+        stop:1 #0C0C0F
+    );
+}
+
+QLabel#WrappedEmoji{
+    font-size:32pt;
+}
+
+QLabel#WrappedTitle{
+    color:#9CA3AF;
+    font-size:10.5pt;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+QLabel#WrappedValue{
+    color:#FFFFFF;
+    font-size:19pt;
+    font-weight:950;
+}
+
+QLabel#WrappedSubtitle{
+    color:#B8B8C0;
+    font-size:10.5pt;
+    font-weight:600;
+}
+
+/* ---------- Badge Cloud ---------- */
+
+QLabel#BadgePill{
+    background:qlineargradient(
+        x1:0, y1:0,
+        x2:1, y2:1,
+        stop:0 #1E1E24,
+        stop:1 #101014
+    );
+    border:1px solid #34343A;
+    border-radius:18px;
+    padding:12px;
+    color:#FFFFFF;
+    font-size:10.5pt;
+    font-weight:850;
+}
+
+QLabel#BadgePill:hover{
+    border:1px solid #1DB954;
+    background:#17251C;
+}
+
+QLabel#BadgeEmpty{
+    color:#A0A0A0;
+    font-size:11pt;
+}
+
 /* ---------- Header ---------- */
 
 QFrame#Header{

@@ -4,6 +4,7 @@ from math import log2
 from services.rating_service import calculate_rating_analytics
 from services.listening_history_service import get_listening_analytics
 from services.playlist_intelligence_service import calculate_playlist_intelligence
+from services.analytics_glow_service import calculate_analytics_glow
 
 def format_duration(total_ms):
     total_seconds = total_ms // 1000
@@ -316,6 +317,10 @@ def get_empty_analytics():
         analytics
     )
 
+    analytics["analytics_glow"] = calculate_analytics_glow(
+        analytics
+    )
+
     return analytics
 
 
@@ -524,6 +529,10 @@ def calculate_playlist_analytics(tracks):
 
     analytics["playlist_intelligence"] = calculate_playlist_intelligence(
         tracks,
+        analytics
+    )
+
+    analytics["analytics_glow"] = calculate_analytics_glow(
         analytics
     )
 
