@@ -3,7 +3,7 @@ from math import log2
 
 from services.rating_service import calculate_rating_analytics
 from services.listening_history_service import get_listening_analytics
-
+from services.playlist_intelligence_service import calculate_playlist_intelligence
 
 def format_duration(total_ms):
     total_seconds = total_ms // 1000
@@ -265,7 +265,7 @@ def get_empty_analytics():
     Keeping this separate prevents missing-key errors in the GUI.
     """
 
-    return {
+    analytics = {
         "total_songs": 0,
         "unique_artists": 0,
         "unique_albums": 0,
@@ -310,6 +310,13 @@ def get_empty_analytics():
         "top_albums": [],
         "release_years": [],
     }
+
+    analytics["playlist_intelligence"] = calculate_playlist_intelligence(
+        [],
+        analytics
+    )
+
+    return analytics
 
 
 def calculate_playlist_analytics(tracks):
@@ -469,7 +476,7 @@ def calculate_playlist_analytics(tracks):
         health_score
     )
 
-    return {
+    analytics = {
         "total_songs": total_songs,
         "unique_artists": unique_artists,
         "unique_albums": unique_albums,
@@ -514,3 +521,10 @@ def calculate_playlist_analytics(tracks):
         "top_albums": album_counter.most_common(5),
         "release_years": Counter(years).most_common(5),
     }
+
+    analytics["playlist_intelligence"] = calculate_playlist_intelligence(
+        tracks,
+        analytics
+    )
+
+    return analytics

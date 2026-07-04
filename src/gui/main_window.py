@@ -42,6 +42,10 @@ from services.listening_history_service import (
     clear_listening_memory as clear_listening_memory_service,
 )
 
+from services.playlist_intelligence_service import (
+    export_playlist_report as export_playlist_report_service,
+)
+
 from gui.image_loader import (
     clear_image_cache,
     cache_size,
@@ -190,6 +194,14 @@ class MainWindow(QMainWindow):
 
         self.settings_page.image_cache_clear_requested.connect(
             self.clear_album_art_cache
+        )
+
+        self.analytics_page.profile_apply_requested.connect(
+            self.apply_recommended_profile
+        )
+
+        self.analytics_page.report_export_requested.connect(
+            self.export_playlist_report
         )
 
         self.duplicates_page.clean_button.clicked.connect(
@@ -679,6 +691,77 @@ class MainWindow(QMainWindow):
         self.status_bar.set_message(
             "Settings saved"
         )
+
+    def apply_recommended_profile(self, profile_name):
+
+        applied = self.dashboard.shuffle_panel.set_profile(
+            profile_name
+        )
+
+        if not applied:
+            QMessageBox.warning(
+                self,
+                "Profile Not Found",
+                f"Could not apply profile: {profile_name}"
+            )
+
+            return
+
+        self.sidebar.set_active_button(
+            self.sidebar.dashboard_btn
+        )
+
+        self.stack.setCurrentWidget(
+            self.dashboard
+        )
+
+        self.dashboard.shuffle_panel.highlight()
+
+        self.status_bar.set_message(
+            f"Applied recommended profile: {profile_name}"
+        )
+
+    def export_playlist_report(self):
+
+        try:
+            self.update_cached_playlist(
+                force=False
+            )
+
+            playlist = self.cached_playlist
+            tracks = self.cached_tracks
+
+            analytics = self.get_cached_analytics(
+                playlist,
+                tracks
+            )
+
+            report_path = export_playlist_report_service(
+                playlist,
+                analytics
+            )
+
+            self.status_bar.set_message(
+                f"Playlist report exported: {report_path}"
+            )
+
+            QMessageBox.information(
+                self,
+                "Playlist Report Exported",
+                f"Exported playlist report to:\n\n{report_path}"
+            )
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Report Export Error",
+                str(error)
+            )
+
+            self.status_bar.set_message(
+                "Failed to export playlist report"
+            )
 
     def clear_analysis_caches(self):
 

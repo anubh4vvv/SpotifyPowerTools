@@ -157,6 +157,20 @@ class ShufflePanel(Card):
             "randomness": self.random_slider.value(),
         }
 
+    def set_profile(self, profile_name):
+        index = self.profile.findText(
+            profile_name
+        )
+
+        if index < 0:
+            return False
+
+        self.profile.setCurrentIndex(
+            index
+        )
+
+        return True
+
     def highlight(self):
         self.setStyleSheet(
             """

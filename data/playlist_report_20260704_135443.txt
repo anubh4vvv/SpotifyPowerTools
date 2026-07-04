@@ -1,0 +1,77 @@
+Spotify Power Tools Playlist Report
+========================================
+
+Playlist: <3
+Generated: 20260704_135443 UTC
+
+Health Summary
+--------------
+Health Score: 100%
+Status: Excellent
+Songs: 317
+Unique Artists: 197
+Unique Albums: 278
+Diversity: 62.1%
+Duplicates: 0
+
+Recommended Shuffle Profile
+-----------------------------
+Profile: Balanced
+Confidence: High
+Reason: Playlist health is strong, so Balanced is a safe default.
+
+Rating Summary
+--------------
+Average Rating: 3.55/5
+Rated Songs: 33
+Unrated Songs: 284
+5-Star Songs: 9
+Low-Rated Songs: 6
+
+Listening Memory Summary
+------------------------
+Remembered Songs: 74
+Total Plays: 118
+Total Replays: 27
+Global Skip Rate: 23.7%
+Global Completion Rate: 29.7%
+
+Skip-aware Cleanup Suggestions
+------------------------------
+1. There Is a Light That Never Goes Out - 2011 Remaster — The Smiths
+   Rated 2/5 • 100.0% skip rate • Skipped 3 times • Only 0.0% completion • Recently skipped
+2. Bolve — Sukshinder Shinda
+   60.0% skip rate • Skipped 3 times • Only 0.0% completion • Recently skipped
+3. Mi Amor — Sharn
+   100.0% skip rate • Only 0.0% completion • Recently skipped
+4. Iss Tarah — Chaar Diwaari
+   100.0% skip rate • Only 0.0% completion • Recently skipped
+5. Something Just Like This — The Chainsmokers
+   100.0% skip rate • Only 0.0% completion • Recently skipped
+6. All Out of Love — Air Supply
+   50.0% skip rate • Only 0.0% completion • Recently skipped
+7. Zindagi Ek Safar Hai Suhana - Kishore Kumar — Kishore Kumar
+   Rated 1/5
+8. Masakali — Mohit Chauhan
+   Rated 2/5
+
+Hidden Favorites
+----------------
+1. Tere Liye — Atif Aslam
+   Replayed 1 times • Only 0.0% skip rate
+
+Top Artists
+-----------
+1. Pritam — 14 songs
+2. Chaar Diwaari — 8 songs
+3. The Local Train — 6 songs
+4. Steve Lacy — 6 songs
+5. BoyWithUke — 6 songs
+
+Top Albums
+----------
+1. Rockstar — 6 songs
+2. Parvana — 5 songs
+3. Rebel — 5 songs
+4. Serotonin Dreams — 4 songs
+5. Vaaqif — 3 songs

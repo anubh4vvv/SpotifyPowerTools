@@ -20,7 +20,7 @@
         "artist": "Seedhe Maut"
     },
     "3hxIUxnT27p5WcmjGUXNwx": {
-        "rating": 5,
+        "rating": 4,
         "song_name": "Shut up My Moms Calling",
         "artist": "Hotel Ugly"
     },
@@ -173,5 +173,10 @@
         "rating": 5,
         "song_name": "LOVESEXDHOKA!!!",
         "artist": "Chaar Diwaari"
+    },
+    "4OmfWzukSVD140NiAIEjem": {
+        "rating": 3,
+        "song_name": "Static",
+        "artist": "Steve Lacy"
     }
 }

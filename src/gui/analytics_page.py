@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QScrollArea,
 )
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 
 from gui.card import Card
 from gui.stat_tile import StatTile
@@ -17,6 +17,7 @@ from gui.rating_recommendations_card import RatingRecommendationsCard
 from gui.visual_balance_card import VisualBalanceCard
 from gui.dominance_breakdown_card import DominanceBreakdownCard
 from gui.listening_analytics_card import ListeningAnalyticsCard
+from gui.playlist_intelligence_card import PlaylistIntelligenceCard
 
 from services.playlist_doctor_service import (
     diagnose_playlist,
@@ -27,6 +28,8 @@ from services.analytics_service import calculate_playlist_analytics
 
 
 class AnalyticsPage(QWidget):
+    profile_apply_requested = Signal(str)
+    report_export_requested = Signal()
 
     def __init__(self):
         super().__init__()
@@ -148,6 +151,20 @@ class AnalyticsPage(QWidget):
 
         layout.addWidget(
             self.listening_analytics_card
+        )
+
+        self.playlist_intelligence_card = PlaylistIntelligenceCard()
+
+        self.playlist_intelligence_card.apply_profile_requested.connect(
+            self.profile_apply_requested.emit
+        )
+
+        self.playlist_intelligence_card.export_report_requested.connect(
+            self.report_export_requested.emit
+        )
+
+        layout.addWidget(
+            self.playlist_intelligence_card
         )
 
         # ---------- Chart Cards ----------
@@ -344,6 +361,10 @@ class AnalyticsPage(QWidget):
 
         self.listening_analytics_card.update_listening_analytics(
             analytics["listening_analytics"]
+        )
+
+        self.playlist_intelligence_card.update_intelligence(
+            analytics["playlist_intelligence"]
         )
 
         self.top_artists_chart.set_data(
