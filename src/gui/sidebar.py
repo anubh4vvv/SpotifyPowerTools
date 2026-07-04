@@ -1,10 +1,14 @@
 from PySide6.QtCore import Qt
+
 from PySide6.QtWidgets import (
     QFrame,
     QLabel,
     QPushButton,
     QVBoxLayout,
+    QGraphicsDropShadowEffect,
 )
+
+from PySide6.QtGui import QColor
 
 
 class Sidebar(QFrame):
@@ -13,7 +17,18 @@ class Sidebar(QFrame):
         super().__init__()
 
         self.setObjectName("Sidebar")
-        self.setFixedWidth(240)
+        self.setFixedWidth(260)
+
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(35)
+        shadow.setOffset(8, 0)
+        shadow.setColor(
+            QColor(0, 0, 0, 95)
+        )
+
+        self.setGraphicsEffect(
+            shadow
+        )
 
         self.buttons = []
 
@@ -25,7 +40,7 @@ class Sidebar(QFrame):
         title.setObjectName("SidebarTitle")
         title.setWordWrap(True)
 
-        subtitle = QLabel("Smart Playlist Companion")
+        subtitle = QLabel("Aurora Music Intelligence")
         subtitle.setObjectName("SidebarSubtitle")
         subtitle.setWordWrap(True)
 
@@ -34,14 +49,14 @@ class Sidebar(QFrame):
 
         layout.addSpacing(28)
 
-        self.dashboard_btn = self.make_button("Dashboard")
-        self.shuffle_btn = self.make_button("Smart Shuffle")
-        self.queue_btn = self.make_button("Queue")
-        self.search_btn = self.make_button("Search")
-        self.analytics_btn = self.make_button("Analytics")
-        self.duplicates_btn = self.make_button("Duplicates")
-        self.settings_btn = self.make_button("Settings")
-        self.about_btn = self.make_button("About")
+        self.dashboard_btn = self.make_button("Dashboard", "🏠")
+        self.shuffle_btn = self.make_button("Smart Shuffle", "🎛️")
+        self.queue_btn = self.make_button("Queue", "🎧")
+        self.search_btn = self.make_button("Search", "🔎")
+        self.analytics_btn = self.make_button("Analytics", "🌈")
+        self.duplicates_btn = self.make_button("Duplicates", "🧹")
+        self.settings_btn = self.make_button("Settings", "⚙️")
+        self.about_btn = self.make_button("About", "✨")
 
         layout.addWidget(self.dashboard_btn)
         layout.addWidget(self.shuffle_btn)
@@ -54,7 +69,7 @@ class Sidebar(QFrame):
 
         layout.addStretch()
 
-        version = QLabel("Version 1.0.0")
+        version = QLabel("Aurora UI • v1.0.0")
         version.setAlignment(Qt.AlignCenter)
         version.setObjectName("SidebarVersion")
 
@@ -64,11 +79,12 @@ class Sidebar(QFrame):
             self.dashboard_btn
         )
 
-    def make_button(self, text):
+    def make_button(self, text, icon):
 
-        button = QPushButton(text)
+        button = QPushButton(f"{icon}   {text}")
         button.setObjectName("SidebarButton")
         button.setCursor(Qt.PointingHandCursor)
+        button.setProperty("active", "false")
 
         self.buttons.append(
             button
@@ -76,25 +92,21 @@ class Sidebar(QFrame):
 
         return button
 
+    def refresh_button_style(self, button):
+
+        button.style().unpolish(button)
+        button.style().polish(button)
+        button.update()
+
     def set_active_button(self, active_button):
 
         for button in self.buttons:
 
             if button == active_button:
-
-                button.setStyleSheet("""
-                    QPushButton#SidebarButton {
-                        background:#1DB954;
-                        color:#000000;
-                        border:none;
-                        border-radius:10px;
-                        padding:12px 14px;
-                        text-align:left;
-                        font-size:11pt;
-                        font-weight:800;
-                    }
-                """)
-
+                button.setProperty("active", "true")
             else:
+                button.setProperty("active", "false")
 
-                button.setStyleSheet("")
+            self.refresh_button_style(
+                button
+            )

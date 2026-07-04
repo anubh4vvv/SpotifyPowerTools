@@ -11,16 +11,30 @@ class AppStatusBar(QFrame):
         super().__init__()
 
         self.setObjectName("AppStatusBar")
-        self.setFixedHeight(34)
+        self.setFixedHeight(38)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(18, 6, 18, 6)
+        layout.setContentsMargins(18, 7, 18, 7)
+        layout.setSpacing(8)
+
+        self.dot = QLabel("●")
+        self.dot.setObjectName("StatusDot")
 
         self.message = QLabel("Ready")
         self.message.setObjectName("StatusMessage")
 
-        layout.addWidget(self.message)
+        layout.addWidget(
+            self.dot
+        )
+
+        layout.addWidget(
+            self.message
+        )
+
         layout.addStretch()
 
     def set_message(self, text):
-        self.message.setText(text)
+
+        self.message.setText(
+            text
+        )

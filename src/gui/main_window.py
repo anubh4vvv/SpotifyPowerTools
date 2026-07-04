@@ -7,11 +7,14 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QMessageBox,
     QStackedWidget,
+    QGraphicsOpacityEffect,
 )
 
 from PySide6.QtCore import (
     QTimer,
     QThread,
+    QPropertyAnimation,
+    QEasingCurve,
 )
 
 from gui.dashboard import Dashboard
@@ -97,11 +100,15 @@ class MainWindow(QMainWindow):
         self.search_thread = None
         self.search_worker = None
 
+        self.page_animation = None
+        self.page_animation_widget = None
+
         self.setWindowTitle("Spotify Power Tools")
         self.resize(1600, 950)
         self.setStyleSheet(APP_STYLE)
 
         central = QWidget()
+        central.setObjectName("AppRoot")
         self.setCentralWidget(central)
 
         root_layout = QVBoxLayout(central)
@@ -293,7 +300,7 @@ class MainWindow(QMainWindow):
             self.sidebar.dashboard_btn
         )
 
-        self.stack.setCurrentWidget(
+        self.set_page(
             self.dashboard
         )
 
@@ -312,7 +319,7 @@ class MainWindow(QMainWindow):
             self.sidebar.shuffle_btn
         )
 
-        self.stack.setCurrentWidget(
+        self.set_page(
             self.dashboard
         )
 
@@ -330,7 +337,7 @@ class MainWindow(QMainWindow):
             self.sidebar.analytics_btn
         )
 
-        self.stack.setCurrentWidget(
+        self.set_page(
             self.analytics_page
         )
 
@@ -349,7 +356,7 @@ class MainWindow(QMainWindow):
             self.sidebar.duplicates_btn
         )
 
-        self.stack.setCurrentWidget(
+        self.set_page(
             self.duplicates_page
         )
 
@@ -368,7 +375,7 @@ class MainWindow(QMainWindow):
             self.sidebar.queue_btn
         )
 
-        self.stack.setCurrentWidget(
+        self.set_page(
             self.queue_page
         )
 
@@ -380,7 +387,7 @@ class MainWindow(QMainWindow):
             self.sidebar.search_btn
         )
 
-        self.stack.setCurrentWidget(
+        self.set_page(
             self.search_page
         )
 
@@ -660,7 +667,7 @@ class MainWindow(QMainWindow):
 
         self.settings_page.load_from_saved()
 
-        self.stack.setCurrentWidget(
+        self.set_page(
             self.settings_page
         )
 
@@ -674,7 +681,7 @@ class MainWindow(QMainWindow):
             self.sidebar.about_btn
         )
 
-        self.stack.setCurrentWidget(
+        self.set_page(
             self.about_page
         )
 
@@ -690,6 +697,64 @@ class MainWindow(QMainWindow):
 
         self.status_bar.set_message(
             "Settings saved"
+        )
+
+    def animate_page(self, widget):
+
+        if self.page_animation is not None:
+
+            self.page_animation.stop()
+
+            if self.page_animation_widget is not None:
+                self.page_animation_widget.setGraphicsEffect(None)
+
+        effect = QGraphicsOpacityEffect(widget)
+        effect.setOpacity(0.0)
+
+        widget.setGraphicsEffect(
+            effect
+        )
+
+        animation = QPropertyAnimation(
+            effect,
+            b"opacity",
+            self
+        )
+
+        animation.setDuration(
+            230
+        )
+
+        animation.setStartValue(
+            0.0
+        )
+
+        animation.setEndValue(
+            1.0
+        )
+
+        animation.setEasingCurve(
+            QEasingCurve.OutCubic
+        )
+
+        animation.finished.connect(
+            lambda: widget.setGraphicsEffect(None)
+        )
+
+        self.page_animation = animation
+        self.page_animation_widget = widget
+
+        animation.start()
+
+    def set_page(self, widget):
+
+        if self.stack.currentWidget() != widget:
+            self.stack.setCurrentWidget(
+                widget
+            )
+
+        self.animate_page(
+            widget
         )
 
     def apply_recommended_profile(self, profile_name):
@@ -711,7 +776,7 @@ class MainWindow(QMainWindow):
             self.sidebar.dashboard_btn
         )
 
-        self.stack.setCurrentWidget(
+        self.set_page(
             self.dashboard
         )
 

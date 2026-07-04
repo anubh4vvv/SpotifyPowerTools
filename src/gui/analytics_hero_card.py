@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QProgressBar,
 )
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve
 
 
 class GlowMetric(QFrame):
@@ -33,6 +33,7 @@ class GlowMetric(QFrame):
         self.progress.setValue(0)
         self.progress.setTextVisible(False)
         self.progress.setFixedHeight(9)
+        self.animation = None
 
         layout.addWidget(
             self.title_label
@@ -45,6 +46,35 @@ class GlowMetric(QFrame):
         layout.addWidget(
             self.progress
         )
+
+    def animate_to(self, target_value):
+
+        if self.animation is not None:
+            self.animation.stop()
+
+        self.animation = QPropertyAnimation(
+            self.progress,
+            b"value",
+            self
+        )
+
+        self.animation.setDuration(
+            450
+        )
+
+        self.animation.setStartValue(
+            self.progress.value()
+        )
+
+        self.animation.setEndValue(
+            target_value
+        )
+
+        self.animation.setEasingCurve(
+            QEasingCurve.OutCubic
+        )
+
+        self.animation.start()
 
     def update_value(self, value):
 
@@ -60,10 +90,9 @@ class GlowMetric(QFrame):
             f"{value}%"
         )
 
-        self.progress.setValue(
+        self.animate_to(
             int(max(0, min(100, round(value))))
         )
-
 
 class AnalyticsHeroCard(QFrame):
 
@@ -153,6 +182,7 @@ class AnalyticsHeroCard(QFrame):
         self.aura_progress.setValue(0)
         self.aura_progress.setTextVisible(False)
         self.aura_progress.setFixedHeight(12)
+        self.aura_animation = None
 
         right.addWidget(
             self.aura_title
@@ -214,6 +244,35 @@ class AnalyticsHeroCard(QFrame):
         layout.addLayout(
             metric_grid
         )
+
+    def animate_aura_to(self, target_value):
+
+        if self.aura_animation is not None:
+            self.aura_animation.stop()
+
+        self.aura_animation = QPropertyAnimation(
+            self.aura_progress,
+            b"value",
+            self
+        )
+
+        self.aura_animation.setDuration(
+            650
+        )
+
+        self.aura_animation.setStartValue(
+            self.aura_progress.value()
+        )
+
+        self.aura_animation.setEndValue(
+            target_value
+        )
+
+        self.aura_animation.setEasingCurve(
+            QEasingCurve.OutCubic
+        )
+
+        self.aura_animation.start()
 
     def get_aura_status(self, score):
 
@@ -282,7 +341,7 @@ class AnalyticsHeroCard(QFrame):
             )
         )
 
-        self.aura_progress.setValue(
+        self.animate_aura_to(
             int(max(0, min(100, round(aura_score))))
         )
 
