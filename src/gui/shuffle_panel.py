@@ -7,12 +7,12 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QFrame,
+    QScrollArea,
 )
 
 from PySide6.QtCore import Qt, QTimer
 
 from gui.card import Card
-
 from services.settings_service import load_settings
 
 
@@ -22,7 +22,7 @@ class QueuePreviewRow(QWidget):
         super().__init__()
 
         self.setObjectName("QueuePreviewRow")
-        self.setFixedHeight(42)
+        self.setFixedHeight(46)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(10, 4, 10, 4)
@@ -35,20 +35,18 @@ class QueuePreviewRow(QWidget):
 
         text_block = QVBoxLayout()
         text_block.setContentsMargins(0, 0, 0, 0)
-        text_block.setSpacing(1)
+        text_block.setSpacing(0)
 
         self.song_label = QLabel("")
         self.song_label.setObjectName("QueuePreviewSong")
-        self.song_label.setWordWrap(False)
 
         self.reason_label = QLabel("")
         self.reason_label.setObjectName("QueuePreviewReason")
-        self.reason_label.setWordWrap(False)
 
         self.artist_label = QLabel("")
         self.artist_label.setObjectName("QueuePreviewArtist")
         self.artist_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        self.artist_label.setMinimumWidth(105)
+        self.artist_label.setMinimumWidth(115)
 
         text_block.addWidget(self.song_label)
         text_block.addWidget(self.reason_label)
@@ -58,7 +56,6 @@ class QueuePreviewRow(QWidget):
         layout.addWidget(self.artist_label)
 
     def update_item(self, index, item):
-
         if isinstance(item, dict):
             song = item.get("song")
             score = item.get("score")
@@ -71,41 +68,26 @@ class QueuePreviewRow(QWidget):
         if song is None:
             return
 
-        self.index_label.setText(
-            f"{index:02d}"
-        )
+        self.index_label.setText(f"{index:02d}")
+        self.song_label.setText(song.name)
+        self.artist_label.setText(song.artist)
 
-        self.song_label.setText(
-            song.name
-        )
+        reason_text = self.format_reasons(score, reasons)
 
-        self.artist_label.setText(
-            song.artist
-        )
-
-        reason_text = self.format_reasons(
-            score,
-            reasons
-        )
-
-        self.reason_label.setText(
-            reason_text
-        )
-
-        self.reason_label.setToolTip(
-            reason_text
-        )
+        self.reason_label.setText(reason_text)
+        self.reason_label.setToolTip(reason_text)
 
     def format_reasons(self, score, reasons):
-
         cleaned = []
 
         for reason in reasons:
             if reason not in cleaned:
                 cleaned.append(reason)
 
+        cleaned = cleaned[:2]
+
         if cleaned:
-            reason_text = " • ".join(cleaned[:2])
+            reason_text = " • ".join(cleaned)
         else:
             reason_text = "Smart shuffle selection"
 
@@ -118,13 +100,13 @@ class QueuePreviewRow(QWidget):
 class ShufflePanel(Card):
 
     def __init__(self):
+        super().__init__("SMART SHUFFLE")
 
-        super().__init__("Smart Shuffle")
-
-        self.setMinimumHeight(390)
+        self.setObjectName("SmartShuffleCard")
+        self.setMinimumHeight(400)
+        self.setMaximumHeight(410)
 
         self.profile = QComboBox()
-        self.profile.setObjectName("ShuffleMiniControl")
         self.profile.addItems([
             "Balanced",
             "Discovery",
@@ -132,40 +114,38 @@ class ShufflePanel(Card):
             "Album",
             "Random",
             "Weighted",
-            "Custom"
+            "Custom",
         ])
 
         self.queue_size = QComboBox()
-        self.queue_size.setObjectName("ShuffleMiniControl")
         self.queue_size.addItems([
             "10 songs",
             "25 songs",
             "50 songs",
-            "100 songs"
+            "100 songs",
         ])
 
-        # These sliders are still kept for backend/settings compatibility.
-        # They are hidden from the dashboard because the mockup has a cleaner Smart Shuffle card.
+        # Kept for settings/backend compatibility, hidden for mockup cleanliness.
+        self.profile.setVisible(False)
+        self.queue_size.setVisible(False)
+
         self.artist_slider = QSlider(Qt.Horizontal)
         self.album_slider = QSlider(Qt.Horizontal)
         self.random_slider = QSlider(Qt.Horizontal)
 
-        for slider in [
+        for slider in (
             self.artist_slider,
             self.album_slider,
             self.random_slider,
-        ]:
+        ):
             slider.setRange(0, 100)
             slider.setVisible(False)
 
-        self.preview_button = QPushButton(
-            "Preview Shuffle"
-        )
-        self.preview_button.setObjectName("SecondaryButton")
+        self.preview_button = QPushButton("Preview Shuffle")
+        self.preview_button.setObjectName("GhostButton")
 
-        self.apply_button = QPushButton(
-            "queue songs into spotify"
-        )
+        self.apply_button = QPushButton("queue 25 tracks into spotify")
+        self.apply_button.setObjectName("AmberButton")
         self.apply_button.setEnabled(False)
 
         self.profile_tag = QLabel("adaptive")
@@ -173,15 +153,17 @@ class ShufflePanel(Card):
         self.profile_tag.setAlignment(Qt.AlignCenter)
 
         self.explanation = QLabel(
-            "Leaning on your finish rate and recent replays — favoring tracks you sit through, "
-            "easing off ones you tend to skip early."
+            "Leaning on your finish rate and recent replays — favoring "
+            "tracks you sit through, easing off ones you tend to skip early."
         )
         self.explanation.setObjectName("ShuffleExplanation")
         self.explanation.setWordWrap(True)
 
+        self.rows = []
+
         self.layout.setSpacing(12)
 
-        self.build_controls()
+        self.build_top()
         self.build_preview_area()
         self.build_buttons()
 
@@ -189,83 +171,103 @@ class ShufflePanel(Card):
             self.update_profile_tag
         )
 
+        self.queue_size.currentTextChanged.connect(
+            self.update_queue_button_text
+        )
+
         self.apply_settings(
             load_settings()
         )
 
-    def build_controls(self):
-
+    def build_top(self):
         top_row = QHBoxLayout()
         top_row.setContentsMargins(0, 0, 0, 0)
-        top_row.setSpacing(10)
+        top_row.setSpacing(8)
 
-        label = QLabel("profile")
-        label.setObjectName("ShuffleControlLabel")
-
-        queue_label = QLabel("queue")
-        queue_label.setObjectName("ShuffleControlLabel")
-
-        top_row.addWidget(label)
-        top_row.addWidget(self.profile, 1)
-        top_row.addWidget(queue_label)
-        top_row.addWidget(self.queue_size, 1)
+        top_row.addStretch()
         top_row.addWidget(self.profile_tag)
 
         self.layout.addLayout(top_row)
         self.layout.addWidget(self.explanation)
 
     def build_preview_area(self):
-
         self.preview_frame = QFrame()
         self.preview_frame.setObjectName("QueuePreviewFrame")
+        self.preview_frame.setMinimumHeight(194)
+        self.preview_frame.setMaximumHeight(206)
 
-        preview_layout = QVBoxLayout(self.preview_frame)
-        preview_layout.setContentsMargins(8, 8, 8, 8)
-        preview_layout.setSpacing(5)
+        frame_layout = QVBoxLayout(self.preview_frame)
+        frame_layout.setContentsMargins(8, 8, 8, 8)
+        frame_layout.setSpacing(0)
 
         self.empty_preview_label = QLabel(
-            "Preview your smart queue here. The first few songs will appear in this card."
+            "Preview your smart queue. Songs will appear here."
         )
         self.empty_preview_label.setObjectName("QueueEmptyText")
         self.empty_preview_label.setWordWrap(True)
 
-        self.rows_layout = QVBoxLayout()
+        self.scroll = QScrollArea()
+        self.scroll.setObjectName("QueuePreviewScroll")
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QScrollArea.NoFrame)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+
+        self.scroll_content = QWidget()
+        self.scroll_content.setObjectName("QueuePreviewScrollContent")
+
+        self.rows_layout = QVBoxLayout(self.scroll_content)
         self.rows_layout.setContentsMargins(0, 0, 0, 0)
-        self.rows_layout.setSpacing(5)
+        self.rows_layout.setSpacing(4)
 
-        self.rows = []
+        self.rows_layout.addWidget(self.empty_preview_label)
+        self.rows_layout.addStretch()
 
-        preview_layout.addWidget(self.empty_preview_label)
-        preview_layout.addLayout(self.rows_layout)
+        self.scroll.setWidget(self.scroll_content)
 
-        self.layout.addWidget(self.preview_frame, 1)
+        frame_layout.addWidget(self.scroll)
+
+        self.layout.addWidget(self.preview_frame)
 
     def build_buttons(self):
-
         button_row = QHBoxLayout()
         button_row.setContentsMargins(0, 0, 0, 0)
         button_row.setSpacing(10)
 
-        button_row.addWidget(
-            self.preview_button,
-            1
-        )
-
-        button_row.addWidget(
-            self.apply_button,
-            1
-        )
+        button_row.addWidget(self.preview_button, 1)
+        button_row.addWidget(self.apply_button, 3)
 
         self.layout.addLayout(button_row)
 
     def update_profile_tag(self):
-
         self.profile_tag.setText(
             self.profile.currentText().lower()
         )
 
-    def apply_settings(self, settings):
+    def update_queue_button_text(self):
+        self.apply_button.setText(
+            f"queue {self.get_queue_limit()} tracks into spotify"
+        )
 
+    def set_preview_loading(self):
+        self.preview_button.setText("Generating...")
+        self.apply_button.setEnabled(False)
+
+    def set_preview_ready(self):
+        self.preview_button.setText("Preview Shuffle")
+        self.apply_button.setEnabled(True)
+        self.update_queue_button_text()
+
+    def set_preview_failed(self):
+        self.preview_button.setText("Preview Shuffle")
+        self.apply_button.setEnabled(False)
+        self.update_queue_button_text()
+
+    def set_queue_idle(self):
+        self.apply_button.setEnabled(True)
+        self.update_queue_button_text()
+
+    def apply_settings(self, settings):
         self.profile.setCurrentText(
             settings["shuffle_profile"]
         )
@@ -287,9 +289,9 @@ class ShufflePanel(Card):
         )
 
         self.update_profile_tag()
+        self.update_queue_button_text()
 
     def get_settings(self):
-
         return {
             "queue_size": self.get_queue_limit(),
             "shuffle_profile": self.profile.currentText(),
@@ -299,7 +301,6 @@ class ShufflePanel(Card):
         }
 
     def set_profile(self, profile_name):
-
         index = self.profile.findText(
             profile_name
         )
@@ -307,19 +308,15 @@ class ShufflePanel(Card):
         if index < 0:
             return False
 
-        self.profile.setCurrentIndex(
-            index
-        )
-
+        self.profile.setCurrentIndex(index)
         self.update_profile_tag()
 
         return True
 
     def highlight(self):
-
         self.setStyleSheet(
             """
-            QFrame#Card {
+            QFrame#SmartShuffleCard {
                 background:#221c16;
                 border:2px solid #e3a857;
                 border-radius:10px;
@@ -333,59 +330,57 @@ class ShufflePanel(Card):
         )
 
     def clear_highlight(self):
-
         self.setStyleSheet("")
 
     def get_queue_limit(self):
-
         text = self.queue_size.currentText()
-
         number = text.split()[0]
 
         return int(number)
 
     def clear_rows(self):
-
         for row in self.rows:
             row.setParent(None)
             row.deleteLater()
 
         self.rows = []
 
-    def show_tracks(self, tracks):
+    def rebuild_rows_layout(self):
+        while self.rows_layout.count():
+            item = self.rows_layout.takeAt(0)
 
+            widget = item.widget()
+
+            if widget is not None:
+                widget.setParent(None)
+
+        for row in self.rows:
+            self.rows_layout.addWidget(row)
+
+        self.rows_layout.addStretch()
+
+    def show_tracks(self, tracks):
         self.clear_rows()
 
         tracks = tracks or []
 
         if not tracks:
-
-            self.empty_preview_label.show()
             self.empty_preview_label.setText(
                 "No preview yet. Click Preview Shuffle to generate your smart queue."
             )
+            self.empty_preview_label.show()
+
+            self.rows_layout.addWidget(self.empty_preview_label)
+            self.rows_layout.addStretch()
+
             return
 
         self.empty_preview_label.hide()
 
-        visible_tracks = tracks[:4]
-
-        for index, item in enumerate(
-            visible_tracks,
-            start=1
-        ):
-
+        for index, item in enumerate(tracks, start=1):
             row = QueuePreviewRow()
+            row.update_item(index, item)
 
-            row.update_item(
-                index,
-                item
-            )
+            self.rows.append(row)
 
-            self.rows.append(
-                row
-            )
-
-            self.rows_layout.addWidget(
-                row
-            )
+        self.rebuild_rows_layout()

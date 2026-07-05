@@ -945,4 +945,677 @@ QLabel#AuraRingLabel {{
     font-weight: 700;
     letter-spacing: 2px;
 }}
+/* =========================================================
+   Cinematic Mockup Exactness Pass
+   ========================================================= */
+
+QWidget#DashboardContent {{
+    background: transparent;
+}}
+
+QFrame#DashboardHeader {{
+    background: transparent;
+}}
+
+QLabel#DashboardGreeting {{
+    font-family: {FONT_SERIF_STACK};
+    font-size: 26pt;
+    font-weight: 400;
+    color: #f3ecdf;
+}}
+
+QLabel#DashboardMeta {{
+    color: #8f8574;
+    font-size: 10.5pt;
+    font-weight: 500;
+}}
+
+QLabel#ProfilePill {{
+    background: #221c16;
+    color: #c9bfae;
+    border: 1px solid rgba(243,236,223,0.14);
+    border-radius: 18px;
+    padding: 8px 20px;
+    font-size: 10.5pt;
+    font-weight: 600;
+}}
+
+QFrame#NowPlayingCard,
+QFrame#SmartShuffleCard,
+QFrame#IdentityCard,
+QFrame#StatsStrip {{
+    background: #221c16;
+    border: 1px solid rgba(243,236,223,0.08);
+    border-radius: 10px;
+}}
+
+QFrame#NowPlayingCard QLabel#CardTitle,
+QFrame#SmartShuffleCard QLabel#CardTitle {{
+    color: #8f8574;
+    font-size: 10pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+}}
+
+QFrame#PolaroidFrame {{
+    background: #f3ecdf;
+    border: none;
+    border-radius: 3px;
+}}
+
+QLabel#AlbumCover {{
+    background: #0e0c09;
+    border: none;
+}}
+
+QLabel#PolaroidCaption {{
+    color: #4f463b;
+    font-family: "JetBrains Mono";
+    font-size: 9pt;
+    font-weight: 500;
+}}
+
+QLabel#NowPlayingTitle {{
+    color: #f3ecdf;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 30pt;
+    font-weight: 500;
+}}
+
+QLabel#NowPlayingArtist {{
+    color: #f3ecdf;
+    font-size: 14pt;
+    font-weight: 500;
+}}
+
+QLabel#NowPlayingAlbum {{
+    color: #c9bfae;
+    font-size: 11.5pt;
+    font-style: italic;
+}}
+
+QLabel#NowPlayingTime,
+QLabel#NowPlayingMeta {{
+    color: #8f8574;
+    font-size: 10pt;
+}}
+
+QLabel#RatingTitle {{
+    color: #c9bfae;
+    font-size: 10pt;
+    font-weight: 700;
+}}
+
+QPushButton#TransportSecondary {{
+    background: transparent;
+    color: #c9bfae;
+    border: 1px solid rgba(243,236,223,0.14);
+    border-radius: 18px;
+    padding: 8px;
+    font-size: 11pt;
+    font-weight: 700;
+}}
+
+QPushButton#TransportSecondary:hover {{
+    border: 1px solid #e3a857;
+    color: #f3ecdf;
+}}
+
+QPushButton#TransportPlay {{
+    background: #e3a857;
+    color: #14110e;
+    border: none;
+    border-radius: 20px;
+    padding: 8px;
+    font-size: 11pt;
+    font-weight: 900;
+}}
+
+QPushButton#RatingClearButton {{
+    background: transparent;
+    color: #c9bfae;
+    border: 1px solid rgba(243,236,223,0.10);
+    border-radius: 9px;
+    padding: 8px;
+    font-size: 9.5pt;
+}}
+
+QPushButton#RatingClearButton:hover {{
+    border: 1px solid #e3a857;
+    color: #f3ecdf;
+}}
+
+QLabel#SmartShuffleBadge {{
+    background: rgba(147,166,138,32);
+    color: #93a68a;
+    border: 1px solid rgba(147,166,138,80);
+    border-radius: 12px;
+    padding: 5px 10px;
+    font-size: 9.5pt;
+    font-weight: 600;
+}}
+
+QLabel#ShuffleExplanation {{
+    color: #c9bfae;
+    font-size: 10.5pt;
+}}
+
+QFrame#QueuePreviewFrame {{
+    background: #1a1611;
+    border: 1px solid rgba(243,236,223,0.08);
+    border-radius: 9px;
+}}
+
+QWidget#QueuePreviewRow {{
+    background: transparent;
+    border-bottom: 1px solid rgba(243,236,223,0.06);
+}}
+
+QLabel#QueuePreviewIndex {{
+    color: #8f8574;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 11pt;
+    font-weight: 500;
+}}
+
+QLabel#QueuePreviewSong {{
+    color: #f3ecdf;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 12pt;
+    font-weight: 500;
+}}
+
+QLabel#QueuePreviewReason {{
+    color: #8f8574;
+    font-size: 8.5pt;
+    font-weight: 500;
+}}
+
+QLabel#QueuePreviewArtist {{
+    color: #c9bfae;
+    font-size: 9.5pt;
+    font-weight: 500;
+}}
+
+QLabel#QueueEmptyText {{
+    color: #8f8574;
+    font-size: 10pt;
+    font-weight: 500;
+}}
+
+QPushButton#GhostButton {{
+    background: transparent;
+    color: #c9bfae;
+    border: 1px solid rgba(243,236,223,0.10);
+    border-radius: 7px;
+    padding: 10px 14px;
+    font-size: 10pt;
+    font-weight: 500;
+}}
+
+QPushButton#GhostButton:hover {{
+    border: 1px solid #e3a857;
+    color: #f3ecdf;
+}}
+
+QPushButton#AmberButton {{
+    background: #e3a857;
+    color: #14110e;
+    border: none;
+    border-radius: 7px;
+    padding: 10px 14px;
+    font-size: 10pt;
+    font-weight: 700;
+}}
+
+QPushButton#AmberButton:hover {{
+    background: #efb666;
+}}
+
+QFrame#StatsStrip {{
+    background: #221c16;
+}}
+
+QFrame#StatStripItem {{
+    background: #1a1611;
+    border: 1px solid rgba(243,236,223,0.08);
+    border-radius: 9px;
+}}
+
+QLabel#StatStripValue {{
+    color: #f3ecdf;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 28pt;
+    font-weight: 500;
+}}
+
+QLabel#StatStripLabel {{
+    color: #8f8574;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+}}
+
+QFrame#IdentityCard {{
+    background: qlineargradient(
+        x1:0, y1:0,
+        x2:1, y2:1,
+        stop:0 #221c16,
+        stop:1 #1a1611
+    );
+}}
+
+QLabel#IdentityEyebrow {{
+    color: #8f8574;
+    font-size: 9.5pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+}}
+
+QLabel#IdentityName {{
+    color: #e3a857;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 36pt;
+    font-style: italic;
+    font-weight: 500;
+}}
+
+QLabel#IdentitySubtitle {{
+    color: #c9bfae;
+    font-size: 11.5pt;
+}}
+
+QLabel#BadgeStickerSage {{
+    background: rgba(147,166,138,28);
+    color: #93a68a;
+    border: 1px dashed rgba(147,166,138,120);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 9.5pt;
+    font-weight: 600;
+}}
+
+QLabel#BadgeStickerRose {{
+    background: rgba(201,138,125,28);
+    color: #c98a7d;
+    border: 1px dashed rgba(201,138,125,120);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 9.5pt;
+    font-weight: 600;
+}}
+
+QLabel#BadgeStickerAmber {{
+    background: rgba(227,168,87,28);
+    color: #e3a857;
+    border: 1px dashed rgba(227,168,87,120);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 9.5pt;
+    font-weight: 600;
+}}
+
+QFrame#AuraRing {{
+    background: rgba(227,168,87,12);
+    border: 3px solid #e3a857;
+    border-radius: 74px;
+}}
+
+QLabel#AuraRingNumber {{
+    color: #e3a857;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 38pt;
+    font-weight: 500;
+}}
+
+QLabel#AuraRingLabel {{
+    color: #8f8574;
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+}}
+/* =========================================================
+   Cinematic Mockup Exactness Sprint
+   Keep this block last.
+   ========================================================= */
+
+QWidget#DashboardContent {{
+    background: transparent;
+}}
+
+QFrame#DashboardHeader {{
+    background: transparent;
+}}
+
+QLabel#DashboardGreeting {{
+    font-family: {FONT_SERIF_STACK};
+    font-size: 26pt;
+    font-weight: 400;
+    color: #f3ecdf;
+}}
+
+QLabel#DashboardMeta {{
+    color: #8f8574;
+    font-size: 10.5pt;
+    font-weight: 500;
+}}
+
+QLabel#ProfilePill {{
+    background: #221c16;
+    color: #c9bfae;
+    border: 1px solid rgba(243,236,223,0.14);
+    border-radius: 18px;
+    padding: 8px 20px;
+    font-size: 10.5pt;
+    font-weight: 600;
+}}
+
+QFrame#NowPlayingCard,
+QFrame#SmartShuffleCard,
+QFrame#IdentityCard,
+QFrame#StatsStrip {{
+    background: #221c16;
+    border: 1px solid rgba(243,236,223,0.08);
+    border-radius: 10px;
+}}
+
+QFrame#NowPlayingCard QLabel#CardTitle,
+QFrame#SmartShuffleCard QLabel#CardTitle {{
+    color: #8f8574;
+    font-size: 10pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+}}
+
+QFrame#PolaroidFrame {{
+    background: #f3ecdf;
+    border: none;
+    border-radius: 3px;
+}}
+
+QLabel#AlbumCover {{
+    background: #0e0c09;
+    border: none;
+}}
+
+QLabel#PolaroidCaption {{
+    color: #4f463b;
+    font-family: "JetBrains Mono";
+    font-size: 9pt;
+    font-weight: 500;
+}}
+
+QLabel#NowPlayingTitle {{
+    color: #f3ecdf;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 26pt;
+    font-weight: 500;
+}}
+
+QLabel#NowPlayingArtist {{
+    color: #f3ecdf;
+    font-size: 14pt;
+    font-weight: 500;
+}}
+
+QLabel#NowPlayingAlbum {{
+    color: #c9bfae;
+    font-size: 11.5pt;
+    font-style: italic;
+}}
+
+QLabel#NowPlayingTime,
+QLabel#NowPlayingMeta {{
+    color: #8f8574;
+    font-size: 10pt;
+}}
+
+QLabel#RatingTitle {{
+    color: #c9bfae;
+    font-size: 10pt;
+    font-weight: 700;
+}}
+
+QPushButton#TransportSecondary {{
+    background: transparent;
+    color: #c9bfae;
+    border: 1px solid rgba(243,236,223,0.14);
+    border-radius: 18px;
+    padding: 8px;
+    font-size: 15pt;
+    font-weight: 700;
+}}
+
+QPushButton#TransportSecondary:hover {{
+    border: 1px solid #e3a857;
+    color: #f3ecdf;
+}}
+
+QPushButton#TransportPlay {{
+    background: #e3a857;
+    color: #14110e;
+    border: none;
+    border-radius: 20px;
+    padding: 8px;
+    font-size: 12pt;
+    font-weight: 900;
+}}
+
+QPushButton#RatingClearButton {{
+    background: transparent;
+    color: #c9bfae;
+    border: 1px solid rgba(243,236,223,0.10);
+    border-radius: 9px;
+    padding: 8px;
+    font-size: 9.5pt;
+}}
+
+QPushButton#RatingClearButton:hover {{
+    border: 1px solid #e3a857;
+    color: #f3ecdf;
+}}
+
+QLabel#SmartShuffleBadge {{
+    background: rgba(147,166,138,32);
+    color: #93a68a;
+    border: 1px solid rgba(147,166,138,80);
+    border-radius: 12px;
+    padding: 5px 10px;
+    font-size: 9.5pt;
+    font-weight: 600;
+}}
+
+QLabel#ShuffleExplanation {{
+    color: #c9bfae;
+    font-size: 10.5pt;
+}}
+
+QFrame#QueuePreviewFrame {{
+    background: #1a1611;
+    border: 1px solid rgba(243,236,223,0.08);
+    border-radius: 9px;
+}}
+
+QScrollArea#QueuePreviewScroll {{
+    background: transparent;
+    border: none;
+}}
+
+QWidget#QueuePreviewScrollContent {{
+    background: transparent;
+}}
+
+QWidget#QueuePreviewRow {{
+    background: transparent;
+    border-bottom: 1px solid rgba(243,236,223,0.06);
+}}
+
+QLabel#QueuePreviewIndex {{
+    color: #8f8574;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 11pt;
+    font-weight: 500;
+}}
+
+QLabel#QueuePreviewSong {{
+    color: #f3ecdf;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 12pt;
+    font-weight: 500;
+}}
+
+QLabel#QueuePreviewReason {{
+    color: #8f8574;
+    font-size: 8.5pt;
+    font-weight: 500;
+}}
+
+QLabel#QueuePreviewArtist {{
+    color: #c9bfae;
+    font-size: 9.5pt;
+    font-weight: 500;
+}}
+
+QLabel#QueueEmptyText {{
+    color: #8f8574;
+    font-size: 10pt;
+    font-weight: 500;
+}}
+
+QPushButton#GhostButton {{
+    background: transparent;
+    color: #c9bfae;
+    border: 1px solid rgba(243,236,223,0.10);
+    border-radius: 7px;
+    padding: 10px 14px;
+    font-size: 10pt;
+    font-weight: 500;
+}}
+
+QPushButton#GhostButton:hover {{
+    border: 1px solid #e3a857;
+    color: #f3ecdf;
+}}
+
+QPushButton#AmberButton {{
+    background: #e3a857;
+    color: #14110e;
+    border: none;
+    border-radius: 7px;
+    padding: 10px 14px;
+    font-size: 10pt;
+    font-weight: 700;
+}}
+
+QPushButton#AmberButton:hover {{
+    background: #efb666;
+}}
+
+QPushButton#AmberButton:disabled {{
+    background: rgba(227,168,87,90);
+    color: rgba(20,17,14,140);
+}}
+
+QFrame#StatsStrip {{
+    background: #221c16;
+}}
+
+QFrame#StatStripItem {{
+    background: #1a1611;
+    border: 1px solid rgba(243,236,223,0.08);
+    border-radius: 9px;
+}}
+
+QLabel#StatStripValue {{
+    color: #f3ecdf;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 28pt;
+    font-weight: 500;
+}}
+
+QLabel#StatStripLabel {{
+    color: #8f8574;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+}}
+
+QFrame#IdentityCard {{
+    background: qlineargradient(
+        x1:0, y1:0,
+        x2:1, y2:1,
+        stop:0 #221c16,
+        stop:1 #1a1611
+    );
+}}
+
+QLabel#IdentityEyebrow {{
+    color: #8f8574;
+    font-size: 9.5pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+}}
+
+QLabel#IdentityName {{
+    color: #e3a857;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 36pt;
+    font-style: italic;
+    font-weight: 500;
+}}
+
+QLabel#IdentitySubtitle {{
+    color: #c9bfae;
+    font-size: 11.5pt;
+}}
+
+QLabel#BadgeStickerSage {{
+    background: rgba(147,166,138,28);
+    color: #93a68a;
+    border: 1px dashed rgba(147,166,138,120);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 9.5pt;
+    font-weight: 600;
+}}
+
+QLabel#BadgeStickerRose {{
+    background: rgba(201,138,125,28);
+    color: #c98a7d;
+    border: 1px dashed rgba(201,138,125,120);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 9.5pt;
+    font-weight: 600;
+}}
+
+QLabel#BadgeStickerAmber {{
+    background: rgba(227,168,87,28);
+    color: #e3a857;
+    border: 1px dashed rgba(227,168,87,120);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 9.5pt;
+    font-weight: 600;
+}}
+
+QFrame#AuraRing {{
+    background: rgba(227,168,87,12);
+    border: 3px solid #e3a857;
+    border-radius: 74px;
+}}
+
+QLabel#AuraRingNumber {{
+    color: #e3a857;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 38pt;
+    font-weight: 500;
+}}
+
+QLabel#AuraRingLabel {{
+    color: #8f8574;
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+}}
 """

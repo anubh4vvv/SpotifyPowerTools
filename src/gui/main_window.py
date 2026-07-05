@@ -108,6 +108,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Spotify Power Tools")
         self.resize(1600, 950)
+        self.setMinimumSize(1500, 900)
         self.setStyleSheet(APP_STYLE)
 
         central = QWidget()
@@ -150,14 +151,13 @@ class MainWindow(QMainWindow):
         body_layout.addWidget(self.stack, 1)
 
         self.status_bar = AppStatusBar()
+        self.status_bar.setVisible(False)
 
         root_layout.addWidget(self.header)
         root_layout.addWidget(body, 1)
         root_layout.addWidget(self.status_bar)
 
-        self.dashboard.shuffle_panel.apply_button.setText(
-            "Queue Smart Shuffle"
-        )
+        self.dashboard.shuffle_panel.update_queue_button_text()
 
         self.sidebar.dashboard_btn.clicked.connect(
             self.show_dashboard
@@ -1144,6 +1144,12 @@ class MainWindow(QMainWindow):
         playlist = self.cached_playlist
         tracks = self.cached_tracks
 
+        if hasattr(self.dashboard, "update_playlist_summary"):
+            self.dashboard.update_playlist_summary(
+                playlist,
+                tracks
+            )
+
         self.dashboard.playlist_card.update_playlist(
             playlist,
             tracks
@@ -1902,15 +1908,7 @@ class MainWindow(QMainWindow):
 
         self.dashboard.shuffle_panel.preview_button.setEnabled(True)
 
-        self.dashboard.shuffle_panel.preview_button.setText(
-            "Preview Shuffle"
-        )
-
-        self.dashboard.shuffle_panel.apply_button.setEnabled(True)
-
-        self.dashboard.shuffle_panel.apply_button.setText(
-            "Queue Smart Shuffle"
-        )
+        self.dashboard.shuffle_panel.set_preview_ready()
 
         self.status_bar.set_message(
             f"Preview ready • Showing {len(preview)} upcoming songs"
@@ -1994,11 +1992,7 @@ class MainWindow(QMainWindow):
 
     def queue_finished(self, result):
 
-        self.dashboard.shuffle_panel.apply_button.setEnabled(True)
-
-        self.dashboard.shuffle_panel.apply_button.setText(
-            "Queue Smart Shuffle"
-        )
+        self.dashboard.shuffle_panel.set_queue_idle()
 
         self.dashboard.shuffle_panel.preview_button.setEnabled(True)
 
