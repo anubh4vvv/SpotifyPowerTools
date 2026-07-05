@@ -317,6 +317,20 @@ class MainWindow(QMainWindow):
 
         self.refresh_devices()
 
+    def closeEvent(self, event):
+
+        try:
+
+            if hasattr(self, "dashboard") and hasattr(self.dashboard, "web_view"):
+                self.dashboard.web_view.setHtml("")
+                self.dashboard.web_view.setParent(None)
+                self.dashboard.web_view.deleteLater()
+
+        except RuntimeError:
+            pass
+
+        super().closeEvent(event)
+
     def show_dashboard(self):
 
         self.sidebar.set_active_button(
@@ -803,11 +817,14 @@ class MainWindow(QMainWindow):
             widget != self.dashboard
         )
 
-        # Do not animate QWebEngine dashboard.
+        # Important:
+        # Do not animate the WebEngine dashboard.
         # QWebEngineView can crash with QGraphicsEffect / opacity animation.
         if widget == self.dashboard:
+
             if hasattr(self, "film_grain_overlay"):
                 self.film_grain_overlay.raise_()
+
             return
 
         self.animate_page(
@@ -974,6 +991,12 @@ class MainWindow(QMainWindow):
     def clear_analysis_caches(self):
 
         self.analytics_cache.clear()
+
+        QTimer.singleShot(
+            0,
+            self.slow_refresh
+        )
+        
         self.duplicates_cache.clear()
 
     def export_listening_memory(self):
@@ -1207,12 +1230,24 @@ class MainWindow(QMainWindow):
             tracks
         )
 
-        analytics_payload = self.collect_dashboard_analytics()
+        if playlist is not None and tracks:
 
-        if analytics_payload and hasattr(self.dashboard, "update_analytics_summary"):
-            self.dashboard.update_analytics_summary(
-                analytics_payload
+            analytics = self.get_cached_analytics(
+                playlist,
+                tracks
             )
+
+            if hasattr(self.dashboard, "update_analytics_summary"):
+                self.dashboard.update_analytics_summary(
+                    analytics
+                )
+
+        else:
+
+            if hasattr(self.dashboard, "update_analytics_summary"):
+                self.dashboard.update_analytics_summary(
+                    {}
+                )
 
         if self.stack.currentWidget() != self.dashboard:
             return
@@ -1240,6 +1275,11 @@ class MainWindow(QMainWindow):
             playlist,
             analytics
         )
+
+        if hasattr(self.dashboard, "update_analytics_summary"):
+            self.dashboard.update_analytics_summary(
+                analytics
+            )
 
         if playlist is not None:
             self.status_bar.set_message(
