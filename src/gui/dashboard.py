@@ -1013,6 +1013,8 @@ class Dashboard(QWidget):
             "badges": badges[:3],
             "hiddenFavorite": hidden_favorite,
             "playlistVillain": playlist_villain,
+            "recommendedProfile": recommended_profile,
+            "recommendedConfidence": recommendation_confidence,
         }
 
         self.latest_identity_summary = identity_payload
@@ -1022,28 +1024,28 @@ class Dashboard(QWidget):
             identity_payload
         )
 
-        profile_value = recommended_profile
+        rating_value = "—"
 
-        if len(profile_value) > 8:
-            profile_value = profile_value[:8]
+        if average_rating is not None and average_rating > 0:
+            rating_value = average_rating
 
         stats_payload = {
             "items": [
                 {
-                    "value": health_score,
-                    "label": "HEALTH",
+                    "value": total_songs,
+                    "label": "TRACKS",
                 },
                 {
-                    "value": variety_score,
-                    "label": "VARIETY",
+                    "value": f"{completion_rate}%",
+                    "label": "COMPLETION RATE",
                 },
                 {
-                    "value": top_artist_count or unique_artists,
-                    "label": "TOP ARTIST" if top_artist_count else "ARTISTS",
+                    "value": rating_value,
+                    "label": "AVG RATING",
                 },
                 {
-                    "value": profile_value,
-                    "label": "PROFILE",
+                    "value": unique_artists,
+                    "label": "UNIQUE ARTISTS",
                 },
             ]
         }
