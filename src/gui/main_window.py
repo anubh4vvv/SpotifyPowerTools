@@ -31,6 +31,7 @@ from gui.settings_page import SettingsPage
 from gui.queue_page import QueuePage
 from gui.search_page import SearchPage
 from gui.share_card_widget import ShareCardWidget
+from gui.film_grain_overlay import FilmGrainOverlay
 
 from controllers.spotify_controller import SpotifyController
 
@@ -128,6 +129,8 @@ class MainWindow(QMainWindow):
         body_layout.setSpacing(0)
 
         self.sidebar = Sidebar()
+        self.sidebar.setVisible(False)
+
 
         self.stack = QStackedWidget()
 
@@ -156,6 +159,14 @@ class MainWindow(QMainWindow):
         root_layout.addWidget(self.header)
         root_layout.addWidget(body, 1)
         root_layout.addWidget(self.status_bar)
+
+        self.film_grain_overlay = FilmGrainOverlay(
+            central,
+            opacity=0.14,
+            tile_size=180
+        )
+
+        self.film_grain_overlay.raise_()
 
         self.dashboard.shuffle_panel.update_queue_button_text()
 
@@ -189,6 +200,10 @@ class MainWindow(QMainWindow):
 
         self.sidebar.about_btn.clicked.connect(
             self.show_about
+        )
+
+        self.dashboard.bridge.pageRequested.connect(
+            self.handle_web_page_request
         )
 
         self.settings_page.settings_saved.connect(
@@ -338,6 +353,29 @@ class MainWindow(QMainWindow):
         self.status_bar.set_message(
             "Smart Shuffle selected"
         )
+
+    def handle_web_page_request(self, page_name):
+
+        page_name = str(page_name or "").lower().strip()
+
+        handlers = {
+            "dashboard": self.show_dashboard,
+            "smart_shuffle": self.show_smart_shuffle,
+            "shuffle": self.show_smart_shuffle,
+            "analytics": self.show_analytics,
+            "queue": self.show_queue,
+            "search": self.show_search,
+            "duplicates": self.show_duplicates,
+            "settings": self.show_settings,
+            "about": self.show_about,
+        }
+
+        handler = handlers.get(page_name)
+
+        if handler is None:
+            return
+
+        handler()
 
     def show_analytics(self):
 
@@ -761,9 +799,23 @@ class MainWindow(QMainWindow):
                 widget
             )
 
+        self.sidebar.setVisible(
+            widget != self.dashboard
+        )
+
+        # Do not animate QWebEngine dashboard.
+        # QWebEngineView can crash with QGraphicsEffect / opacity animation.
+        if widget == self.dashboard:
+            if hasattr(self, "film_grain_overlay"):
+                self.film_grain_overlay.raise_()
+            return
+
         self.animate_page(
             widget
         )
+
+        if hasattr(self, "film_grain_overlay"):
+            self.film_grain_overlay.raise_()
 
     def apply_recommended_profile(self, profile_name):
 
@@ -1154,6 +1206,13 @@ class MainWindow(QMainWindow):
             playlist,
             tracks
         )
+
+        analytics_payload = self.collect_dashboard_analytics()
+
+        if analytics_payload and hasattr(self.dashboard, "update_analytics_summary"):
+            self.dashboard.update_analytics_summary(
+                analytics_payload
+            )
 
         if self.stack.currentWidget() != self.dashboard:
             return
