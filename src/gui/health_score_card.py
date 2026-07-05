@@ -25,7 +25,7 @@ class HealthScoreCard(Card):
         self.status_label = QLabel("No Data")
         self.status_label.setAlignment(Qt.AlignCenter)
         self.status_label.setStyleSheet(
-            "font-size:14pt; font-weight:700; color:#1DB954;"
+            "font-size:14pt; font-weight:700; color: #e3a857;"
         )
 
         self.progress = QProgressBar()

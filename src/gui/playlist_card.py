@@ -12,7 +12,8 @@ class PlaylistCard(Card):
 
         super().__init__("Playlist Statistics")
 
-        self.setMinimumHeight(300)
+        self.setMinimumHeight(135)
+        self.setMaximumHeight(155)
 
         self.last_cache_key = None
 
@@ -26,8 +27,8 @@ class PlaylistCard(Card):
 
         grid.addWidget(self.song_tile, 0, 0)
         grid.addWidget(self.artist_tile, 0, 1)
-        grid.addWidget(self.album_tile, 1, 0)
-        grid.addWidget(self.duration_tile, 1, 1)
+        grid.addWidget(self.album_tile, 0, 2)
+        grid.addWidget(self.duration_tile, 0, 3)
 
         self.layout.addLayout(grid)
 

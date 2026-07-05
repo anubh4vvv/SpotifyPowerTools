@@ -95,12 +95,12 @@ class CurrentSongCard(Card):
         controls = QHBoxLayout()
         controls.setSpacing(12)
 
-        self.previous_button = QPushButton("Previous")
+        self.previous_button = QPushButton("⏮")
         self.previous_button.setObjectName("SecondaryButton")
 
-        self.play_pause_button = QPushButton("Pause")
+        self.play_pause_button = QPushButton("⏸")
 
-        self.next_button = QPushButton("Next")
+        self.next_button = QPushButton("⏭")
         self.next_button.setObjectName("SecondaryButton")
 
         controls.addWidget(self.previous_button)
@@ -224,8 +224,8 @@ class CurrentSongCard(Card):
 
                 button.setStyleSheet("""
                     QPushButton#RatingButton {
-                        background:#1DB954;
-                        color:#000000;
+                        background:#e3a857;
+                        color:#14110e;
                         border:none;
                         border-radius:10px;
                         font-weight:900;
@@ -246,7 +246,7 @@ class CurrentSongCard(Card):
                     }
 
                     QPushButton#RatingButton:hover {
-                        border:1px solid #1DB954;
+                        border:1px solid  #e3a857;
                     }
                 """)
 
@@ -282,7 +282,7 @@ class CurrentSongCard(Card):
         self.meta.clear()
 
         self.play_pause_button.setText(
-            "Play"
+            "▶"
         )
 
         self.current_rating = -1
@@ -337,9 +337,9 @@ class CurrentSongCard(Card):
         self.last_is_playing = is_playing
 
         if is_playing:
-            self.play_pause_button.setText("Pause")
+            self.play_pause_button.setText("⏸")
         else:
-            self.play_pause_button.setText("Play")
+            self.play_pause_button.setText("▶")
 
     def update_cover_art(self, album):
 

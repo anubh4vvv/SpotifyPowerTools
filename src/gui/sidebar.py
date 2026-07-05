@@ -36,11 +36,11 @@ class Sidebar(QFrame):
         layout.setContentsMargins(22, 28, 22, 24)
         layout.setSpacing(12)
 
-        title = QLabel("Spotify\nPower Tools")
+        title = QLabel("Power\nTools")
         title.setObjectName("SidebarTitle")
         title.setWordWrap(True)
 
-        subtitle = QLabel("Aurora Music Intelligence")
+        subtitle = QLabel("FOR SPOTIFY")
         subtitle.setObjectName("SidebarSubtitle")
         subtitle.setWordWrap(True)
 
@@ -49,14 +49,14 @@ class Sidebar(QFrame):
 
         layout.addSpacing(28)
 
-        self.dashboard_btn = self.make_button("Dashboard", "🏠")
-        self.shuffle_btn = self.make_button("Smart Shuffle", "🎛️")
-        self.queue_btn = self.make_button("Queue", "🎧")
-        self.search_btn = self.make_button("Search", "🔎")
-        self.analytics_btn = self.make_button("Analytics", "🌈")
-        self.duplicates_btn = self.make_button("Duplicates", "🧹")
-        self.settings_btn = self.make_button("Settings", "⚙️")
-        self.about_btn = self.make_button("About", "✨")
+        self.dashboard_btn = self.make_button("Dashboard", "•")
+        self.shuffle_btn = self.make_button("Smart Shuffle", "↝")
+        self.queue_btn = self.make_button("Queue", "≡")
+        self.search_btn = self.make_button("Search", "⌕")
+        self.analytics_btn = self.make_button("Analytics", "▥")
+        self.duplicates_btn = self.make_button("Duplicates", "□")
+        self.settings_btn = self.make_button("Settings", "⚙")
+        self.about_btn = self.make_button("About", "i")
 
         layout.addWidget(self.dashboard_btn)
         layout.addWidget(self.shuffle_btn)
@@ -69,9 +69,9 @@ class Sidebar(QFrame):
 
         layout.addStretch()
 
-        version = QLabel("Aurora UI • v1.0.0")
-        version.setAlignment(Qt.AlignCenter)
-        version.setObjectName("SidebarVersion")
+        subtitle = QLabel("FOR SPOTIFY")
+        version = QLabel("connected · adaptive profile")
+        self.subtitle = QLabel("playlist intelligence, quietly")
 
         layout.addWidget(version)
 

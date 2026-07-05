@@ -119,6 +119,7 @@ class MainWindow(QMainWindow):
         root_layout.setSpacing(0)
 
         self.header = Header()
+        self.header.setVisible(False)
 
         body = QWidget()
         body_layout = QHBoxLayout(body)

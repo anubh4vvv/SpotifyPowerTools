@@ -1,746 +1,948 @@
-APP_STYLE = """
+from gui.colors import (
+    BACKGROUND,
+    CARD,
+    CARD_LIGHT,
+    TEXT,
+    TEXT_SECONDARY,
+    TEXT_MUTED,
+    BORDER,
+    HOVER,
+    SUCCESS,
+    WARNING,
+    ERROR,
+    ACCENT,
+    ACCENT_HOVER,
+    ACCENT_PRESSED,
+    ON_ACCENT,
+    SAGE,
+    ROSE,
+    LINE_STRONG,
+)
+
+from gui.fonts import FONT_SANS_STACK, FONT_SERIF_STACK
+
+APP_STYLE = f"""
 /* =========================================================
-   Spotify Power Tools — Aurora UI
-   Neon glass music intelligence dashboard
+   Spotify Power Tools — Moodboard UI
+   Cinematic, matte, film-grain-adjacent
    ========================================================= */
 
-QMainWindow{
-    background:#050509;
-}
+QMainWindow{{
+    background:{BACKGROUND};
+}}
 
-QWidget#AppRoot{
+QWidget#AppRoot{{
     background:qradialgradient(
-        cx:0.10, cy:0.05,
-        radius:1.2,
-        fx:0.10, fy:0.05,
-        stop:0 #153A2B,
-        stop:0.24 #081B17,
-        stop:0.52 #070711,
-        stop:0.78 #090516,
-        stop:1 #030305
+        cx:0.12, cy:0.05,
+        radius:1.3,
+        fx:0.12, fy:0.05,
+        stop:0 rgba(227,168,87,10),
+        stop:0.35 {BACKGROUND},
+        stop:1 {BACKGROUND}
     );
-}
+}}
 
-QWidget{
+QWidget{{
     background:transparent;
-    color:#F8FAFC;
-    font-family:'Segoe UI Variable', 'Segoe UI', Arial, sans-serif;
+    color:{TEXT};
+    font-family:{FONT_SANS_STACK};
     font-size:11pt;
-}
+}}
 
-QStackedWidget{
+QStackedWidget{{
     background:transparent;
-}
+}}
 
 /* ---------- Header ---------- */
 
-QFrame#Header{
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:1, y2:0,
-        stop:0 rgba(9, 12, 18, 235),
-        stop:0.45 rgba(10, 20, 22, 225),
-        stop:1 rgba(17, 9, 30, 235)
-    );
-    border-bottom:1px solid rgba(139, 92, 246, 70);
-}
+QFrame#Header{{
+    background:{CARD};
+    border-bottom:1px solid {LINE_STRONG};
+}}
 
-QLabel#HeaderLogo{
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:1, y2:1,
-        stop:0 #1DB954,
-        stop:0.52 #22D3EE,
-        stop:1 #A855F7
-    );
-    color:#020617;
+QLabel#HeaderLogo{{
+    background:{ACCENT};
+    color:{ON_ACCENT};
     border-radius:18px;
+    font-family:{FONT_SERIF_STACK};
     font-size:20pt;
-    font-weight:900;
-}
+    font-weight:600;
+}}
 
-QLabel#HeaderTitle{
-    font-size:23pt;
-    font-weight:900;
-    color:#FFFFFF;
-}
+QLabel#HeaderTitle{{
+    font-family:{FONT_SERIF_STACK};
+    font-size:22pt;
+    font-weight:500;
+    color:{TEXT};
+}}
 
-QLabel#HeaderSubtitle{
+QLabel#HeaderSubtitle{{
     font-size:10pt;
-    color:#B7C3D7;
-    font-weight:650;
-}
+    color:{TEXT_MUTED};
+    font-weight:500;
+}}
 
-QLabel#HeaderStatus{
-    color:#03130A;
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:1, y2:0,
-        stop:0 #1DB954,
-        stop:1 #B8FFD2
-    );
+QLabel#HeaderStatus{{
+    color:{SAGE};
+    background:rgba(147,166,138,32);
+    border:1px solid rgba(147,166,138,80);
     border-radius:15px;
     padding:7px 13px;
-    font-size:10.5pt;
-    font-weight:900;
-}
+    font-size:10pt;
+    font-weight:600;
+}}
 
-QLabel#HeaderStatusError{
-    color:#FFFFFF;
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:1, y2:0,
-        stop:0 #EF4444,
-        stop:1 #FB7185
-    );
+QLabel#HeaderStatusError{{
+    color:{ROSE};
+    background:rgba(201,138,125,32);
+    border:1px solid rgba(201,138,125,80);
     border-radius:15px;
     padding:7px 13px;
-    font-size:10.5pt;
-    font-weight:900;
-}
+    font-size:10pt;
+    font-weight:600;
+}}
 
 /* ---------- Sidebar ---------- */
 
-QFrame#Sidebar{
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:0, y2:1,
-        stop:0 rgba(8, 10, 18, 245),
-        stop:0.48 rgba(7, 18, 18, 236),
-        stop:1 rgba(13, 8, 25, 245)
-    );
-    border-right:1px solid rgba(34, 211, 238, 55);
-}
+QFrame#Sidebar{{
+    background:{BACKGROUND};
+    border-right:1px solid {BORDER};
+}}
 
-QLabel#SidebarTitle{
-    font-size:21pt;
-    font-weight:900;
-    color:#FFFFFF;
-}
+QLabel#SidebarTitle{{
+    font-family:{FONT_SERIF_STACK};
+    font-size:19pt;
+    font-weight:500;
+    color:{TEXT};
+}}
 
-QLabel#SidebarSubtitle{
-    color:#B8FFD2;
-    font-size:10pt;
-    font-weight:750;
+QLabel#SidebarSubtitle{{
+    color:{TEXT_MUTED};
+    font-size:9.5pt;
+    font-weight:500;
     margin-bottom:10px;
-}
+}}
 
-QLabel#SidebarVersion{
-    color:#64748B;
+QLabel#SidebarVersion{{
+    color:{TEXT_MUTED};
     font-size:9pt;
-    font-weight:700;
-}
+    font-weight:500;
+}}
 
 /* ---------- Sidebar Buttons ---------- */
 
-QPushButton#SidebarButton{
+QPushButton#SidebarButton{{
     background:transparent;
     border:1px solid transparent;
-    border-radius:15px;
+    border-radius:8px;
     text-align:left;
-    padding:12px 14px;
-    font-size:11pt;
-    font-weight:750;
-    color:#CBD5E1;
-}
+    padding:11px 14px;
+    font-size:10.5pt;
+    font-weight:500;
+    color:{TEXT_SECONDARY};
+}}
 
-QPushButton#SidebarButton:hover{
-    background:rgba(255,255,255,22);
-    border:1px solid rgba(34,211,238,70);
-    color:#FFFFFF;
-}
+QPushButton#SidebarButton:hover{{
+    background:{CARD};
+    border:1px solid {BORDER};
+    color:{TEXT};
+}}
 
-QPushButton#SidebarButton[active="true"]{
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:1, y2:0,
-        stop:0 #1DB954,
-        stop:0.55 #22D3EE,
-        stop:1 #A855F7
-    );
-    color:#020617;
-    border:1px solid rgba(255,255,255,100);
-    border-radius:15px;
-    font-size:11pt;
-    font-weight:950;
-}
+QPushButton#SidebarButton[active="true"]{{
+    background:{CARD};
+    color:{TEXT};
+    border:1px solid {LINE_STRONG};
+    border-radius:8px;
+    font-size:10.5pt;
+    font-weight:600;
+}}
 
 /* ---------- App Status Bar ---------- */
 
-QFrame#AppStatusBar{
-    background:rgba(4, 6, 12, 235);
-    border-top:1px solid rgba(139, 92, 246, 55);
-}
+QFrame#AppStatusBar{{
+    background:{CARD};
+    border-top:1px solid {BORDER};
+}}
 
-QLabel#StatusDot{
-    color:#22D3EE;
-    font-size:13pt;
-    font-weight:900;
-}
+QLabel#StatusDot{{
+    color:{SAGE};
+    font-size:12pt;
+    font-weight:600;
+}}
 
-QLabel#StatusMessage{
-    color:#CBD5E1;
-    font-size:10pt;
-    font-weight:750;
-}
+QLabel#StatusMessage{{
+    color:{TEXT_SECONDARY};
+    font-size:9.5pt;
+    font-weight:500;
+}}
 
 /* ---------- General Cards ---------- */
 
-QFrame#Card{
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:1, y2:1,
-        stop:0 rgba(255,255,255,26),
-        stop:0.45 rgba(17,24,39,216),
-        stop:1 rgba(3,7,18,235)
-    );
-    border:1px solid rgba(148, 163, 184, 48);
-    border-radius:24px;
-}
+QFrame#Card{{
+    background:{CARD};
+    border:1px solid {BORDER};
+    border-radius:10px;
+}}
 
-QFrame#Card:hover{
-    border:1px solid rgba(34, 211, 238, 120);
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:1, y2:1,
-        stop:0 rgba(29,185,84,45),
-        stop:0.42 rgba(17,24,39,225),
-        stop:1 rgba(88,28,135,80)
-    );
-}
+QFrame#Card:hover{{
+    border:1px solid {LINE_STRONG};
+}}
 
-QLabel#CardTitle{
-    font-size:18pt;
-    font-weight:950;
-    color:#FFFFFF;
-}
+QLabel#CardTitle{{
+    font-family:{FONT_SERIF_STACK};
+    font-size:15pt;
+    font-weight:500;
+    color:{TEXT};
+}}
 
-QLabel#SectionTitle{
-    font-size:25pt;
-    font-weight:950;
-    color:#FFFFFF;
-}
+QLabel#SectionTitle{{
+    font-family:{FONT_SERIF_STACK};
+    font-size:21pt;
+    font-weight:500;
+    color:{TEXT};
+}}
 
-QLabel#SectionSubtitle{
-    color:#94A3B8;
-    font-size:11pt;
-    font-weight:650;
-}
+QLabel#SectionSubtitle{{
+    color:{TEXT_MUTED};
+    font-size:10.5pt;
+    font-weight:500;
+}}
 
 /* ---------- Buttons ---------- */
 
-QPushButton{
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:1, y2:0,
-        stop:0 #1DB954,
-        stop:0.55 #22D3EE,
-        stop:1 #A855F7
-    );
-    color:#020617;
+QPushButton{{
+    background:{ACCENT};
+    color:{ON_ACCENT};
     border:none;
-    border-radius:14px;
+    border-radius:7px;
     padding:11px 17px;
-    font-size:11pt;
-    font-weight:950;
-}
-
-QPushButton:hover{
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:1, y2:0,
-        stop:0 #22D165,
-        stop:0.55 #67E8F9,
-        stop:1 #C084FC
-    );
-}
-
-QPushButton:pressed{
-    background:#1DB954;
-}
-
-QPushButton:disabled{
-    background:#27272A;
-    color:#71717A;
-}
-
-QPushButton#SecondaryButton{
-    background:rgba(255,255,255,18);
-    border:1px solid rgba(148,163,184,55);
-    color:#F8FAFC;
-    border-radius:14px;
-    padding:10px 15px;
     font-size:10.5pt;
-    font-weight:850;
-}
+    font-weight:600;
+}}
 
-QPushButton#SecondaryButton:hover{
-    background:rgba(34,211,238,28);
-    border:1px solid rgba(34,211,238,130);
-    color:#FFFFFF;
-}
+QPushButton:hover{{
+    background:{ACCENT_HOVER};
+}}
 
-QPushButton#SecondaryButton:pressed{
-    background:rgba(29,185,84,60);
-}
+QPushButton:pressed{{
+    background:{ACCENT_PRESSED};
+}}
+
+QPushButton:disabled{{
+    background:{CARD_LIGHT};
+    color:{TEXT_MUTED};
+}}
+
+QPushButton#SecondaryButton{{
+    background:transparent;
+    border:1px solid {BORDER};
+    color:{TEXT_SECONDARY};
+    border-radius:7px;
+    padding:10px 15px;
+    font-size:10pt;
+    font-weight:500;
+}}
+
+QPushButton#SecondaryButton:hover{{
+    background:{CARD_LIGHT};
+    border:1px solid {LINE_STRONG};
+    color:{TEXT};
+}}
+
+QPushButton#SecondaryButton:pressed{{
+    background:{HOVER};
+}}
 
 /* ---------- Inputs ---------- */
 
-QLineEdit{
-    background:rgba(15, 23, 42, 210);
-    color:#FFFFFF;
-    border:1px solid rgba(148,163,184,70);
-    border-radius:14px;
+QLineEdit{{
+    background:{CARD};
+    color:{TEXT};
+    border:1px solid {BORDER};
+    border-radius:7px;
     padding:10px 14px;
-    selection-background-color:#22D3EE;
-    selection-color:#020617;
-}
+    selection-background-color:{ACCENT};
+    selection-color:{ON_ACCENT};
+}}
 
-QLineEdit:hover{
-    border:1px solid rgba(34,211,238,110);
-}
+QLineEdit:hover{{
+    border:1px solid {LINE_STRONG};
+}}
 
-QLineEdit:focus{
-    border:1px solid #22D3EE;
-}
+QLineEdit:focus{{
+    border:1px solid {ACCENT};
+}}
 
 /* ---------- Combo Boxes ---------- */
 
-QComboBox{
-    background:rgba(15, 23, 42, 220);
-    color:#FFFFFF;
-    border:1px solid rgba(148,163,184,70);
-    border-radius:14px;
+QComboBox{{
+    background:{CARD};
+    color:{TEXT};
+    border:1px solid {BORDER};
+    border-radius:7px;
     padding:9px 12px;
-    font-weight:750;
-}
+    font-weight:500;
+}}
 
-QComboBox:hover{
-    border:1px solid #22D3EE;
-}
+QComboBox:hover{{
+    border:1px solid {LINE_STRONG};
+}}
 
-QComboBox:focus{
-    border:1px solid #A855F7;
-}
+QComboBox:focus{{
+    border:1px solid {ACCENT};
+}}
 
-QComboBox::drop-down{
+QComboBox::drop-down{{
     border:none;
     width:30px;
-}
+}}
 
-QComboBox::down-arrow{
+QComboBox::down-arrow{{
     image:none;
     border-left:5px solid transparent;
     border-right:5px solid transparent;
-    border-top:6px solid #CBD5E1;
+    border-top:6px solid {TEXT_SECONDARY};
     margin-right:8px;
-}
+}}
 
-QAbstractItemView{
-    background:#0F172A;
-    color:#FFFFFF;
-    border:1px solid rgba(34,211,238,90);
-    selection-background-color:#22D3EE;
-    selection-color:#020617;
+QAbstractItemView{{
+    background:{CARD};
+    color:{TEXT};
+    border:1px solid {LINE_STRONG};
+    selection-background-color:{ACCENT};
+    selection-color:{ON_ACCENT};
     outline:none;
-}
+}}
 
 /* ---------- Sliders ---------- */
 
-QSlider::groove:horizontal{
-    height:7px;
-    background:rgba(148,163,184,55);
-    border-radius:3px;
-}
+QSlider::groove:horizontal{{
+    height:3px;
+    background:{BORDER};
+    border-radius:2px;
+}}
 
-QSlider::sub-page:horizontal{
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:1, y2:0,
-        stop:0 #1DB954,
-        stop:0.6 #22D3EE,
-        stop:1 #A855F7
-    );
-    border-radius:3px;
-}
+QSlider::sub-page:horizontal{{
+    background:{ACCENT};
+    border-radius:2px;
+}}
 
-QSlider::add-page:horizontal{
-    background:rgba(148,163,184,45);
-    border-radius:3px;
-}
+QSlider::add-page:horizontal{{
+    background:{BORDER};
+    border-radius:2px;
+}}
 
-QSlider::handle:horizontal{
-    background:#FFFFFF;
-    border:2px solid #22D3EE;
-    width:17px;
-    height:17px;
+QSlider::handle:horizontal{{
+    background:{TEXT};
+    border:2px solid {ACCENT};
+    width:14px;
+    height:14px;
     margin:-6px 0;
-    border-radius:8px;
-}
+    border-radius:7px;
+}}
 
-QSlider::handle:horizontal:hover{
-    background:#B8FFD2;
-    border:2px solid #1DB954;
-}
+QSlider::handle:horizontal:hover{{
+    background:{ACCENT_HOVER};
+    border:2px solid {ACCENT_HOVER};
+}}
 
 /* ---------- Progress Bar ---------- */
 
-QProgressBar{
-    background:rgba(148,163,184,50);
+QProgressBar{{
+    background:{BORDER};
     border:none;
-    border-radius:6px;
-}
+    border-radius:4px;
+}}
 
-QProgressBar::chunk{
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:1, y2:0,
-        stop:0 #1DB954,
-        stop:0.55 #22D3EE,
-        stop:1 #A855F7
-    );
-    border-radius:6px;
-}
+QProgressBar::chunk{{
+    background:{ACCENT};
+    border-radius:4px;
+}}
 
 /* ---------- Statistic Tiles ---------- */
 
-QFrame#StatTile{
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:1, y2:1,
-        stop:0 rgba(34,211,238,28),
-        stop:0.55 rgba(15,23,42,225),
-        stop:1 rgba(88,28,135,55)
-    );
-    border:1px solid rgba(148,163,184,50);
-    border-radius:21px;
-}
+QFrame#StatTile{{
+    background:{CARD};
+    border:1px solid {BORDER};
+    border-radius:10px;
+}}
 
-QFrame#StatTile:hover{
-    border:1px solid rgba(29,185,84,135);
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:1, y2:1,
-        stop:0 rgba(29,185,84,55),
-        stop:0.55 rgba(15,23,42,225),
-        stop:1 rgba(168,85,247,70)
-    );
-}
+QFrame#StatTile:hover{{
+    border:1px solid {LINE_STRONG};
+}}
 
-QLabel#StatTitle{
-    color:#A7F3D0;
-    font-size:10.5pt;
-    font-weight:900;
-}
+QLabel#StatTitle{{
+    color:{TEXT_MUTED};
+    font-size:9.5pt;
+    font-weight:600;
+}}
 
-QLabel#StatValue{
-    color:#FFFFFF;
-    font-size:27pt;
-    font-weight:950;
-}
+QLabel#StatValue{{
+    color:{TEXT};
+    font-family:{FONT_SERIF_STACK};
+    font-size:22pt;
+    font-weight:500;
+}}
 
 /* ---------- Analytics Hero ---------- */
 
-QFrame#AnalyticsHeroCard{
-    background:qradialgradient(
-        cx:0.15, cy:0.15,
-        radius:1.1,
-        fx:0.15, fy:0.15,
-        stop:0 #B8FFD2,
-        stop:0.18 #1DB954,
-        stop:0.46 #0F766E,
-        stop:0.73 #312E81,
-        stop:1 #0B0618
-    );
-    border:1px solid rgba(255,255,255,120);
-    border-radius:32px;
-}
-
-QLabel#HeroEyebrow{
-    color:#E0FFF0;
-    font-size:10pt;
-    font-weight:950;
-    letter-spacing:2px;
-}
-
-QLabel#HeroEmoji{
-    font-size:52pt;
-}
-
-QLabel#HeroPersonality{
-    color:#FFFFFF;
-    font-size:38pt;
-    font-weight:950;
-}
-
-QLabel#HeroSubtitle{
-    color:#ECFEFF;
-    font-size:14pt;
-    font-weight:750;
-}
-
-QLabel#HeroRecommended{
-    color:#020617;
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:1, y2:0,
-        stop:0 #B8FFD2,
-        stop:0.5 #67E8F9,
-        stop:1 #DDD6FE
-    );
-    border-radius:14px;
-    padding:10px 14px;
-    font-size:11pt;
-    font-weight:950;
-}
-
-QLabel#AuraTitle{
-    color:#ECFEFF;
-    font-size:10pt;
-    font-weight:950;
-    letter-spacing:2px;
-}
-
-QLabel#AuraNumber{
-    color:#FFFFFF;
-    font-size:72pt;
-    font-weight:950;
-}
-
-QLabel#AuraStatus{
-    color:#ECFEFF;
-    font-size:15pt;
-    font-weight:950;
-}
-
-QProgressBar#AuraProgress{
-    background:rgba(255,255,255,45);
-    border:none;
-    border-radius:7px;
-}
-
-QProgressBar#AuraProgress::chunk{
-    background:#FFFFFF;
-    border-radius:7px;
-}
-
-QFrame#GlowMetric{
-    background:rgba(2,6,23,105);
-    border:1px solid rgba(255,255,255,55);
-    border-radius:20px;
-}
-
-QLabel#GlowMetricTitle{
-    color:#D8FFE4;
-    font-size:10.5pt;
-    font-weight:900;
-}
-
-QLabel#GlowMetricValue{
-    color:#FFFFFF;
-    font-size:22pt;
-    font-weight:950;
-}
-
-QProgressBar#GlowMetricProgress{
-    background:rgba(255,255,255,38);
-    border:none;
-    border-radius:6px;
-}
-
-QProgressBar#GlowMetricProgress::chunk{
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:1, y2:0,
-        stop:0 #FFFFFF,
-        stop:1 #B8FFD2
-    );
-    border-radius:6px;
-}
-
-/* ---------- Wrapped Cards ---------- */
-
-QFrame#WrappedStatCard{
-    background:qradialgradient(
-        cx:0.12, cy:0.12,
-        radius:1.0,
-        fx:0.12, fy:0.12,
-        stop:0 rgba(34,211,238,55),
-        stop:0.42 rgba(17,24,39,235),
-        stop:1 rgba(8,8,15,245)
-    );
-    border:1px solid rgba(148,163,184,58);
-    border-radius:26px;
-}
-
-QFrame#WrappedStatCard:hover{
-    border:1px solid rgba(34,211,238,150);
-    background:qradialgradient(
-        cx:0.12, cy:0.12,
-        radius:1.0,
-        fx:0.12, fy:0.12,
-        stop:0 rgba(29,185,84,75),
-        stop:0.44 rgba(15,23,42,235),
-        stop:1 rgba(88,28,135,90)
-    );
-}
-
-QLabel#WrappedEmoji{
-    font-size:36pt;
-}
-
-QLabel#WrappedTitle{
-    color:#A7F3D0;
-    font-size:10.5pt;
-    font-weight:950;
-    letter-spacing:1px;
-}
-
-QLabel#WrappedValue{
-    color:#FFFFFF;
-    font-size:21pt;
-    font-weight:950;
-}
-
-QLabel#WrappedSubtitle{
-    color:#CBD5E1;
-    font-size:10.5pt;
-    font-weight:700;
-}
-
-/* ---------- Badge Cloud ---------- */
-
-QLabel#BadgePill{
+QFrame#AnalyticsHeroCard{{
     background:qlineargradient(
         x1:0, y1:0,
         x2:1, y2:1,
-        stop:0 rgba(29,185,84,55),
-        stop:0.5 rgba(15,23,42,230),
-        stop:1 rgba(168,85,247,70)
+        stop:0 {CARD},
+        stop:1 {BACKGROUND}
     );
-    border:1px solid rgba(255,255,255,65);
-    border-radius:20px;
-    padding:13px;
-    color:#FFFFFF;
-    font-size:10.5pt;
-    font-weight:900;
-}
+    border:1px solid {BORDER};
+    border-radius:12px;
+}}
 
-QLabel#BadgePill:hover{
-    border:1px solid #67E8F9;
-    background:rgba(34,211,238,45);
-}
+QLabel#HeroEyebrow{{
+    color:{TEXT_MUTED};
+    font-size:9.5pt;
+    font-weight:600;
+}}
 
-QLabel#BadgeEmpty{
-    color:#94A3B8;
+QLabel#HeroEmoji{{
+    font-size:36pt;
+}}
+
+QLabel#HeroPersonality{{
+    color:{ACCENT};
+    font-family:{FONT_SERIF_STACK};
+    font-style:italic;
+    font-size:30pt;
+    font-weight:500;
+}}
+
+QLabel#HeroSubtitle{{
+    color:{TEXT_SECONDARY};
     font-size:11pt;
-    font-weight:700;
-}
+    font-weight:500;
+}}
+
+QLabel#HeroRecommended{{
+    color:{ON_ACCENT};
+    background:{ACCENT};
+    border-radius:7px;
+    padding:10px 14px;
+    font-size:10pt;
+    font-weight:600;
+}}
+
+QLabel#AuraTitle{{
+    color:{TEXT_MUTED};
+    font-size:9.5pt;
+    font-weight:600;
+}}
+
+QLabel#AuraNumber{{
+    color:{TEXT};
+    font-family:{FONT_SERIF_STACK};
+    font-size:56pt;
+    font-weight:500;
+}}
+
+QLabel#AuraStatus{{
+    color:{TEXT_SECONDARY};
+    font-size:12pt;
+    font-weight:500;
+}}
+
+QProgressBar#AuraProgress{{
+    background:{BORDER};
+    border:none;
+    border-radius:4px;
+}}
+
+QProgressBar#AuraProgress::chunk{{
+    background:{ACCENT};
+    border-radius:4px;
+}}
+
+QFrame#GlowMetric{{
+    background:{CARD_LIGHT};
+    border:1px solid {BORDER};
+    border-radius:10px;
+}}
+
+QLabel#GlowMetricTitle{{
+    color:{TEXT_MUTED};
+    font-size:9.5pt;
+    font-weight:600;
+}}
+
+QLabel#GlowMetricValue{{
+    color:{TEXT};
+    font-family:{FONT_SERIF_STACK};
+    font-size:18pt;
+    font-weight:500;
+}}
+
+QProgressBar#GlowMetricProgress{{
+    background:{BORDER};
+    border:none;
+    border-radius:3px;
+}}
+
+QProgressBar#GlowMetricProgress::chunk{{
+    background:{SAGE};
+    border-radius:3px;
+}}
+
+/* ---------- Wrapped Cards ---------- */
+
+QFrame#WrappedStatCard{{
+    background:{CARD};
+    border:1px solid {BORDER};
+    border-radius:10px;
+}}
+
+QFrame#WrappedStatCard:hover{{
+    border:1px solid {LINE_STRONG};
+}}
+
+QLabel#WrappedEmoji{{
+    font-size:28pt;
+}}
+
+QLabel#WrappedTitle{{
+    color:{TEXT_MUTED};
+    font-size:9.5pt;
+    font-weight:600;
+}}
+
+QLabel#WrappedValue{{
+    color:{TEXT};
+    font-family:{FONT_SERIF_STACK};
+    font-size:18pt;
+    font-weight:500;
+}}
+
+QLabel#WrappedSubtitle{{
+    color:{TEXT_SECONDARY};
+    font-size:9.5pt;
+    font-weight:500;
+}}
+
+/* ---------- Badge Cloud ---------- */
+
+QLabel#BadgePill{{
+    background:rgba(227,168,87,26);
+    border:1px dashed rgba(227,168,87,110);
+    border-radius:5px;
+    padding:8px 12px;
+    color:{ACCENT};
+    font-size:9.5pt;
+    font-weight:600;
+}}
+
+QLabel#BadgePill:hover{{
+    border:1px dashed {ACCENT};
+    background:rgba(227,168,87,40);
+}}
+
+QLabel#BadgeEmpty{{
+    color:{TEXT_MUTED};
+    font-size:10.5pt;
+    font-weight:500;
+}}
 
 /* ---------- Queue Items ---------- */
 
-QFrame#QueueItem{
-    background:rgba(15,23,42,220);
-    border-radius:18px;
-    border:1px solid rgba(148,163,184,55);
-}
+QFrame#QueueItem{{
+    background:{CARD};
+    border-radius:8px;
+    border:1px solid {BORDER};
+}}
 
-QFrame#QueueItem:hover{
-    border:1px solid rgba(34,211,238,130);
-    background:rgba(29,185,84,28);
-}
+QFrame#QueueItem:hover{{
+    border:1px solid {LINE_STRONG};
+    background:{CARD_LIGHT};
+}}
 
-QLabel#QueueSong{
-    color:#FFFFFF;
-    font-size:12pt;
-    font-weight:950;
-}
+QLabel#QueueSong{{
+    color:{TEXT};
+    font-size:11pt;
+    font-weight:600;
+}}
 
-QLabel#QueueArtist{
-    color:#CBD5E1;
-    font-size:10pt;
-}
+QLabel#QueueArtist{{
+    color:{TEXT_SECONDARY};
+    font-size:9.5pt;
+}}
 
-QLabel#QueueDuration{
-    color:#94A3B8;
-    font-size:10pt;
-}
+QLabel#QueueDuration{{
+    color:{TEXT_MUTED};
+    font-size:9.5pt;
+}}
 
 /* ---------- Search Results ---------- */
 
-QWidget#SearchResultItem{
-    background:rgba(15,23,42,220);
-    border:1px solid rgba(148,163,184,55);
-    border-radius:18px;
-}
+QWidget#SearchResultItem{{
+    background:{CARD};
+    border:1px solid {BORDER};
+    border-radius:8px;
+}}
 
-QWidget#SearchResultItem:hover{
-    background:rgba(34,211,238,30);
-    border:1px solid rgba(34,211,238,130);
-}
+QWidget#SearchResultItem:hover{{
+    background:{CARD_LIGHT};
+    border:1px solid {LINE_STRONG};
+}}
 
 /* ---------- Dividers ---------- */
 
-QFrame#Divider{
-    background:rgba(148,163,184,60);
+QFrame#Divider{{
+    background:{BORDER};
     max-height:1px;
     min-height:1px;
     border:none;
-}
+}}
 
 /* ---------- Scroll Areas ---------- */
 
-QScrollArea{
+QScrollArea{{
     border:none;
     background:transparent;
-}
+}}
 
-QScrollBar:vertical{
-    background:rgba(2,6,23,155);
-    width:12px;
+QScrollBar:vertical{{
+    background:{BACKGROUND};
+    width:10px;
     margin:4px 2px 4px 2px;
-    border-radius:6px;
-}
+    border-radius:5px;
+}}
 
-QScrollBar::handle:vertical{
-    background:qlineargradient(
-        x1:0, y1:0,
-        x2:0, y2:1,
-        stop:0 #1DB954,
-        stop:0.55 #22D3EE,
-        stop:1 #A855F7
-    );
-    border-radius:6px;
-    min-height:42px;
-}
+QScrollBar::handle:vertical{{
+    background:{BORDER};
+    border-radius:5px;
+    min-height:36px;
+}}
 
-QScrollBar::handle:vertical:hover{
-    background:#67E8F9;
-}
+QScrollBar::handle:vertical:hover{{
+    background:{LINE_STRONG};
+}}
 
 QScrollBar::add-line:vertical,
-QScrollBar::sub-line:vertical{
+QScrollBar::sub-line:vertical{{
     height:0px;
     background:none;
-}
+}}
 
 QScrollBar::add-page:vertical,
-QScrollBar::sub-page:vertical{
+QScrollBar::sub-page:vertical{{
     background:none;
-}
+}}
 
-QScrollBar:horizontal{
+QScrollBar:horizontal{{
     height:0px;
     background:transparent;
-}
+}}
 
 /* ---------- Tooltips ---------- */
 
-QToolTip{
-    background:#0F172A;
-    color:#FFFFFF;
-    border:1px solid #22D3EE;
-    border-radius:10px;
+QToolTip{{
+    background:{CARD};
+    color:{TEXT};
+    border:1px solid {LINE_STRONG};
+    border-radius:6px;
     padding:8px;
-}
+}}
+/* ---------- Dashboard Mockup Header ---------- */
+
+QFrame#DashboardHeader {{
+    background: transparent;
+}}
+
+QWidget#DashboardContent {{
+    background: transparent;
+}}
+
+QLabel#DashboardGreeting {{
+    font-family: {FONT_SERIF_STACK};
+    font-size: 26pt;
+    font-weight: 400;
+    color: #f3ecdf;
+}}
+
+QLabel#DashboardMeta {{
+    color: #8f8574;
+    font-size: 10.5pt;
+    font-weight: 500;
+}}
+
+QLabel#ProfilePill {{
+    background: #221c16;
+    color: #c9bfae;
+    border: 1px solid rgba(243,236,223,0.14);
+    border-radius: 18px;
+    padding: 9px 20px;
+    font-size: 10.5pt;
+    font-weight: 600;
+}}
+
+/* ---------- Playlist Identity Card ---------- */
+
+QLabel#IdentityEyebrow {{
+    color: #8f8574;
+    font-size: 9.5pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+}}
+
+QLabel#IdentityName {{
+    color: #e3a857;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 38pt;
+    font-style: italic;
+    font-weight: 500;
+}}
+
+QLabel#IdentitySubtitle {{
+    color: #c9bfae;
+    font-size: 12pt;
+}}
+
+QLabel#BadgeStickerSage {{
+    background: rgba(147,166,138,28);
+    color: #93a68a;
+    border: 1px dashed rgba(147,166,138,120);
+    border-radius: 6px;
+    padding: 9px 13px;
+    font-size: 10pt;
+    font-weight: 600;
+}}
+
+QLabel#BadgeStickerRose {{
+    background: rgba(201,138,125,28);
+    color: #c98a7d;
+    border: 1px dashed rgba(201,138,125,120);
+    border-radius: 6px;
+    padding: 9px 13px;
+    font-size: 10pt;
+    font-weight: 600;
+}}
+
+QLabel#BadgeStickerAmber {{
+    background: rgba(227,168,87,28);
+    color: #e3a857;
+    border: 1px dashed rgba(227,168,87,120);
+    border-radius: 6px;
+    padding: 9px 13px;
+    font-size: 10pt;
+    font-weight: 600;
+}}
+
+QFrame#AuraRing {{
+    background: rgba(227,168,87,12);
+    border: 3px solid #e3a857;
+    border-radius: 75px;
+}}
+
+QLabel#AuraRingNumber {{
+    color: #e3a857;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 42pt;
+    font-weight: 500;
+}}
+
+QLabel#AuraRingLabel {{
+    color: #8f8574;
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+}}
+/* ---------- Dashboard Mockup Layout ---------- */
+
+QWidget#DashboardContent {{
+    background: transparent;
+}}
+
+QFrame#DashboardHeader {{
+    background: transparent;
+}}
+
+QLabel#DashboardGreeting {{
+    font-family: {FONT_SERIF_STACK};
+    font-size: 25pt;
+    font-weight: 400;
+    color: #f3ecdf;
+}}
+
+QLabel#DashboardMeta {{
+    color: #8f8574;
+    font-size: 10.5pt;
+    font-weight: 500;
+}}
+
+QLabel#ProfilePill {{
+    background: #221c16;
+    color: #c9bfae;
+    border: 1px solid rgba(243,236,223,0.14);
+    border-radius: 18px;
+    padding: 8px 20px;
+    font-size: 10.5pt;
+    font-weight: 600;
+}}
+
+/* ---------- Smart Shuffle Mockup Card ---------- */
+
+QLabel#SmartShuffleBadge {{
+    background: rgba(147,166,138,32);
+    color: #93a68a;
+    border: 1px solid rgba(147,166,138,80);
+    border-radius: 12px;
+    padding: 5px 10px;
+    font-size: 9.5pt;
+    font-weight: 600;
+}}
+
+QLabel#ShuffleExplanation {{
+    color: #c9bfae;
+    font-size: 10.5pt;
+    line-height: 145%;
+}}
+
+QLabel#ShuffleControlLabel {{
+    color: #8f8574;
+    font-size: 9pt;
+    font-weight: 700;
+    text-transform: uppercase;
+}}
+
+QComboBox#ShuffleMiniControl {{
+    background: #1a1611;
+    color: #f3ecdf;
+    border: 1px solid rgba(243,236,223,0.08);
+    border-radius: 7px;
+    padding: 7px 10px;
+    font-size: 10pt;
+    font-weight: 500;
+}}
+
+QFrame#QueuePreviewFrame {{
+    background: #1a1611;
+    border: 1px solid rgba(243,236,223,0.08);
+    border-radius: 9px;
+}}
+
+QWidget#QueuePreviewRow {{
+    background: transparent;
+    border-bottom: 1px solid rgba(243,236,223,0.06);
+}}
+
+QLabel#QueuePreviewIndex {{
+    color: #8f8574;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 11pt;
+    font-weight: 500;
+}}
+
+QLabel#QueuePreviewSong {{
+    color: #f3ecdf;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 11.5pt;
+    font-weight: 500;
+}}
+
+QLabel#QueuePreviewReason {{
+    color: #8f8574;
+    font-size: 8.5pt;
+    font-weight: 500;
+}}
+
+QLabel#QueuePreviewArtist {{
+    color: #c9bfae;
+    font-size: 9.5pt;
+    font-weight: 500;
+}}
+
+QLabel#QueueEmptyText {{
+    color: #8f8574;
+    font-size: 10pt;
+    font-weight: 500;
+}}
+
+/* ---------- Playlist Identity Mockup Card ---------- */
+
+QFrame#IdentityCard {{
+    background: qlineargradient(
+        x1:0, y1:0,
+        x2:1, y2:1,
+        stop:0 #221c16,
+        stop:1 #1a1611
+    );
+    border: 1px solid rgba(243,236,223,0.08);
+    border-radius: 10px;
+}}
+
+QLabel#IdentityEyebrow {{
+    color: #8f8574;
+    font-size: 9.5pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+}}
+
+QLabel#IdentityName {{
+    color: #e3a857;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 36pt;
+    font-style: italic;
+    font-weight: 500;
+}}
+
+QLabel#IdentitySubtitle {{
+    color: #c9bfae;
+    font-size: 11.5pt;
+}}
+
+QLabel#BadgeStickerSage {{
+    background: rgba(147,166,138,28);
+    color: #93a68a;
+    border: 1px dashed rgba(147,166,138,120);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 9.5pt;
+    font-weight: 600;
+}}
+
+QLabel#BadgeStickerRose {{
+    background: rgba(201,138,125,28);
+    color: #c98a7d;
+    border: 1px dashed rgba(201,138,125,120);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 9.5pt;
+    font-weight: 600;
+}}
+
+QLabel#BadgeStickerAmber {{
+    background: rgba(227,168,87,28);
+    color: #e3a857;
+    border: 1px dashed rgba(227,168,87,120);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 9.5pt;
+    font-weight: 600;
+}}
+
+QFrame#AuraRing {{
+    background: rgba(227,168,87,12);
+    border: 3px solid #e3a857;
+    border-radius: 74px;
+}}
+
+QLabel#AuraRingNumber {{
+    color: #e3a857;
+    font-family: {FONT_SERIF_STACK};
+    font-size: 38pt;
+    font-weight: 500;
+}}
+
+QLabel#AuraRingLabel {{
+    color: #8f8574;
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+}}
 """

@@ -125,7 +125,7 @@ class SettingsPage(QWidget):
 
         self.message = QLabel("")
         self.message.setStyleSheet(
-            "color:#1DB954; font-size:10pt;"
+            "color: #e3a857; font-size:10pt;"
         )
 
         self.card.layout.addWidget(self.message)

@@ -12,7 +12,8 @@ class PlaylistDoctorCard(Card):
     def __init__(self):
         super().__init__("Playlist Doctor")
 
-        self.setMinimumHeight(300)
+        self.setMinimumHeight(135)
+        self.setMaximumHeight(155)
 
         self.summary_label = QLabel("No diagnosis yet.")
         self.summary_label.setWordWrap(True)

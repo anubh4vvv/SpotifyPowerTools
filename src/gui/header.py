@@ -17,7 +17,7 @@ class Header(QFrame):
         super().__init__()
 
         self.setObjectName("Header")
-        self.setFixedHeight(92)
+        self.setFixedHeight(64)
 
         shadow = QGraphicsDropShadowEffect(self)
         shadow.setBlurRadius(26)
@@ -36,7 +36,7 @@ class Header(QFrame):
 
         self.logo = QLabel("♫")
         self.logo.setObjectName("HeaderLogo")
-        self.logo.setFixedSize(48, 48)
+        self.logo.setFixedSize(34, 34)
         self.logo.setAlignment(Qt.AlignCenter)
 
         text_block = QFrame()
@@ -44,10 +44,10 @@ class Header(QFrame):
         text_layout.setContentsMargins(0, 0, 0, 0)
         text_layout.setSpacing(2)
 
-        self.title = QLabel("Spotify Power Tools")
-        self.title.setObjectName("HeaderTitle")
+        self.title = QLabel("PowerTools")
+        self.subtitle = QLabel("playlist intelligence, quietly")
 
-        self.subtitle = QLabel("Aurora-powered playlist intelligence")
+        self.subtitle = QLabel("playlist intelligence, quietly")
         self.subtitle.setObjectName("HeaderSubtitle")
 
         text_layout.addWidget(

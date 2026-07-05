@@ -28,7 +28,7 @@ class PreviewRow(QWidget):
             Qt.AlignCenter
         )
         self.index_label.setStyleSheet(
-            "color:#1DB954; font-size:10pt; font-weight:900;"
+            "color:#e3a857; font-size:10pt; font-weight:900;"
         )
 
         self.cover = QLabel()
@@ -51,7 +51,7 @@ class PreviewRow(QWidget):
         self.reason_label = QLabel("")
         self.reason_label.setWordWrap(True)
         self.reason_label.setStyleSheet(
-            "color:#1DB954; font-size:9.5pt; font-weight:600;"
+            "color:#c9bfae; font-size:9.5pt; font-weight:600;"
         )
 
         text_layout.addWidget(self.song_label)
@@ -64,14 +64,14 @@ class PreviewRow(QWidget):
 
         self.setStyleSheet("""
             PreviewRow {
-                background:#151518;
-                border:1px solid #2A2A2D;
-                border-radius:12px;
+                background:#1a1611;
+                border:1px solid rgba(243,236,223,0.08);
+                border-radius:10px;
             }
 
             PreviewRow:hover {
-                border:1px solid #1DB954;
-                background:#1B1B20;
+                border:1px solid #e3a857;
+                background:#221c16;
             }
         """)
 

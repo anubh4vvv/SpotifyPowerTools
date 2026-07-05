@@ -51,7 +51,7 @@ class PlaylistIntelligenceCard(Card):
             Qt.TextSelectableByMouse
         )
         self.hidden_favorites_label.setStyleSheet(
-            "color:#1DB954; font-size:10.5pt;"
+            "color: #e3a857; font-size:10.5pt;"
         )
 
         button_row = QHBoxLayout()

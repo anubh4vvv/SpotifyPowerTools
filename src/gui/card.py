@@ -20,7 +20,7 @@ class Card(QFrame):
         shadow.setBlurRadius(28)
         shadow.setOffset(0, 10)
         shadow.setColor(
-            QColor(0, 0, 0, 90)
+            QColor(10, 8, 5, 100)  # was QColor(0, 0, 0, 90)
         )
 
         self.setGraphicsEffect(

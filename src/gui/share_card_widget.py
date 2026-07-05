@@ -399,7 +399,7 @@ class ShareCardWidget(QWidget):
                 cx:0.14, cy:0.08,
                 radius:1.15,
                 fx:0.14, fy:0.08,
-                stop:0 #1DB954,
+                stop:0  #e3a857,
                 stop:0.28 #0F766E,
                 stop:0.58 #111827,
                 stop:1 #050509
@@ -410,13 +410,13 @@ class ShareCardWidget(QWidget):
             qlineargradient(
                 x1:0, y1:0,
                 x2:1, y2:1,
-                stop:0 #1DB954,
+                stop:0  #e3a857,
                 stop:0.48 #22D3EE,
                 stop:1 #A855F7
             )
             """
 
-            accent = "#1DB954"
+            accent = " #e3a857"
             accent_two = "#22D3EE"
 
         self.setStyleSheet(f"""
