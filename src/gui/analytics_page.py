@@ -1,36 +1,347 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QGridLayout,
-    QLabel,
-    QScrollArea,
-    QPushButton,
-    QComboBox,
-    QHBoxLayout,
-)
+import json
+from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QObject, Signal, Slot, Qt, QUrl
+from PySide6.QtWebChannel import QWebChannel
+from PySide6.QtWebEngineCore import QWebEngineSettings
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtWidgets import QWidget, QVBoxLayout
 
-from gui.card import Card
-from gui.stat_tile import StatTile
-from gui.bar_chart_card import BarChartCard
-from gui.health_score_card import HealthScoreCard
-from gui.playlist_doctor_card import PlaylistDoctorCard
-from gui.rating_recommendations_card import RatingRecommendationsCard
-from gui.visual_balance_card import VisualBalanceCard
-from gui.dominance_breakdown_card import DominanceBreakdownCard
-from gui.listening_analytics_card import ListeningAnalyticsCard
-from gui.playlist_intelligence_card import PlaylistIntelligenceCard
-from gui.analytics_hero_card import AnalyticsHeroCard
-from gui.wrapped_stat_card import WrappedStatCard
-from gui.badge_cloud_card import BadgeCloudCard
-
+from services.analytics_service import calculate_playlist_analytics
 from services.playlist_doctor_service import (
     diagnose_playlist,
     get_rating_recommendations,
 )
 
-from services.analytics_service import calculate_playlist_analytics
+
+THEME_EXPORT_MAP = {
+    "Golden Hour": "Golden Hour",
+    "Late Night": "Late Night",
+    "Rosewood": "Rosewood",
+
+    # Backward compatibility if older names are passed from somewhere.
+    "Aurora": "Golden Hour",
+    "Midnight": "Late Night",
+    "Neon Pop": "Rosewood",
+}
+
+
+def safe_get(data, key, default=None):
+    if not isinstance(data, dict):
+        return default
+
+    value = data.get(key, default)
+
+    if value in (None, "", [], {}):
+        return default
+
+    return value
+
+
+def first_existing(data, keys, default=None):
+    if not isinstance(data, dict):
+        return default
+
+    for key in keys:
+        value = data.get(key)
+
+        if value not in (None, "", [], {}):
+            return value
+
+    return default
+
+
+def clamp_number(value, minimum=0, maximum=100):
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        number = 0
+
+    return max(
+        minimum,
+        min(maximum, number)
+    )
+
+
+def percent_text(value):
+    number = clamp_number(value)
+
+    if number.is_integer():
+        return f"{int(number)}%"
+
+    return f"{round(number, 1)}%"
+
+
+def simple_text(value, default="—"):
+    if value in (None, "", [], {}):
+        return default
+
+    return str(value)
+
+
+def card_value(card, fallback="—"):
+    if not isinstance(card, dict):
+        return simple_text(card, fallback)
+
+    return simple_text(
+        first_existing(
+            card,
+            [
+                "value",
+                "title",
+                "name",
+                "song_name",
+                "track_name",
+                "song",
+                "headline",
+            ],
+            fallback
+        ),
+        fallback
+    )
+
+
+def card_subtitle(card, fallback=""):
+    if not isinstance(card, dict):
+        return ""
+
+    return simple_text(
+        first_existing(
+            card,
+            [
+                "subtitle",
+                "description",
+                "artist",
+                "meta",
+                "reason",
+            ],
+            fallback
+        ),
+        fallback
+    )
+
+
+def normalize_bar_items(items, name_keys=None, value_keys=None, limit=5):
+    name_keys = name_keys or [
+        "name",
+        "title",
+        "song_name",
+        "artist",
+        "album",
+        "label",
+    ]
+
+    value_keys = value_keys or [
+        "value",
+        "count",
+        "plays",
+        "replay_count",
+        "skip_count",
+        "rating",
+    ]
+
+    if not items:
+        return []
+
+    normalized = []
+
+    for item in items[:limit]:
+        if isinstance(item, tuple) and len(item) >= 2:
+            name = item[0]
+            value = item[1]
+
+        elif isinstance(item, dict):
+            name = first_existing(
+                item,
+                name_keys,
+                "Unknown"
+            )
+
+            value = first_existing(
+                item,
+                value_keys,
+                0
+            )
+
+            artist = item.get("artist")
+
+            if artist and "song" in " ".join(name_keys):
+                name = f"{name} — {artist}"
+
+        else:
+            name = str(item)
+            value = 0
+
+        try:
+            numeric_value = float(value)
+        except (TypeError, ValueError):
+            numeric_value = 0
+
+        normalized.append({
+            "name": simple_text(name, "Unknown"),
+            "value": numeric_value,
+            "displayValue": simple_text(value, "0"),
+        })
+
+    return normalized
+
+
+def normalize_rating_tracks(items, limit=3):
+    if not items:
+        return []
+
+    rows = []
+
+    for item in items[:limit]:
+        if isinstance(item, dict):
+            name = item.get("name") or item.get("song_name") or "Unknown Song"
+            artist = item.get("artist") or "Unknown Artist"
+            rating = item.get("rating", 0)
+
+            rows.append(
+                f"{name} — {artist} ({rating}/5)"
+            )
+
+    return rows
+
+
+def normalize_badges(badges, limit=4):
+    if not badges:
+        return []
+
+    normalized = []
+
+    for badge in badges[:limit]:
+        if isinstance(badge, dict):
+            normalized.append({
+                "emoji": badge.get("emoji", "✨"),
+                "title": badge.get("title", "Badge"),
+                "description": badge.get("description", ""),
+            })
+        else:
+            normalized.append({
+                "emoji": "✨",
+                "title": str(badge),
+                "description": "",
+            })
+
+    return normalized
+
+
+def normalize_track_rows(items, value_key, value_suffix="", limit=3):
+    if not items:
+        return []
+
+    rows = []
+
+    for item in items[:limit]:
+        if not isinstance(item, dict):
+            continue
+
+        song = (
+            item.get("song_name")
+            or item.get("name")
+            or item.get("track_name")
+            or "Unknown Song"
+        )
+
+        artist = item.get("artist") or "Unknown Artist"
+        value = item.get(value_key, 0)
+
+        rows.append({
+            "title": f"{song} — {artist}",
+            "meta": f"{value}{value_suffix}",
+            "value": value,
+        })
+
+    return rows
+
+
+def normalize_cleanup_rows(items, limit=3):
+    if not items:
+        return []
+
+    rows = []
+
+    for item in items[:limit]:
+        if not isinstance(item, dict):
+            continue
+
+        name = item.get("name") or item.get("song_name") or "Unknown Song"
+        artist = item.get("artist") or "Unknown Artist"
+        reason = item.get("reason") or "Cleanup candidate"
+
+        rows.append({
+            "title": f"{name} — {artist}",
+            "meta": reason,
+        })
+
+    return rows
+
+
+def normalize_hidden_favorites(items, limit=3):
+    if not items:
+        return []
+
+    rows = []
+
+    for item in items[:limit]:
+        if not isinstance(item, dict):
+            continue
+
+        name = item.get("name") or item.get("song_name") or "Unknown Song"
+        artist = item.get("artist") or "Unknown Artist"
+
+        completion = item.get("completion_rate")
+        skip = item.get("skip_rate")
+        replay = item.get("replay_count")
+
+        meta_parts = []
+
+        if completion is not None:
+            meta_parts.append(f"{completion}% completion")
+
+        if skip is not None:
+            meta_parts.append(f"{skip}% skip")
+
+        if replay:
+            meta_parts.append(f"replayed {replay}×")
+
+        rows.append({
+            "title": f"{name} — {artist}",
+            "meta": " · ".join(meta_parts) or "Hidden favorite",
+        })
+
+    return rows
+
+
+class AnalyticsBridge(QObject):
+    applyProfileRequested = Signal(str)
+    exportReportRequested = Signal()
+    exportShareCardRequested = Signal(str)
+
+    @Slot(str)
+    def applyProfile(self, profile_name):
+        self.applyProfileRequested.emit(
+            str(profile_name or "Balanced")
+        )
+
+    @Slot()
+    def exportReport(self):
+        self.exportReportRequested.emit()
+
+    @Slot(str)
+    def exportShareCard(self, theme_name):
+        display_theme = str(theme_name or "Golden Hour")
+
+        export_theme = THEME_EXPORT_MAP.get(
+            display_theme,
+            display_theme
+        )
+
+        self.exportShareCardRequested.emit(
+            export_theme
+        )
 
 
 class AnalyticsPage(QWidget):
@@ -41,331 +352,93 @@ class AnalyticsPage(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.setObjectName("AnalyticsPage")
+
+        self.web_ready = False
+        self.latest_payload = None
+
         root_layout = QVBoxLayout(self)
         root_layout.setContentsMargins(0, 0, 0, 0)
         root_layout.setSpacing(0)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QScrollArea.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarAlwaysOff
+        self.web_view = QWebEngineView()
+        self.web_view.setObjectName("WebAnalyticsView")
+        self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
+
+        self.web_view.settings().setAttribute(
+            QWebEngineSettings.LocalContentCanAccessRemoteUrls,
+            True
         )
 
-        content = QWidget()
-
-        layout = QVBoxLayout(content)
-        layout.setContentsMargins(25, 25, 25, 25)
-        layout.setSpacing(24)
-
-        title = QLabel("Playlist Analytics")
-        title.setObjectName("SectionTitle")
-
-        subtitle = QLabel(
-            "Understand the health, balance, structure, rating intelligence, and listening memory of the playlist you are currently listening to."
-        )
-        subtitle.setStyleSheet(
-            "color:#A0A0A0; font-size:11pt;"
-        )
-        subtitle.setWordWrap(True)
-
-        layout.addWidget(title)
-        layout.addWidget(subtitle)
-
-        # ---------- Glow-Up Hero Section ----------
-
-        self.analytics_hero_card = AnalyticsHeroCard()
-
-        layout.addWidget(
-            self.analytics_hero_card
+        self.web_view.settings().setAttribute(
+            QWebEngineSettings.LocalContentCanAccessFileUrls,
+            True
         )
 
-        wrapped_grid = QGridLayout()
-        wrapped_grid.setSpacing(18)
+        self.bridge = AnalyticsBridge()
 
-        self.top_artist_story_card = WrappedStatCard("Top Artist", "🎤")
-        self.most_replayed_story_card = WrappedStatCard("Most Replayed", "🔁")
-        self.most_skipped_story_card = WrappedStatCard("Most Skipped", "⏭️")
-        self.hidden_favorite_story_card = WrappedStatCard("Hidden Favorite", "💎")
-        self.playlist_villain_story_card = WrappedStatCard("Playlist Villain", "😈")
-        self.playlist_mvp_story_card = WrappedStatCard("Playlist MVP", "🏆")
-
-        wrapped_grid.addWidget(
-            self.top_artist_story_card,
-            0,
-            0
-        )
-
-        wrapped_grid.addWidget(
-            self.most_replayed_story_card,
-            0,
-            1
-        )
-
-        wrapped_grid.addWidget(
-            self.most_skipped_story_card,
-            0,
-            2
-        )
-
-        wrapped_grid.addWidget(
-            self.hidden_favorite_story_card,
-            1,
-            0
-        )
-
-        wrapped_grid.addWidget(
-            self.playlist_villain_story_card,
-            1,
-            1
-        )
-
-        wrapped_grid.addWidget(
-            self.playlist_mvp_story_card,
-            1,
-            2
-        )
-
-        layout.addLayout(
-            wrapped_grid
-        )
-
-        self.badge_cloud_card = BadgeCloudCard()
-
-        layout.addWidget(
-            self.badge_cloud_card
-        )
-
-        self.share_card_tools = Card("Share Your Analytics")
-
-        share_help = QLabel(
-            "Export a beautiful PNG card you can send to friends or post as your playlist profile."
-        )
-        share_help.setObjectName("SectionSubtitle")
-        share_help.setWordWrap(True)
-
-        share_row = QHBoxLayout()
-        share_row.setSpacing(12)
-
-        self.share_theme_combo = QComboBox()
-        self.share_theme_combo.addItems([
-            "Aurora",
-            "Midnight",
-            "Neon Pop",
-        ])
-
-        self.export_share_card_button = QPushButton("Export Share Card")
-
-        share_row.addWidget(
-            self.share_theme_combo
-        )
-
-        share_row.addWidget(
-            self.export_share_card_button
-        )
-
-        self.share_card_tools.layout.addWidget(
-            share_help
-        )
-
-        self.share_card_tools.layout.addLayout(
-            share_row
-        )
-
-        layout.addWidget(
-            self.share_card_tools
-        )
-
-        self.export_share_card_button.clicked.connect(
-            self.emit_share_card_export
-        )
-
-        # ---------- Main Stats ----------
-
-        stats_grid = QGridLayout()
-        stats_grid.setSpacing(15)
-
-        self.total_songs = StatTile("Songs")
-        self.unique_artists = StatTile("Artists")
-        self.unique_albums = StatTile("Albums")
-        self.duration = StatTile("Duration")
-
-        self.health_score = StatTile("Health")
-        self.health_status = StatTile("Status")
-        self.duplicates = StatTile("Duplicates")
-        self.diversity = StatTile("Diversity")
-
-        self.average_popularity = StatTile("Avg Popularity")
-        self.average_song_length = StatTile("Avg Length")
-        self.explicit_songs = StatTile("Explicit")
-        self.clean_songs = StatTile("Clean")
-
-        self.artist_entropy = StatTile("Artist Entropy")
-        self.album_entropy = StatTile("Album Entropy")
-        self.average_rating = StatTile("Avg Rating")
-        self.rated_songs = StatTile("Rated")
-
-        self.unrated_songs = StatTile("Unrated")
-        self.five_star_songs = StatTile("5-Star")
-
-        stats_grid.addWidget(self.total_songs, 0, 0)
-        stats_grid.addWidget(self.unique_artists, 0, 1)
-        stats_grid.addWidget(self.unique_albums, 0, 2)
-        stats_grid.addWidget(self.duration, 0, 3)
-
-        stats_grid.addWidget(self.health_score, 1, 0)
-        stats_grid.addWidget(self.health_status, 1, 1)
-        stats_grid.addWidget(self.duplicates, 1, 2)
-        stats_grid.addWidget(self.diversity, 1, 3)
-
-        stats_grid.addWidget(self.average_popularity, 2, 0)
-        stats_grid.addWidget(self.average_song_length, 2, 1)
-        stats_grid.addWidget(self.explicit_songs, 2, 2)
-        stats_grid.addWidget(self.clean_songs, 2, 3)
-
-        stats_grid.addWidget(self.artist_entropy, 3, 0)
-        stats_grid.addWidget(self.album_entropy, 3, 1)
-        stats_grid.addWidget(self.average_rating, 3, 2)
-        stats_grid.addWidget(self.rated_songs, 3, 3)
-
-        stats_grid.addWidget(self.unrated_songs, 4, 0)
-        stats_grid.addWidget(self.five_star_songs, 4, 1)
-
-        layout.addLayout(stats_grid)
-
-        # ---------- Visual Summary Cards ----------
-
-        visual_grid = QGridLayout()
-        visual_grid.setSpacing(20)
-
-        self.health_visual_card = HealthScoreCard()
-        self.visual_balance_card = VisualBalanceCard()
-        self.dominance_breakdown_card = DominanceBreakdownCard()
-
-        visual_grid.addWidget(self.health_visual_card, 0, 0)
-        visual_grid.addWidget(self.visual_balance_card, 0, 1)
-        visual_grid.addWidget(self.dominance_breakdown_card, 1, 0, 1, 2)
-
-        layout.addLayout(visual_grid)
-
-        # ---------- Smart Recommendation Cards ----------
-
-        self.playlist_doctor_card = PlaylistDoctorCard()
-
-        layout.addWidget(
-            self.playlist_doctor_card
-        )
-
-        self.rating_recommendations_card = RatingRecommendationsCard()
-
-        layout.addWidget(
-            self.rating_recommendations_card
-        )
-
-        self.listening_analytics_card = ListeningAnalyticsCard()
-
-        layout.addWidget(
-            self.listening_analytics_card
-        )
-
-        self.playlist_intelligence_card = PlaylistIntelligenceCard()
-
-        self.playlist_intelligence_card.apply_profile_requested.connect(
+        self.bridge.applyProfileRequested.connect(
             self.profile_apply_requested.emit
         )
 
-        self.playlist_intelligence_card.export_report_requested.connect(
+        self.bridge.exportReportRequested.connect(
             self.report_export_requested.emit
         )
 
-        layout.addWidget(
-            self.playlist_intelligence_card
+        self.bridge.exportShareCardRequested.connect(
+            self.share_card_export_requested.emit
         )
 
-        # ---------- Chart Cards ----------
+        self.channel = QWebChannel(self.web_view.page())
+        self.channel.registerObject("analyticsBridge", self.bridge)
+        self.web_view.page().setWebChannel(self.channel)
 
-        charts_grid = QGridLayout()
-        charts_grid.setSpacing(20)
-
-        self.top_artists_chart = BarChartCard("Top Artists")
-        self.top_albums_chart = BarChartCard("Top Albums")
-        self.release_years_chart = BarChartCard("Release Years")
-        self.clean_explicit_chart = BarChartCard("Clean vs Explicit")
-        self.rating_distribution_chart = BarChartCard("Rating Distribution")
-
-        charts_grid.addWidget(self.top_artists_chart, 0, 0)
-        charts_grid.addWidget(self.top_albums_chart, 0, 1)
-
-        charts_grid.addWidget(self.release_years_chart, 1, 0)
-        charts_grid.addWidget(self.clean_explicit_chart, 1, 1)
-
-        charts_grid.addWidget(self.rating_distribution_chart, 2, 0, 1, 2)
-
-        layout.addLayout(charts_grid)
-
-        # ---------- Insight Cards ----------
-
-        insight_grid = QGridLayout()
-        insight_grid.setSpacing(20)
-
-        self.duplicates_card = Card("Duplicate Tracks")
-        self.age_card = Card("Oldest / Newest")
-        self.rating_card = Card("Rating Insights")
-
-        self.duplicates_label = self.make_text_label()
-        self.age_label = self.make_text_label()
-        self.rating_label = self.make_text_label()
-
-        self.duplicates_card.layout.addWidget(
-            self.duplicates_label
+        self.web_view.loadFinished.connect(
+            self.on_web_loaded
         )
 
-        self.age_card.layout.addWidget(
-            self.age_label
+        html_path = (
+            Path(__file__).resolve().parent
+            / "web"
+            / "analytics.html"
         )
 
-        self.rating_card.layout.addWidget(
-            self.rating_label
+        self.web_view.setUrl(
+            QUrl.fromLocalFile(str(html_path))
         )
 
-        insight_grid.addWidget(self.duplicates_card, 0, 0)
-        insight_grid.addWidget(self.age_card, 0, 1)
-        insight_grid.addWidget(self.rating_card, 1, 0, 1, 2)
-
-        layout.addLayout(insight_grid)
-        layout.addStretch()
-
-        scroll.setWidget(content)
-
-        root_layout.addWidget(scroll)
-
-    def make_text_label(self):
-
-        label = QLabel("No data yet")
-        label.setWordWrap(True)
-        label.setTextInteractionFlags(
-            Qt.TextSelectableByMouse
-        )
-        label.setStyleSheet(
-            "color:#DADADA; font-size:11pt;"
+        root_layout.addWidget(
+            self.web_view
         )
 
-        return label
+    def on_web_loaded(self, ok):
+        self.web_ready = bool(ok)
 
-    def emit_share_card_export(self):
+        if self.web_ready and self.latest_payload is not None:
+            self.push_payload(
+                self.latest_payload
+            )
 
-        self.share_card_export_requested.emit(
-            self.share_theme_combo.currentText()
+    def run_js_function(self, function_name, payload):
+        if not self.web_ready:
+            return
+
+        js_payload = json.dumps(
+            payload,
+            ensure_ascii=False
+        )
+
+        self.web_view.page().runJavaScript(
+            f"{function_name}({js_payload});"
+        )
+
+    def push_payload(self, payload):
+        self.run_js_function(
+            "window.analytics.update",
+            payload
         )
 
     def update_analytics(self, playlist, tracks):
-        """
-        Fallback direct updater.
-
-        MainWindow can now use update_from_analytics() with cached analytics
-        to avoid recalculating every time.
-        """
-
         analytics = calculate_playlist_analytics(
             tracks
         )
@@ -376,7 +449,21 @@ class AnalyticsPage(QWidget):
         )
 
     def update_from_analytics(self, playlist, analytics):
+        analytics = analytics or {}
+        playlist = playlist or {}
 
+        payload = self.build_payload(
+            playlist,
+            analytics
+        )
+
+        self.latest_payload = payload
+
+        self.push_payload(
+            payload
+        )
+
+    def build_payload(self, playlist, analytics):
         glow = analytics.get(
             "analytics_glow",
             {}
@@ -387,303 +474,385 @@ class AnalyticsPage(QWidget):
             {}
         )
 
-        self.analytics_hero_card.update_glow(
-            glow,
-            intelligence
+        listening = analytics.get(
+            "listening_analytics",
+            {}
         )
 
-        wrapped_cards = glow.get(
+        wrapped = glow.get(
             "wrapped_cards",
             {}
         )
 
-        self.top_artist_story_card.update_card(
-            wrapped_cards.get("top_artist", {})
+        personality = glow.get(
+            "personality",
+            {}
         )
 
-        self.most_replayed_story_card.update_card(
-            wrapped_cards.get("most_replayed", {})
+        recommendation = intelligence.get(
+            "recommendation",
+            {}
         )
 
-        self.most_skipped_story_card.update_card(
-            wrapped_cards.get("most_skipped", {})
+        recommended_profile = (
+            intelligence.get("recommended_profile")
+            or recommendation.get("profile")
+            or intelligence.get("profile")
+            or "Balanced"
         )
 
-        self.hidden_favorite_story_card.update_card(
-            wrapped_cards.get("hidden_favorite", {})
+        recommendation_confidence = (
+            intelligence.get("recommendation_confidence")
+            or recommendation.get("confidence")
+            or "Low"
         )
 
-        self.playlist_villain_story_card.update_card(
-            wrapped_cards.get("playlist_villain", {})
+        recommendation_reason = (
+            intelligence.get("recommendation_reason")
+            or recommendation.get("reason")
+            or intelligence.get("reason")
+            or "Balanced is a safe default until more data is available."
         )
 
-        self.playlist_mvp_story_card.update_card(
-            wrapped_cards.get("playlist_mvp", {})
-        )
-
-        self.badge_cloud_card.update_badges(
-            glow.get("badges", [])
-        )
-
-        self.total_songs.set_value(
-            analytics["total_songs"]
-        )
-
-        self.unique_artists.set_value(
-            analytics["unique_artists"]
-        )
-
-        self.unique_albums.set_value(
-            analytics["unique_albums"]
-        )
-
-        self.duration.set_value(
-            analytics["total_duration"]
-        )
-
-        self.health_score.set_value(
-            f"{analytics['health_score']}%"
-        )
-
-        self.health_status.set_value(
-            analytics["health_status"]
-        )
-
-        self.duplicates.set_value(
-            analytics["duplicate_count"]
-        )
-
-        self.diversity.set_value(
-            f"{analytics['diversity_score']}%"
-        )
-
-        self.average_popularity.set_value(
-            analytics["average_popularity"]
-        )
-
-        self.average_song_length.set_value(
-            analytics["average_song_length"]
-        )
-
-        self.explicit_songs.set_value(
-            f"{analytics['explicit_songs']} ({analytics['explicit_percentage']}%)"
-        )
-
-        self.clean_songs.set_value(
-            analytics["clean_songs"]
-        )
-
-        self.artist_entropy.set_value(
-            f"{analytics['artist_entropy_score']}%"
-        )
-
-        self.album_entropy.set_value(
-            f"{analytics['album_entropy_score']}%"
-        )
-
-        self.average_rating.set_value(
-            f"{analytics['average_rating']}/5"
-        )
-
-        self.rated_songs.set_value(
-            f"{analytics['rated_songs']} ({analytics['rated_percentage']}%)"
-        )
-
-        self.unrated_songs.set_value(
-            f"{analytics['unrated_songs']} ({analytics['unrated_percentage']}%)"
-        )
-
-        self.five_star_songs.set_value(
-            analytics["five_star_songs"]
-        )
-
-        self.health_visual_card.update_health(
-            analytics["health_score"],
-            analytics["health_status"],
-            analytics["duplicate_count"],
-            analytics["diversity_score"]
-        )
-
-        self.visual_balance_card.update_balance(
+        doctor = diagnose_playlist(
             analytics
-        )
-
-        self.dominance_breakdown_card.update_dominance(
-            analytics
-        )
-
-        diagnosis = diagnose_playlist(
-            analytics
-        )
-
-        self.playlist_doctor_card.update_diagnosis(
-            diagnosis
         )
 
         rating_recommendations = get_rating_recommendations(
             analytics
         )
 
-        self.rating_recommendations_card.update_recommendations(
-            rating_recommendations
+        top_artist_card = wrapped.get("top_artist", {})
+        most_replayed_card = wrapped.get("most_replayed", {})
+        most_skipped_card = wrapped.get("most_skipped", {})
+        hidden_favorite_card = wrapped.get("hidden_favorite", {})
+        playlist_villain_card = wrapped.get("playlist_villain", {})
+        playlist_mvp_card = wrapped.get("playlist_mvp", {})
+
+        top_artists = normalize_bar_items(
+            analytics.get("top_artists", []),
+            name_keys=["name", "artist", "label"],
+            value_keys=["count", "value"],
+            limit=5
         )
 
-        self.listening_analytics_card.update_listening_analytics(
-            analytics["listening_analytics"]
+        top_albums = normalize_bar_items(
+            analytics.get("top_albums", []),
+            name_keys=["name", "album", "label"],
+            value_keys=["count", "value"],
+            limit=5
         )
 
-        self.playlist_intelligence_card.update_intelligence(
-            analytics["playlist_intelligence"]
+        rating_distribution = normalize_bar_items(
+            analytics.get("rating_distribution", []),
+            name_keys=["name", "label"],
+            value_keys=["count", "value"],
+            limit=5
         )
 
-        self.top_artists_chart.set_data(
-            analytics["top_artists"]
+        cleanup_suggestions = normalize_cleanup_rows(
+            intelligence.get("cleanup_suggestions", []),
+            limit=3
         )
 
-        self.top_albums_chart.set_data(
-            analytics["top_albums"]
+        hidden_favorites = normalize_hidden_favorites(
+            intelligence.get("hidden_favorites", []),
+            limit=3
         )
 
-        self.release_years_chart.set_data(
-            analytics["release_years"]
+        most_replayed = normalize_track_rows(
+            listening.get("most_replayed", []),
+            "replay_count",
+            " replays",
+            limit=3
         )
 
-        self.clean_explicit_chart.set_data([
-            (
-                "Clean",
-                analytics["clean_songs"]
+        most_skipped = normalize_track_rows(
+            listening.get("most_skipped", []),
+            "skip_count",
+            " skips",
+            limit=3
+        )
+
+        top_rated = normalize_rating_tracks(
+            analytics.get("top_rated_tracks", []),
+            limit=3
+        )
+
+        low_rated = normalize_rating_tracks(
+            analytics.get("low_rated_tracks", []),
+            limit=3
+        )
+
+        streaks = listening.get(
+            "streaks",
+            {}
+        )
+
+        strengths = doctor.get(
+            "strengths",
+            []
+        )
+
+        warnings = doctor.get(
+            "warnings",
+            []
+        )
+
+        rating_tips = rating_recommendations.get(
+            "recommendations",
+            []
+        )
+
+        if not rating_tips:
+            rating_tips = rating_recommendations.get(
+                "tips",
+                []
+            )
+
+        if not rating_tips:
+            rating_tips = [
+                f"{analytics.get('unrated_songs', 0)} songs are still unrated — rate more to sharpen personalization."
+            ]
+
+        return {
+            "page": {
+                "title": "Playlist Analytics",
+                "subtitle": "Understand the health, balance, and listening memory of the playlist you're currently listening to.",
+                "playlistName": playlist.get("name", ""),
+            },
+
+            "hero": {
+                "title": safe_get(personality, "title", "Main Character Mix"),
+                "emoji": safe_get(personality, "emoji", "✨"),
+                "subtitle": safe_get(
+                    personality,
+                    "subtitle",
+                    "Balanced vibes with enough personality to keep it moving."
+                ),
+                "recommendedProfile": recommended_profile,
+                "confidence": recommendation_confidence,
+                "auraScore": round(
+                    clamp_number(
+                        glow.get("aura_score", 0)
+                    )
+                ),
+                "auraStatus": self.get_aura_status(
+                    glow.get("aura_score", 0)
+                ),
+            },
+
+            "tasteSignals": [
+                {
+                    "label": "Taste Match",
+                    "value": percent_text(
+                        glow.get("taste_match", 0)
+                    ),
+                    "percent": clamp_number(
+                        glow.get("taste_match", 0)
+                    ),
+                },
+                {
+                    "label": "Variety",
+                    "value": percent_text(
+                        glow.get("variety_score", 0)
+                    ),
+                    "percent": clamp_number(
+                        glow.get("variety_score", 0)
+                    ),
+                },
+                {
+                    "label": "Replay Energy",
+                    "value": percent_text(
+                        glow.get("replay_energy", 0)
+                    ),
+                    "percent": clamp_number(
+                        glow.get("replay_energy", 0)
+                    ),
+                },
+            ],
+
+            "identityCards": [
+                {
+                    "icon": "🎤",
+                    "label": "Top Artist",
+                    "value": card_value(top_artist_card),
+                    "sub": card_subtitle(top_artist_card),
+                },
+                {
+                    "icon": "🔁",
+                    "label": "Most Replayed",
+                    "value": card_value(most_replayed_card),
+                    "sub": card_subtitle(most_replayed_card),
+                },
+                {
+                    "icon": "⏭",
+                    "label": "Most Skipped",
+                    "value": card_value(most_skipped_card),
+                    "sub": card_subtitle(most_skipped_card),
+                },
+                {
+                    "icon": "💎",
+                    "label": "Hidden Favorite",
+                    "value": card_value(hidden_favorite_card),
+                    "sub": card_subtitle(hidden_favorite_card),
+                },
+                {
+                    "icon": "👹",
+                    "label": "Playlist Villain",
+                    "value": card_value(playlist_villain_card),
+                    "sub": card_subtitle(playlist_villain_card),
+                },
+                {
+                    "icon": "🏆",
+                    "label": "Playlist MVP",
+                    "value": card_value(playlist_mvp_card),
+                    "sub": card_subtitle(playlist_mvp_card),
+                },
+            ],
+
+            "badges": normalize_badges(
+                glow.get("badges", []),
+                limit=4
             ),
-            (
-                "Explicit",
-                analytics["explicit_songs"]
-            ),
-        ])
 
-        self.rating_distribution_chart.set_data(
-            analytics["rating_distribution"]
-        )
+            "overview": [
+                {
+                    "label": "Songs",
+                    "value": analytics.get("total_songs", 0),
+                    "tone": "",
+                },
+                {
+                    "label": "Artists",
+                    "value": analytics.get("unique_artists", 0),
+                    "tone": "",
+                },
+                {
+                    "label": "Albums",
+                    "value": analytics.get("unique_albums", 0),
+                    "tone": "",
+                },
+                {
+                    "label": "Duration",
+                    "value": analytics.get("total_duration", "0h 0m"),
+                    "tone": "",
+                },
+                {
+                    "label": "Avg Length",
+                    "value": analytics.get("average_song_length", "0m 0s"),
+                    "tone": "",
+                },
+                {
+                    "label": "Clean",
+                    "value": analytics.get("clean_songs", 0),
+                    "tone": "sage",
+                },
+                {
+                    "label": "Explicit",
+                    "value": analytics.get("explicit_songs", 0),
+                    "tone": "rose",
+                },
+                {
+                    "label": "Duplicates",
+                    "value": analytics.get("duplicate_count", 0),
+                    "tone": "sage" if analytics.get("duplicate_count", 0) == 0 else "rose",
+                },
+            ],
 
-        self.duplicates_label.setText(
-            self.format_duplicate_list(
-                analytics["duplicate_tracks"]
-            )
-        )
+            "health": {
+                "score": analytics.get("health_score", 0),
+                "status": analytics.get("health_status", "No Data"),
+                "bars": [
+                    {
+                        "label": "Diversity",
+                        "value": analytics.get("diversity_score", 0),
+                    },
+                    {
+                        "label": "Artist Entropy",
+                        "value": analytics.get("artist_entropy_score", 0),
+                    },
+                    {
+                        "label": "Album Entropy",
+                        "value": analytics.get("album_entropy_score", 0),
+                    },
+                    {
+                        "label": "Rating Coverage",
+                        "value": analytics.get("rated_percentage", 0),
+                    },
+                ],
+                "note": (
+                    f"{analytics.get('top_artist_name', 'N/A')} makes up "
+                    f"{analytics.get('top_artist_percentage', 0)}% of the playlist. "
+                    f"Duplicate pressure: {analytics.get('duplicate_count', 0)} extra copies."
+                ),
+            },
 
-        self.age_label.setText(
-            self.format_age_info(
-                analytics
-            )
-        )
+            "doctor": {
+                "headline": doctor.get(
+                    "headline",
+                    f"This playlist is in {str(analytics.get('health_status', 'good')).lower()} shape."
+                ),
+                "strengths": strengths[:3],
+                "warnings": warnings[:3],
+                "ratingTips": rating_tips[:3],
+            },
 
-        self.rating_label.setText(
-            self.format_rating_info(
-                analytics
-            )
-        )
+            "listening": {
+                "totalKnownSongs": listening.get("total_known_songs", 0),
+                "totalPlays": listening.get("total_plays", 0),
+                "totalReplays": listening.get("total_replays", 0),
+                "completionRate": listening.get("global_completion_rate", 0),
+                "skipRate": listening.get("global_skip_rate", 0),
+                "streaks": {
+                    "finished": f"{streaks.get('finished_streak', 0)} songs",
+                    "skip": f"{streaks.get('skip_streak', 0)} songs",
+                    "artist": (
+                        f"{streaks.get('artist_streak_name', 'N/A')} ×"
+                        f"{streaks.get('artist_streak_count', 0)}"
+                    ),
+                    "album": (
+                        f"{streaks.get('album_streak_name', 'N/A')} ×"
+                        f"{streaks.get('album_streak_count', 0)}"
+                    ),
+                },
+            },
 
-    def format_duplicate_list(self, duplicates):
+            "mostReplayed": most_replayed,
+            "mostSkipped": most_skipped,
 
-        if not duplicates:
-            return "No duplicate tracks found."
+            "shuffleRecommendation": {
+                "profile": recommended_profile,
+                "confidence": recommendation_confidence,
+                "reason": recommendation_reason,
+                "cleanup": cleanup_suggestions,
+                "hiddenFavorites": hidden_favorites,
+            },
 
-        lines = []
+            "library": {
+                "topArtists": top_artists,
+                "topAlbums": top_albums,
+            },
 
-        for index, item in enumerate(
-            duplicates,
-            start=1
-        ):
+            "ratings": {
+                "distribution": rating_distribution,
+                "topRated": top_rated,
+                "lowRated": low_rated,
+            },
+        }
 
-            name, duplicate_count = item
+    def get_aura_status(self, score):
+        score = clamp_number(score)
 
-            lines.append(
-                f"{index}. {name}  —  {duplicate_count} extra"
-            )
+        if score >= 90:
+            return "Legendary"
 
-        return "\n".join(lines)
+        if score >= 80:
+            return "Excellent"
 
-    def format_age_info(self, analytics):
+        if score >= 65:
+            return "Strong"
 
-        return (
-            f"Oldest:\n"
-            f"{analytics['oldest_song']}\n"
-            f"Year: {analytics['oldest_year']}\n\n"
-            f"Newest:\n"
-            f"{analytics['newest_song']}\n"
-            f"Year: {analytics['newest_year']}"
-        )
+        if score >= 45:
+            return "Developing"
 
-    def format_rating_info(self, analytics):
-
-        lines = []
-
-        lines.append(
-            f"Average Rating: {analytics['average_rating']}/5"
-        )
-
-        lines.append(
-            f"Rated Songs: {analytics['rated_songs']} "
-            f"({analytics['rated_percentage']}%)"
-        )
-
-        lines.append(
-            f"Unrated Songs: {analytics['unrated_songs']} "
-            f"({analytics['unrated_percentage']}%)"
-        )
-
-        lines.append(
-            f"5-Star Songs: {analytics['five_star_songs']}"
-        )
-
-        lines.append(
-            f"Low-Rated Songs: {analytics['low_rated_songs']}"
-        )
-
-        lines.append("")
-        lines.append("Top Rated:")
-
-        top_tracks = analytics["top_rated_tracks"]
-
-        if not top_tracks:
-
-            lines.append(
-                "No rated songs yet."
-            )
-
-        else:
-
-            for index, item in enumerate(
-                top_tracks,
-                start=1
-            ):
-
-                lines.append(
-                    f"{index}. {item['name']} - {item['artist']} "
-                    f"({item['rating']}/5)"
-                )
-
-        lines.append("")
-        lines.append("Low Rated:")
-
-        low_tracks = analytics["low_rated_tracks"]
-
-        if not low_tracks:
-
-            lines.append(
-                "No low-rated songs found."
-            )
-
-        else:
-
-            for index, item in enumerate(
-                low_tracks,
-                start=1
-            ):
-
-                lines.append(
-                    f"{index}. {item['name']} - {item['artist']} "
-                    f"({item['rating']}/5)"
-                )
-
-        return "\n".join(
-            lines
-        )
+        return "Needs Vibes"
