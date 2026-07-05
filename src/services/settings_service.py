@@ -17,6 +17,7 @@ VALID_QUEUE_SIZES = [10, 25, 50, 100]
 VALID_PROFILES = [
     "Balanced",
     "Discovery",
+    "Adaptive",
     "Album",
     "Random",
     "Weighted",
@@ -30,7 +31,6 @@ SETTINGS_FILE = DATA_DIR / "settings.json"
 
 
 def clamp(value, minimum, maximum):
-
     return max(
         minimum,
         min(maximum, value)
@@ -38,10 +38,10 @@ def clamp(value, minimum, maximum):
 
 
 def sanitize_settings(settings):
-
     clean = DEFAULT_SETTINGS.copy()
 
-    clean.update(settings)
+    if isinstance(settings, dict):
+        clean.update(settings)
 
     if clean["queue_size"] not in VALID_QUEUE_SIZES:
         clean["queue_size"] = DEFAULT_SETTINGS["queue_size"]
@@ -71,7 +71,6 @@ def sanitize_settings(settings):
 
 
 def load_settings():
-
     if not SETTINGS_FILE.exists():
         return DEFAULT_SETTINGS.copy()
 
@@ -86,7 +85,6 @@ def load_settings():
 
 
 def save_settings(settings):
-
     DATA_DIR.mkdir(
         parents=True,
         exist_ok=True
@@ -105,7 +103,6 @@ def save_settings(settings):
 
 
 def reset_settings():
-
     return save_settings(
         DEFAULT_SETTINGS.copy()
     )

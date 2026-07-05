@@ -1,130 +1,132 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QGridLayout,
-    QLabel,
-    QScrollArea,
-    QPushButton,
-)
+import json
+from pathlib import Path
 
-from PySide6.QtCore import Qt
-
-from gui.card import Card
-from gui.stat_tile import StatTile
+from PySide6.QtCore import QObject, Signal, Slot, Qt, QUrl
+from PySide6.QtWebChannel import QWebChannel
+from PySide6.QtWebEngineCore import QWebEngineSettings
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtWidgets import QWidget, QVBoxLayout
 
 from services.duplicate_service import analyze_duplicates
 
 
+class DuplicatesBridge(QObject):
+    cleanRequested = Signal()
+
+    @Slot()
+    def createCleanedCopy(self):
+        self.cleanRequested.emit()
+
+
 class DuplicatesPage(QWidget):
+    clean_requested = Signal()
 
     def __init__(self):
         super().__init__()
 
+        self.setObjectName("DuplicatesPage")
+
         self.is_busy = False
+        self.web_ready = False
+        self.latest_payload = self.empty_payload()
 
         root_layout = QVBoxLayout(self)
         root_layout.setContentsMargins(0, 0, 0, 0)
         root_layout.setSpacing(0)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QScrollArea.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarAlwaysOff
+        self.web_view = QWebEngineView()
+        self.web_view.setObjectName("WebDuplicatesView")
+        self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
+
+        self.web_view.settings().setAttribute(
+            QWebEngineSettings.LocalContentCanAccessRemoteUrls,
+            True,
         )
 
-        content = QWidget()
-
-        layout = QVBoxLayout(content)
-        layout.setContentsMargins(25, 25, 25, 25)
-        layout.setSpacing(24)
-
-        title = QLabel("Duplicate Finder")
-        title.setObjectName("SectionTitle")
-
-        subtitle = QLabel(
-            "Find duplicate tracks and create a safe cleaned playlist copy. "
-            "Your original Spotify playlist is never modified."
-        )
-        subtitle.setWordWrap(True)
-        subtitle.setStyleSheet(
-            "color:#A0A0A0; font-size:11pt;"
+        self.web_view.settings().setAttribute(
+            QWebEngineSettings.LocalContentCanAccessFileUrls,
+            True,
         )
 
-        layout.addWidget(title)
-        layout.addWidget(subtitle)
+        self.bridge = DuplicatesBridge()
 
-        stats_grid = QGridLayout()
-        stats_grid.setSpacing(15)
-
-        self.total_songs = StatTile("Songs")
-        self.duplicate_tracks = StatTile("Duplicate Tracks")
-        self.extra_copies = StatTile("Extra Copies")
-        self.status = StatTile("Status")
-
-        stats_grid.addWidget(self.total_songs, 0, 0)
-        stats_grid.addWidget(self.duplicate_tracks, 0, 1)
-        stats_grid.addWidget(self.extra_copies, 0, 2)
-        stats_grid.addWidget(self.status, 0, 3)
-
-        layout.addLayout(stats_grid)
-
-        self.duplicates_card = Card("Duplicate Tracks")
-
-        self.duplicates_label = QLabel("No data yet")
-        self.duplicates_label.setWordWrap(True)
-        self.duplicates_label.setTextInteractionFlags(
-            Qt.TextSelectableByMouse
-        )
-        self.duplicates_label.setStyleSheet(
-            "color:#DADADA; font-size:11pt;"
+        self.bridge.cleanRequested.connect(
+            self.clean_requested.emit
         )
 
-        self.clean_button = QPushButton(
-            "Create Cleaned Copy"
-        )
-        self.clean_button.setEnabled(False)
+        self.channel = QWebChannel(self.web_view.page())
+        self.channel.registerObject("duplicatesBridge", self.bridge)
+        self.web_view.page().setWebChannel(self.channel)
 
-        self.helper_label = QLabel(
-            "A cleaned copy keeps the first copy of every song and removes extra duplicates."
-        )
-        self.helper_label.setWordWrap(True)
-        self.helper_label.setStyleSheet(
-            "color:#A0A0A0; font-size:10pt;"
+        self.web_view.loadFinished.connect(
+            self.on_web_loaded
         )
 
-        self.duplicates_card.layout.addWidget(
-            self.duplicates_label
+        html_path = (
+            Path(__file__).resolve().parent
+            / "web"
+            / "duplicates.html"
         )
 
-        self.duplicates_card.layout.addSpacing(12)
-
-        self.duplicates_card.layout.addWidget(
-            self.helper_label
+        self.web_view.setUrl(
+            QUrl.fromLocalFile(str(html_path))
         )
 
-        self.duplicates_card.layout.addWidget(
-            self.clean_button
+        root_layout.addWidget(self.web_view)
+
+    def empty_payload(self):
+        return {
+            "stats": {
+                "totalSongs": 0,
+                "duplicateTracks": 0,
+                "extraCopies": 0,
+                "status": "No Playlist",
+                "statusTone": "rose",
+            },
+            "hasPlaylist": False,
+            "hasDuplicates": False,
+            "isBusy": False,
+            "duplicates": [],
+        }
+
+    def on_web_loaded(self, ok):
+        self.web_ready = bool(ok)
+
+        if self.web_ready:
+            self.push_payload(
+                self.latest_payload
+            )
+
+    def run_js_function(self, function_name, payload):
+        if not self.web_ready:
+            return
+
+        js_payload = json.dumps(
+            payload,
+            ensure_ascii=False,
         )
 
-        layout.addWidget(self.duplicates_card)
-        layout.addStretch()
+        self.web_view.page().runJavaScript(
+            f"{function_name}({js_payload});"
+        )
 
-        scroll.setWidget(content)
-        root_layout.addWidget(scroll)
+    def push_payload(self, payload):
+        self.latest_payload = payload
+
+        self.run_js_function(
+            "window.duplicatesPage.update",
+            payload,
+        )
 
     def set_busy(self, busy):
+        self.is_busy = bool(busy)
 
-        self.is_busy = busy
+        payload = dict(self.latest_payload or self.empty_payload())
+        payload["isBusy"] = self.is_busy
 
-        if busy:
-            self.clean_button.setEnabled(False)
-            self.clean_button.setText("Creating...")
-        else:
-            self.clean_button.setText("Create Cleaned Copy")
+        self.push_payload(payload)
 
     def update_duplicates(self, playlist, tracks):
-
         analysis = analyze_duplicates(
             tracks
         )
@@ -135,41 +137,59 @@ class DuplicatesPage(QWidget):
         )
 
     def update_from_analysis(self, playlist, analysis):
+        analysis = analysis or {}
 
-        self.total_songs.set_value(
-            analysis["total_songs"]
-        )
+        total_songs = analysis.get("total_songs", 0)
+        duplicate_tracks = analysis.get("unique_duplicate_tracks", 0)
+        extra_copies = analysis.get("extra_copies", 0)
+        duplicates = analysis.get("duplicates", [])
 
-        self.duplicate_tracks.set_value(
-            analysis["unique_duplicate_tracks"]
-        )
+        has_playlist = playlist is not None
+        has_duplicates = extra_copies > 0
 
-        self.extra_copies.set_value(
-            analysis["extra_copies"]
-        )
-
-        has_duplicates = analysis["extra_copies"] > 0
-
-        if playlist is None:
-            self.status.set_value("No Playlist")
-        elif not has_duplicates:
-            self.status.set_value("Clean")
+        if not has_playlist:
+            status = "No Playlist"
+            status_tone = "rose"
+        elif has_duplicates:
+            status = "Review"
+            status_tone = "rose"
         else:
-            self.status.set_value("Review")
+            status = "Clean"
+            status_tone = "sage"
 
-        if not self.is_busy:
-            self.clean_button.setEnabled(
-                playlist is not None and has_duplicates
-            )
+        payload = {
+            "stats": {
+                "totalSongs": total_songs,
+                "duplicateTracks": duplicate_tracks,
+                "extraCopies": extra_copies,
+                "status": status,
+                "statusTone": status_tone,
+            },
+            "hasPlaylist": has_playlist,
+            "hasDuplicates": has_duplicates,
+            "isBusy": self.is_busy,
+            "duplicates": self.normalize_duplicates(duplicates),
+        }
 
-        self.duplicates_label.setText(
-            self.format_duplicates(
-                analysis["duplicates"]
-            )
-        )
+        self.push_payload(payload)
+
+    def normalize_duplicates(self, duplicates):
+        rows = []
+
+        for item in duplicates or []:
+            rows.append({
+                "name": item.get("name", "Unknown Song"),
+                "artist": item.get("artist", "Unknown Artist"),
+                "album": item.get("album", "Unknown Album"),
+                "releaseYear": item.get("release_year", "Unknown"),
+                "duration": item.get("duration", "0:00"),
+                "totalCopies": item.get("total_copies", 0),
+                "extraCopies": item.get("extra_copies", 0),
+            })
+
+        return rows
 
     def format_duplicates(self, duplicates):
-
         if not duplicates:
             return (
                 "No duplicate tracks found.\n\n"
@@ -179,7 +199,6 @@ class DuplicatesPage(QWidget):
         lines = []
 
         for index, item in enumerate(duplicates, start=1):
-
             lines.append(
                 f"{index}. {item['name']} — {item['artist']}\n"
                 f"   Album: {item['album']}\n"

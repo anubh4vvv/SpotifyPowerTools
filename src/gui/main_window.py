@@ -234,7 +234,7 @@ class MainWindow(QMainWindow):
             self.export_share_card
         )
 
-        self.duplicates_page.clean_button.clicked.connect(
+        self.duplicates_page.clean_requested.connect(
             self.create_cleaned_playlist
         )
 
@@ -321,10 +321,19 @@ class MainWindow(QMainWindow):
 
         try:
 
-            if hasattr(self, "dashboard") and hasattr(self.dashboard, "web_view"):
-                self.dashboard.web_view.setHtml("")
-                self.dashboard.web_view.setParent(None)
-                self.dashboard.web_view.deleteLater()
+            for index in range(self.stack.count()):
+
+                page = self.stack.widget(index)
+
+                if page is not None and hasattr(page, "web_view"):
+
+                    try:
+                        page.web_view.setHtml("")
+                        page.web_view.setParent(None)
+                        page.web_view.deleteLater()
+
+                    except RuntimeError:
+                        pass
 
         except RuntimeError:
             pass
@@ -818,9 +827,9 @@ class MainWindow(QMainWindow):
         )
 
         # Important:
-        # Do not animate the WebEngine dashboard.
         # QWebEngineView can crash with QGraphicsEffect / opacity animation.
-        if widget == self.dashboard:
+        # Skip animation for any page that owns a web_view.
+        if hasattr(widget, "web_view"):
 
             if hasattr(self, "film_grain_overlay"):
                 self.film_grain_overlay.raise_()
@@ -996,7 +1005,7 @@ class MainWindow(QMainWindow):
             0,
             self.slow_refresh
         )
-        
+
         self.duplicates_cache.clear()
 
     def export_listening_memory(self):

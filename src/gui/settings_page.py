@@ -1,29 +1,63 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QComboBox,
-    QSlider,
-    QPushButton,
-)
+import json
+from pathlib import Path
 
-from PySide6.QtCore import (
-    Qt,
-    Signal,
-)
-
-from gui.card import Card
+from PySide6.QtCore import QObject, Signal, Slot, Qt, QUrl
+from PySide6.QtWebChannel import QWebChannel
+from PySide6.QtWebEngineCore import QWebEngineSettings
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtWidgets import QWidget, QVBoxLayout
 
 from services.settings_service import (
     load_settings,
     save_settings,
     reset_settings,
+    VALID_PROFILES,
+    VALID_QUEUE_SIZES,
 )
 
 
-class SettingsPage(QWidget):
+class SettingsBridge(QObject):
+    saveRequested = Signal(str, int, int, int, int)
+    resetRequested = Signal()
+    memoryExportRequested = Signal()
+    memoryClearRequested = Signal()
+    imageCacheClearRequested = Signal()
 
+    @Slot(str, int, int, int, int)
+    def saveSettings(
+        self,
+        profile,
+        queue_size,
+        artist_weight,
+        album_weight,
+        randomness,
+    ):
+        self.saveRequested.emit(
+            str(profile),
+            int(queue_size),
+            int(artist_weight),
+            int(album_weight),
+            int(randomness),
+        )
+
+    @Slot()
+    def resetSettings(self):
+        self.resetRequested.emit()
+
+    @Slot()
+    def exportMemory(self):
+        self.memoryExportRequested.emit()
+
+    @Slot()
+    def clearMemory(self):
+        self.memoryClearRequested.emit()
+
+    @Slot()
+    def clearImageCache(self):
+        self.imageCacheClearRequested.emit()
+
+
+class SettingsPage(QWidget):
     settings_saved = Signal(dict)
     memory_export_requested = Signal()
     memory_clear_requested = Signal()
@@ -32,272 +66,165 @@ class SettingsPage(QWidget):
     def __init__(self):
         super().__init__()
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(25, 25, 25, 25)
-        layout.setSpacing(24)
+        self.setObjectName("SettingsPage")
 
-        title = QLabel("Settings")
-        title.setObjectName("SectionTitle")
+        self.web_ready = False
+        self.current_settings = load_settings()
+        self.latest_message = ""
 
-        subtitle = QLabel(
-            "Customize Spotify Power Tools and save your defaults."
-        )
-        subtitle.setStyleSheet(
-            "color:#A0A0A0; font-size:11pt;"
-        )
+        root_layout = QVBoxLayout(self)
+        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.setSpacing(0)
 
-        layout.addWidget(title)
-        layout.addWidget(subtitle)
+        self.web_view = QWebEngineView()
+        self.web_view.setObjectName("WebSettingsView")
+        self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
 
-        self.card = Card("Default Shuffle Settings")
-
-        self.profile = QComboBox()
-        self.profile.addItems([
-            "Balanced",
-            "Discovery",
-            "Adaptive",
-            "Album",
-            "Random",
-            "Weighted",
-            "Custom"
-        ])
-
-        self.queue_size = QComboBox()
-        self.queue_size.addItems([
-            "10 songs",
-            "25 songs",
-            "50 songs",
-            "100 songs"
-        ])
-
-        self.artist_slider = QSlider(Qt.Horizontal)
-        self.artist_slider.setRange(0, 100)
-
-        self.album_slider = QSlider(Qt.Horizontal)
-        self.album_slider.setRange(0, 100)
-
-        self.random_slider = QSlider(Qt.Horizontal)
-        self.random_slider.setRange(0, 100)
-
-        self.artist_value = QLabel()
-        self.album_value = QLabel()
-        self.random_value = QLabel()
-
-        self.add_setting_row(
-            "Default Profile",
-            self.profile
+        self.web_view.settings().setAttribute(
+            QWebEngineSettings.LocalContentCanAccessRemoteUrls,
+            True,
         )
 
-        self.add_setting_row(
-            "Default Queue Size",
-            self.queue_size
+        self.web_view.settings().setAttribute(
+            QWebEngineSettings.LocalContentCanAccessFileUrls,
+            True,
         )
 
-        self.add_slider_row(
-            "Artist Weight",
-            self.artist_slider,
-            self.artist_value
+        self.bridge = SettingsBridge()
+
+        self.bridge.saveRequested.connect(
+            self.save_from_web
         )
 
-        self.add_slider_row(
-            "Album Weight",
-            self.album_slider,
-            self.album_value
-        )
-
-        self.add_slider_row(
-            "Randomness",
-            self.random_slider,
-            self.random_value
-        )
-
-        buttons = QHBoxLayout()
-
-        self.save_button = QPushButton("Save Settings")
-        self.reset_button = QPushButton("Reset Defaults")
-
-        self.reset_button.setObjectName("SecondaryButton")
-
-        buttons.addWidget(self.save_button)
-        buttons.addWidget(self.reset_button)
-
-        self.card.layout.addLayout(buttons)
-
-        self.message = QLabel("")
-        self.message.setStyleSheet(
-            "color: #e3a857; font-size:10pt;"
-        )
-
-        self.card.layout.addWidget(self.message)
-
-        layout.addWidget(self.card)
-        self.memory_card = Card("Memory Tools")
-
-        memory_help = QLabel(
-            "Manage local listening memory and album-art cache. This does not modify Spotify."
-        )
-        memory_help.setWordWrap(True)
-        memory_help.setStyleSheet(
-            "color:#A0A0A0; font-size:10.5pt;"
-        )
-
-        self.export_memory_button = QPushButton("Export Listening Memory")
-        self.clear_memory_button = QPushButton("Clear Listening Memory")
-        self.clear_cache_button = QPushButton("Clear Album Art Cache")
-
-        self.clear_memory_button.setObjectName("SecondaryButton")
-        self.clear_cache_button.setObjectName("SecondaryButton")
-
-        self.memory_card.layout.addWidget(memory_help)
-        self.memory_card.layout.addWidget(self.export_memory_button)
-        self.memory_card.layout.addWidget(self.clear_memory_button)
-        self.memory_card.layout.addWidget(self.clear_cache_button)
-
-        layout.addWidget(self.memory_card)
-        layout.addStretch()
-
-        self.artist_slider.valueChanged.connect(
-            self.update_value_labels
-        )
-
-        self.album_slider.valueChanged.connect(
-            self.update_value_labels
-        )
-
-        self.random_slider.valueChanged.connect(
-            self.update_value_labels
-        )
-
-        self.save_button.clicked.connect(
-            self.save_current_settings
-        )
-
-        self.reset_button.clicked.connect(
+        self.bridge.resetRequested.connect(
             self.reset_to_defaults
         )
 
-        self.export_memory_button.clicked.connect(
+        self.bridge.memoryExportRequested.connect(
             self.memory_export_requested.emit
         )
 
-        self.clear_memory_button.clicked.connect(
+        self.bridge.memoryClearRequested.connect(
             self.memory_clear_requested.emit
         )
 
-        self.clear_cache_button.clicked.connect(
+        self.bridge.imageCacheClearRequested.connect(
             self.image_cache_clear_requested.emit
         )
 
-        self.load_from_saved()
+        self.channel = QWebChannel(self.web_view.page())
+        self.channel.registerObject("settingsBridge", self.bridge)
+        self.web_view.page().setWebChannel(self.channel)
 
-    def add_setting_row(self, label_text, widget):
-
-        label = QLabel(label_text)
-        label.setStyleSheet(
-            "color:#DADADA; font-size:11pt;"
+        self.web_view.loadFinished.connect(
+            self.on_web_loaded
         )
 
-        self.card.layout.addWidget(label)
-        self.card.layout.addWidget(widget)
-
-    def add_slider_row(self, label_text, slider, value_label):
-
-        row = QHBoxLayout()
-
-        label = QLabel(label_text)
-        label.setStyleSheet(
-            "color:#DADADA; font-size:11pt;"
+        html_path = (
+            Path(__file__).resolve().parent
+            / "web"
+            / "settings.html"
         )
 
-        value_label.setFixedWidth(40)
-        value_label.setAlignment(Qt.AlignRight)
-        value_label.setStyleSheet(
-            "color:#A0A0A0; font-size:10pt;"
+        self.web_view.setUrl(
+            QUrl.fromLocalFile(str(html_path))
         )
 
-        row.addWidget(label)
-        row.addStretch()
-        row.addWidget(value_label)
+        root_layout.addWidget(self.web_view)
 
-        self.card.layout.addLayout(row)
-        self.card.layout.addWidget(slider)
+    def on_web_loaded(self, ok):
+        self.web_ready = bool(ok)
 
-    def update_value_labels(self):
+        if self.web_ready:
+            self.push_settings()
+            self.push_message(self.latest_message)
 
-        self.artist_value.setText(
-            str(self.artist_slider.value())
+    def run_js_function(self, function_name, payload):
+        if not self.web_ready:
+            return
+
+        js_payload = json.dumps(
+            payload,
+            ensure_ascii=False,
         )
 
-        self.album_value.setText(
-            str(self.album_slider.value())
+        self.web_view.page().runJavaScript(
+            f"{function_name}({js_payload});"
         )
 
-        self.random_value.setText(
-            str(self.random_slider.value())
+    def build_payload(self):
+        return {
+            "settings": self.current_settings,
+            "profiles": VALID_PROFILES,
+            "queueSizes": VALID_QUEUE_SIZES,
+        }
+
+    def push_settings(self):
+        self.run_js_function(
+            "window.settingsPage.update",
+            self.build_payload(),
+        )
+
+    def push_message(self, message):
+        self.latest_message = message or ""
+
+        self.run_js_function(
+            "window.settingsPage.setMessage",
+            {
+                "message": self.latest_message,
+            },
         )
 
     def load_from_saved(self):
-
-        settings = load_settings()
-
-        self.profile.setCurrentText(
-            settings["shuffle_profile"]
-        )
-
-        self.queue_size.setCurrentText(
-            f"{settings['queue_size']} songs"
-        )
-
-        self.artist_slider.setValue(
-            settings["artist_weight"]
-        )
-
-        self.album_slider.setValue(
-            settings["album_weight"]
-        )
-
-        self.random_slider.setValue(
-            settings["randomness"]
-        )
-
-        self.update_value_labels()
+        self.current_settings = load_settings()
+        self.push_settings()
 
     def get_settings(self):
+        return dict(self.current_settings)
 
-        queue_size_text = self.queue_size.currentText()
-
-        return {
-            "queue_size": int(queue_size_text.split()[0]),
-            "shuffle_profile": self.profile.currentText(),
-            "artist_weight": self.artist_slider.value(),
-            "album_weight": self.album_slider.value(),
-            "randomness": self.random_slider.value(),
+    def save_from_web(
+        self,
+        profile,
+        queue_size,
+        artist_weight,
+        album_weight,
+        randomness,
+    ):
+        settings = {
+            "shuffle_profile": profile,
+            "queue_size": queue_size,
+            "artist_weight": artist_weight,
+            "album_weight": album_weight,
+            "randomness": randomness,
         }
 
-    def save_current_settings(self):
+        self.current_settings = save_settings(settings)
 
-        settings = save_settings(
-            self.get_settings()
-        )
-
-        self.message.setText(
-            "Settings saved."
-        )
+        self.push_settings()
+        self.push_message("Settings saved.")
 
         self.settings_saved.emit(
-            settings
+            self.current_settings
+        )
+
+    def save_current_settings(self):
+        self.current_settings = save_settings(
+            self.current_settings
+        )
+
+        self.push_settings()
+        self.push_message("Settings saved.")
+
+        self.settings_saved.emit(
+            self.current_settings
         )
 
     def reset_to_defaults(self):
+        self.current_settings = reset_settings()
 
-        settings = reset_settings()
-
-        self.load_from_saved()
-
-        self.message.setText(
-            "Defaults restored."
-        )
+        self.push_settings()
+        self.push_message("Defaults restored.")
 
         self.settings_saved.emit(
-            settings
+            self.current_settings
         )
