@@ -600,99 +600,416 @@ class Dashboard(QWidget):
             {}
         )
 
+        def clean_text(value, fallback="—"):
+            text = extract_text(
+                value
+            ).strip()
+
+            if not text:
+                return fallback
+
+            blocked = {
+                "n/a",
+                "none",
+                "not enough memory yet",
+                "keep listening to unlock this",
+                "unknown",
+            }
+
+            if text.lower() in blocked:
+                return fallback
+
+            return text
+
+        def number_or_zero(value):
+            number = as_number(
+                value
+            )
+
+            if number is None:
+                return 0
+
+            return number
+
+        def rounded_percent(value):
+            number = number_or_zero(
+                value
+            )
+
+            return round(
+                max(0, min(100, number))
+            )
+
+        def first_named_item(items):
+            if not items:
+                return ""
+
+            if isinstance(items, dict):
+                items = list(
+                    items.values()
+                )
+
+            if not isinstance(items, list):
+                items = [
+                    items
+                ]
+
+            if not items:
+                return ""
+
+            first = items[0]
+
+            if isinstance(first, dict):
+                name = (
+                        first.get("name")
+                        or first.get("song_name")
+                        or first.get("track_name")
+                        or first.get("title")
+                        or first.get("value")
+                        or ""
+                )
+
+                artist = (
+                        first.get("artist")
+                        or first.get("artist_name")
+                        or ""
+                )
+
+                if name and artist:
+                    return f"{name} — {artist}"
+
+                if name:
+                    return str(name)
+
+                return clean_text(
+                    first,
+                    fallback=""
+                )
+
+            if isinstance(first, (list, tuple)) and first:
+                return str(
+                    first[0]
+                )
+
+            return str(
+                first
+            )
+
+        def first_count_item(items):
+            if not items:
+                return "", 0
+
+            if isinstance(items, dict):
+                items = list(
+                    items.items()
+                )
+
+            if not isinstance(items, list):
+                return str(items), 0
+
+            if not items:
+                return "", 0
+
+            first = items[0]
+
+            if isinstance(first, dict):
+                name = (
+                        first.get("name")
+                        or first.get("artist")
+                        or first.get("album")
+                        or first.get("title")
+                        or first.get("value")
+                        or ""
+                )
+
+                count = (
+                        first.get("count")
+                        or first.get("songs")
+                        or first.get("total")
+                        or 0
+                )
+
+                return str(name), int(count or 0)
+
+            if isinstance(first, (list, tuple)):
+                name = first[0] if len(first) >= 1 else ""
+                count = first[1] if len(first) >= 2 else 0
+
+                try:
+                    count = int(
+                        count
+                    )
+
+                except (TypeError, ValueError):
+                    count = 0
+
+                return str(name), count
+
+            return str(first), 0
+
+        total_songs = int(
+            number_or_zero(
+                analytics.get("total_songs")
+            )
+        )
+
+        unique_artists = int(
+            number_or_zero(
+                analytics.get("unique_artists")
+            )
+        )
+
+        health_score = rounded_percent(
+            analytics.get("health_score")
+        )
+
+        diversity_score = rounded_percent(
+            first_existing(
+                analytics,
+                "diversity_score",
+                "artist_entropy_score",
+                default=0
+            )
+        )
+
+        variety_score = rounded_percent(
+            first_existing(
+                glow,
+                "variety_score",
+                default=diversity_score
+            )
+        )
+
+        aura_score = rounded_percent(
+            first_existing(
+                glow,
+                "aura_score",
+                "score",
+                default=health_score
+            )
+        )
+
+        top_artist_name = clean_text(
+            analytics.get("top_artist_name"),
+            fallback=""
+        )
+
+        top_artist_count = int(
+            number_or_zero(
+                analytics.get("top_artist_count")
+            )
+        )
+
+        if not top_artist_name:
+            top_artist_name, top_artist_count = first_count_item(
+                analytics.get("top_artists", [])
+            )
+
+        top_artist_percentage = rounded_percent(
+            analytics.get("top_artist_percentage")
+        )
+
+        top_album_name = clean_text(
+            analytics.get("top_album_name"),
+            fallback=""
+        )
+
+        top_album_percentage = rounded_percent(
+            analytics.get("top_album_percentage")
+        )
+
+        recommended_profile = clean_text(
+            intelligence.get("recommended_profile"),
+            fallback="Balanced"
+        )
+
+        recommendation_confidence = clean_text(
+            intelligence.get("recommendation_confidence"),
+            fallback="Low"
+        )
+
+        recommendation_reason = clean_text(
+            intelligence.get("recommendation_reason"),
+            fallback=""
+        )
+
+        completion_rate = rounded_percent(
+            first_existing(
+                listening,
+                "global_completion_rate",
+                "completion_rate",
+                "finish_rate",
+                default=0
+            )
+        )
+
+        skip_rate = rounded_percent(
+            first_existing(
+                listening,
+                "global_skip_rate",
+                "skip_rate",
+                default=0
+            )
+        )
+
+        average_rating = as_rating(
+            analytics.get("average_rating")
+        )
+
+        rated_percentage = rounded_percent(
+            analytics.get("rated_percentage")
+        )
+
         identity_title = ""
 
         if isinstance(personality, dict):
-            identity_title = first_existing(
-                personality,
-                "title",
-                "name",
-                "label",
-                default=""
+            identity_title = clean_text(
+                first_existing(
+                    personality,
+                    "title",
+                    "name",
+                    "label",
+                    default=""
+                ),
+                fallback=""
             )
+
         elif isinstance(personality, str):
             identity_title = personality
+
+        if not identity_title:
+            identity_title = "Playlist Intelligence"
 
         identity_subtitle = ""
 
         if isinstance(personality, dict):
-            identity_subtitle = first_existing(
-                personality,
-                "subtitle",
-                "description",
-                "summary",
-                default=""
+            identity_subtitle = clean_text(
+                first_existing(
+                    personality,
+                    "subtitle",
+                    "description",
+                    "summary",
+                    default=""
+                ),
+                fallback=""
             )
 
         if not identity_subtitle:
-            identity_subtitle = first_existing(
-                glow,
-                "subtitle",
-                "description",
-                "summary",
-                default=""
+            identity_subtitle = "Real playlist signals are being used to tune shuffle behavior."
+
+        insight_parts = []
+
+        if recommended_profile:
+            insight_parts.append(
+                f"Recommended: {recommended_profile} · {recommendation_confidence} confidence"
             )
 
-        aura_score = first_existing(
-            glow,
-            "aura_score",
-            "score",
-            default=None
+        if top_artist_name:
+            if top_artist_percentage > 0:
+                insight_parts.append(
+                    f"Top artist: {top_artist_name} · {top_artist_percentage}%"
+                )
+            elif top_artist_count > 0:
+                insight_parts.append(
+                    f"Top artist: {top_artist_name} · {top_artist_count} songs"
+                )
+            else:
+                insight_parts.append(
+                    f"Top artist: {top_artist_name}"
+                )
+
+        if variety_score > 0:
+            insight_parts.append(
+                f"Variety: {variety_score}%"
+            )
+
+        if completion_rate > 0 or skip_rate > 0:
+            insight_parts.append(
+                f"Completion {completion_rate}% · Skip {skip_rate}%"
+            )
+
+        if average_rating is not None and average_rating > 0:
+            insight_parts.append(
+                f"Rating: {average_rating}/5 across {rated_percentage}% rated"
+            )
+
+        if insight_parts:
+            identity_subtitle = (
+                    f"{identity_subtitle}\n"
+                    + " · ".join(
+                insight_parts[:3]
+            )
+            )
+
+        hidden_favorite = first_named_item(
+            intelligence.get("hidden_favorites", [])
         )
 
-        aura_number = as_number(aura_score)
+        if not hidden_favorite:
+            hidden_favorite = clean_text(
+                wrapped_card_name(
+                    wrapped_cards.get("hidden_favorite", {})
+                ),
+                fallback="—"
+            )
 
-        if aura_number is not None:
-            aura_number = round(aura_number)
+        playlist_villain = first_named_item(
+            intelligence.get("cleanup_suggestions", [])
+        )
+
+        if not playlist_villain:
+            playlist_villain = first_named_item(
+                listening.get("most_skipped", [])
+            )
+
+        if not playlist_villain:
+            playlist_villain = clean_text(
+                wrapped_card_name(
+                    wrapped_cards.get("playlist_villain", {})
+                ),
+                fallback="—"
+            )
 
         badges = normalize_badges(
             glow.get("badges", [])
         )
 
-        hidden_favorite = wrapped_card_name(
-            wrapped_cards.get("hidden_favorite", {})
-        )
+        if not badges:
+            if health_score >= 85:
+                badges = [
+                    "Excellent Health"
+                ]
+            elif diversity_score >= 70:
+                badges = [
+                    "Strong Variety"
+                ]
+            elif skip_rate >= 30:
+                badges = [
+                    "Skip Sensitive"
+                ]
+            elif recommended_profile:
+                badges = [
+                    f"{recommended_profile} Ready"
+                ]
 
-        if not hidden_favorite:
-            hidden_favorite = extract_text(
-                first_existing(
-                    intelligence,
-                    "hidden_favorite",
-                    "hidden_favorites",
-                    default=""
-                )
-            )
-
-        playlist_villain = wrapped_card_name(
-            wrapped_cards.get("playlist_villain", {})
-        )
-
-        if not playlist_villain:
-            playlist_villain = extract_text(
-                first_existing(
-                    intelligence,
-                    "playlist_villain",
-                    "villain",
-                    "most_skipped",
-                    "cleanup_target",
-                    default=""
-                )
-            )
-
-        has_identity = any([
+        has_identity = total_songs > 0 or any([
             identity_title,
             identity_subtitle,
-            aura_number is not None,
+            aura_score,
             badges,
-            hidden_favorite,
-            playlist_villain,
+            hidden_favorite != "—",
+            playlist_villain != "—",
         ])
 
         identity_payload = {
             "hasIdentity": has_identity,
-            "identityTitle": normalize_identity_title(identity_title),
-            "identitySubtitle": normalize_identity_subtitle(identity_subtitle),
-            "auraScore": aura_number,
+            "identityTitle": normalize_identity_title(
+                identity_title
+            ),
+            "identitySubtitle": normalize_identity_subtitle(
+                identity_subtitle
+            ),
+            "auraScore": aura_score if has_identity else None,
             "badges": badges[:3],
             "hiddenFavorite": hidden_favorite,
             "playlistVillain": playlist_villain,
@@ -705,140 +1022,38 @@ class Dashboard(QWidget):
             identity_payload
         )
 
-        total_songs = first_existing(
-            analytics,
-            "total_songs",
-            "track_count",
-            "songs",
-            default=None
+        profile_value = recommended_profile
+
+        if len(profile_value) > 8:
+            profile_value = profile_value[:8]
+
+        stats_payload = {
+            "items": [
+                {
+                    "value": health_score,
+                    "label": "HEALTH",
+                },
+                {
+                    "value": variety_score,
+                    "label": "VARIETY",
+                },
+                {
+                    "value": top_artist_count or unique_artists,
+                    "label": "TOP ARTIST" if top_artist_count else "ARTISTS",
+                },
+                {
+                    "value": profile_value,
+                    "label": "PROFILE",
+                },
+            ]
+        }
+
+        self.latest_stats_summary = stats_payload
+
+        self.run_js_function(
+            "window.dashboard.updateStats",
+            stats_payload
         )
-
-        unique_artists = first_existing(
-            analytics,
-            "unique_artists",
-            "artist_count",
-            default=None
-        )
-
-        completion_rate = as_percent(
-            first_existing(
-                listening,
-                "completion_rate",
-                "finish_rate",
-                "average_completion_rate",
-                "avg_completion_rate",
-                "strong_completion_rate",
-                default=None
-            )
-        )
-
-        if completion_rate is None:
-            completion_rate = as_percent(
-                first_existing(
-                    glow,
-                    "completion_rate",
-                    "taste_match",
-                    default=None
-                )
-            )
-
-        avg_rating = as_rating(
-            first_existing(
-                analytics,
-                "average_rating",
-                "avg_rating",
-                "mean_rating",
-                default=None
-            )
-        )
-
-        if avg_rating is None:
-            avg_rating = as_rating(
-                first_existing(
-                    intelligence,
-                    "average_rating",
-                    "avg_rating",
-                    "mean_rating",
-                    default=None
-                )
-            )
-
-        if avg_rating is None:
-            avg_rating = as_rating(
-                first_existing(
-                    glow,
-                    "average_rating",
-                    "avg_rating",
-                    default=None
-                )
-            )
-
-        stats_items = []
-
-        if total_songs is not None:
-            stats_items.append({
-                "value": total_songs,
-                "label": "TRACKS",
-            })
-
-        if completion_rate is not None:
-            stats_items.append({
-                "value": f"{completion_rate}%",
-                "label": "COMPLETION RATE",
-            })
-
-        if avg_rating is not None:
-            stats_items.append({
-                "value": avg_rating,
-                "label": "AVG RATING",
-            })
-
-        if unique_artists is not None:
-            stats_items.append({
-                "value": unique_artists,
-                "label": "UNIQUE ARTISTS",
-            })
-
-        if len(stats_items) >= 2:
-            while len(stats_items) < 4:
-
-                fallback_index = len(stats_items)
-
-                fallback_items = [
-                    {
-                        "value": round(float(glow.get("variety_score", 0))),
-                        "label": "VARIETY",
-                    },
-                    {
-                        "value": round(float(glow.get("replay_energy", 0))),
-                        "label": "REPLAY ENERGY",
-                    },
-                    {
-                        "value": round(float(glow.get("taste_match", 0))),
-                        "label": "TASTE MATCH",
-                    },
-                ]
-
-                if fallback_index - 1 < len(fallback_items):
-                    fallback = fallback_items[fallback_index - 1]
-
-                    if fallback["value"] > 0:
-                        stats_items.append(fallback)
-                        continue
-
-                break
-
-        if len(stats_items) >= 4:
-            stats_payload = {
-                "items": stats_items[:4]
-            }
-
-            self.latest_stats_summary = stats_payload
-
-            self.run_js_function(
-                "window.dashboard.updateStats",
-                stats_payload
-            )
 
     def update_web_now_playing(self, current, track_metadata, rating):
         if current is None or current.get("item") is None:
