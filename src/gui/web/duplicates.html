@@ -83,9 +83,9 @@ body {
     position: relative;
     overflow-x: hidden;
     background:
-        radial-gradient(circle at 18% 0%, rgba(227,168,87,0.08), transparent 30%),
-        radial-gradient(circle at 85% 20%, rgba(147,166,138,0.04), transparent 24%),
-        linear-gradient(90deg, rgba(255,255,255,0.012), transparent 34%, rgba(227,168,87,0.018) 70%, transparent),
+        radial-gradient(circle at 18% 0%, rgba(227,168,87,0.075), transparent 29%),
+        radial-gradient(circle at 85% 20%, rgba(147,166,138,0.038), transparent 24%),
+        linear-gradient(90deg, rgba(255,255,255,0.012), transparent 34%, rgba(227,168,87,0.016) 70%, transparent),
         var(--bg-deep);
 }
 
@@ -95,11 +95,11 @@ body::before {
     inset: 0;
     pointer-events: none;
     z-index: 50;
-    opacity: 0.18;
+    opacity: 0.16;
     mix-blend-mode: overlay;
     background-image:
-        radial-gradient(circle, rgba(255,255,255,0.22) 0 0.45px, transparent 0.8px),
-        radial-gradient(circle, rgba(0,0,0,0.48) 0 0.52px, transparent 0.95px);
+        radial-gradient(circle, rgba(255,255,255,0.20) 0 0.45px, transparent 0.8px),
+        radial-gradient(circle, rgba(0,0,0,0.46) 0 0.52px, transparent 0.95px);
     background-size: 3px 3px, 7px 7px;
     background-position: 0 0, 2px 3px;
 }
@@ -109,12 +109,12 @@ main {
     z-index: 1;
     width: min(100%, 1080px);
     margin: 0 auto;
-    padding: 40px 40px 54px;
+    padding: 42px 40px 48px;
 }
 
 .page-eyebrow {
     font-family: var(--font-mono);
-    font-size: 10.5px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 1.8px;
     color: var(--text-low);
@@ -132,8 +132,8 @@ main {
     font-size: 12.5px;
     color: var(--text-mid);
     margin-top: 8px;
-    max-width: 620px;
-    line-height: 1.6;
+    max-width: 640px;
+    line-height: 1.55;
 }
 
 .stat-row {
@@ -144,19 +144,20 @@ main {
     border: 1px solid var(--line);
     border-radius: 10px;
     overflow: hidden;
-    margin-top: 30px;
+    margin-top: 28px;
 }
 
 .stat-cell {
     background:
-        radial-gradient(circle at 18% 0%, rgba(255,255,255,0.03), transparent 30%),
-        var(--bg-card);
-    padding: 22px;
+        radial-gradient(circle at 18% 0%, rgba(255,255,255,0.028), transparent 30%),
+        rgba(34,28,22,0.92);
+    padding: 19px 20px;
     text-align: center;
 }
 
 .stat-cell .label {
-    font-size: 10.5px;
+    font-family: var(--font-mono);
+    font-size: 10px;
     color: var(--text-low);
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -164,7 +165,8 @@ main {
 
 .stat-cell .value {
     font-family: var(--font-serif);
-    font-size: 30px;
+    font-size: 29px;
+    line-height: 1;
     margin-top: 10px;
 }
 
@@ -180,16 +182,16 @@ main {
     position: relative;
     overflow: hidden;
     background:
-        radial-gradient(circle at 18% 0%, rgba(255,255,255,0.035), transparent 30%),
-        linear-gradient(145deg, rgba(255,255,255,0.025), transparent 38%),
-        var(--bg-card);
+        radial-gradient(circle at 18% 0%, rgba(255,255,255,0.032), transparent 30%),
+        linear-gradient(145deg, rgba(255,255,255,0.022), transparent 38%),
+        rgba(34,28,22,0.92);
     border: 1px solid var(--line);
     border-radius: 10px;
-    padding: 26px;
-    margin-top: 20px;
+    padding: 24px 26px;
+    margin-top: 18px;
     box-shadow:
-        0 26px 60px rgba(0,0,0,0.22),
-        inset 0 1px 0 rgba(255,255,255,0.025);
+        0 24px 56px rgba(0,0,0,0.20),
+        inset 0 1px 0 rgba(255,255,255,0.022);
 }
 
 .card::before {
@@ -197,7 +199,7 @@ main {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    opacity: 0.10;
+    opacity: 0.085;
     background-image:
         radial-gradient(circle, rgba(255,255,255,0.08) 0 0.45px, transparent 0.85px),
         radial-gradient(circle, rgba(0,0,0,0.18) 0 0.55px, transparent 0.95px);
@@ -213,7 +215,7 @@ main {
     font-family: var(--font-serif);
     font-size: 19px;
     font-weight: 500;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
 }
 
 .card h3 span {
@@ -226,19 +228,19 @@ main {
 
 .empty-state {
     text-align: center;
-    padding: 34px 20px;
+    padding: 26px 20px 28px;
 }
 
 .empty-icon {
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 14px;
+    width: 45px;
+    height: 45px;
+    margin: 0 auto 13px;
     border-radius: 50%;
     border: 1px solid rgba(147,166,138,0.34);
     color: var(--sage);
     display: grid;
     place-items: center;
-    font-size: 24px;
+    font-size: 23px;
     background: rgba(147,166,138,0.06);
 }
 
@@ -251,28 +253,29 @@ main {
 .empty-sub {
     font-size: 12.5px;
     color: var(--text-mid);
-    margin-top: 8px;
+    margin-top: 7px;
 }
 
 .empty-note {
     font-size: 11.5px;
     color: var(--text-low);
-    margin-top: 18px;
-    max-width: 420px;
+    margin-top: 16px;
+    max-width: 430px;
     margin-left: auto;
     margin-right: auto;
-    line-height: 1.6;
+    line-height: 1.55;
 }
 
 .btn-primary {
     display: block;
     width: 100%;
-    margin-top: 20px;
+    height: 44px;
+    margin-top: 14px;
     background: var(--amber);
     color: #1a1611;
     border: none;
     border-radius: 7px;
-    padding: 13px;
+    padding: 0 13px;
     font-size: 12.5px;
     font-weight: 700;
     font-family: var(--font-sans);
@@ -280,8 +283,9 @@ main {
 }
 
 .btn-primary:disabled {
-    opacity: 0.48;
+    opacity: 0.42;
     cursor: default;
+    filter: grayscale(0.22);
 }
 
 .dup-row {
@@ -289,7 +293,7 @@ main {
     justify-content: space-between;
     gap: 18px;
     align-items: center;
-    padding: 14px 0;
+    padding: 12px 0;
     border-bottom: 1px solid var(--line);
 }
 
@@ -298,7 +302,7 @@ main {
 }
 
 .dup-info .title {
-    font-size: 13px;
+    font-size: 12.8px;
     color: var(--text-hi);
     font-weight: 700;
 }
@@ -307,12 +311,12 @@ main {
     font-size: 11px;
     color: var(--text-low);
     margin-top: 4px;
-    line-height: 1.45;
+    line-height: 1.42;
 }
 
 .dup-count {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 10.8px;
     color: var(--rose);
     background: rgba(201,138,125,0.12);
     border: 1px solid rgba(201,138,125,0.30);
@@ -332,6 +336,10 @@ main {
 ::-webkit-scrollbar-thumb {
     background: rgba(227,168,87,0.42);
     border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(227,168,87,0.70);
 }
 </style>
 </head>
