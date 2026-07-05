@@ -1,10 +1,1348 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Spotify Power Tools — Analytics</title>
+
+<script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+
+<style>
+@font-face {
+    font-family: "PT Fraunces";
+    src: url("../resources/fonts/Fraunces-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "PT Fraunces";
+    src: url("../resources/fonts/Fraunces-Italic.ttf") format("truetype");
+    font-weight: 400;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: "PT Inter";
+    src: url("../resources/fonts/Inter-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "PT Inter";
+    src: url("../resources/fonts/Inter-SemiBold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "PT JetBrains Mono";
+    src: url("../resources/fonts/JetBrainsMono-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+:root {
+    --bg-deep: #14110e;
+    --bg-panel: #1a1611;
+    --bg-card: #221c16;
+    --bg-card-hi: #2a2319;
+
+    --line: rgba(243, 236, 223, 0.08);
+    --line-strong: rgba(243, 236, 223, 0.14);
+
+    --text-hi: #f3ecdf;
+    --text-mid: #c9bfae;
+    --text-low: #8f8574;
+
+    --amber: #e3a857;
+    --sage: #93a68a;
+    --rose: #c98a7d;
+
+    --font-serif: "PT Fraunces", Georgia, serif;
+    --font-sans: "PT Inter", "Segoe UI", sans-serif;
+    --font-mono: "PT JetBrains Mono", Consolas, monospace;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    min-height: 100%;
+    background: var(--bg-deep);
+    color: var(--text-hi);
+    font-family: var(--font-sans);
+}
+
+body {
+    position: relative;
+    overflow-x: hidden;
+    background:
+        radial-gradient(circle at 18% 0%, rgba(227,168,87,0.08), transparent 28%),
+        radial-gradient(circle at 84% 22%, rgba(147,166,138,0.045), transparent 25%),
+        linear-gradient(90deg, rgba(255,255,255,0.012), transparent 34%, rgba(227,168,87,0.018) 70%, transparent),
+        var(--bg-deep);
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    background-image:
+        radial-gradient(circle, rgba(255,255,255,0.22) 0 0.45px, transparent 0.8px),
+        radial-gradient(circle, rgba(0,0,0,0.48) 0 0.52px, transparent 0.95px);
+    background-size: 3px 3px, 7px 7px;
+    background-position: 0 0, 2px 3px;
+}
+
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 51;
+    opacity: 0.32;
+    background:
+        radial-gradient(circle at 50% 35%, transparent 0%, rgba(0,0,0,0.18) 100%),
+        linear-gradient(to right, rgba(255,255,255,0.02), transparent 12%, transparent 88%, rgba(0,0,0,0.26));
+}
+
+main {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 1240px);
+    margin: 0 auto;
+    padding: 34px 34px 48px;
+}
+
+.page-head {
+    margin-bottom: 26px;
+}
+
+.page-eyebrow,
+.section-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
+    color: var(--text-low);
+}
+
+.page-title {
+    font-family: var(--font-serif);
+    font-size: 31px;
+    font-weight: 500;
+    margin-top: 8px;
+    letter-spacing: -0.35px;
+}
+
+.page-sub {
+    font-size: 12.5px;
+    color: var(--text-mid);
+    margin-top: 8px;
+    max-width: 650px;
+    line-height: 1.6;
+}
+
+.section-label {
+    margin: 26px 0 10px;
+}
+
+.card {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 18% 0%, rgba(255,255,255,0.035), transparent 30%),
+        linear-gradient(145deg, rgba(255,255,255,0.025), transparent 38%),
+        var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px;
+    box-shadow:
+        0 26px 60px rgba(0,0,0,0.22),
+        inset 0 1px 0 rgba(255,255,255,0.025);
+}
+
+.card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.10;
+    background-image:
+        radial-gradient(circle, rgba(255,255,255,0.08) 0 0.45px, transparent 0.85px),
+        radial-gradient(circle, rgba(0,0,0,0.18) 0 0.55px, transparent 0.95px);
+    background-size: 5px 5px, 9px 9px;
+}
+
+.card > * {
+    position: relative;
+    z-index: 2;
+}
+
+.card h3 {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 14px;
+}
+
+.card h3 .muted {
+    color: var(--text-low);
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+/* hero */
+
+.hero {
+    min-height: 235px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 190px;
+    align-items: center;
+    gap: 28px;
+    background:
+        radial-gradient(circle at 18% 18%, rgba(227,168,87,0.18), transparent 34%),
+        radial-gradient(circle at 82% 30%, rgba(147,166,138,0.08), transparent 36%),
+        linear-gradient(160deg, rgba(34,28,22,0.98) 0%, rgba(23,19,14,0.98) 100%);
+    border: 1px solid var(--line-strong);
+    border-radius: 14px;
+    padding: 30px 34px;
+    box-shadow:
+        0 34px 80px rgba(0,0,0,0.30),
+        inset 0 1px 0 rgba(255,255,255,0.035);
+}
+
+.hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
+    color: var(--text-low);
+    margin-bottom: 10px;
+}
+
+.hero-title {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 44px;
+    color: var(--amber);
+    line-height: 1.02;
+    letter-spacing: -0.7px;
+}
+
+.hero-tagline {
+    font-size: 15px;
+    color: var(--text-hi);
+    margin-top: 12px;
+    line-height: 1.45;
+}
+
+.hero-profile {
+    display: inline-block;
+    width: fit-content;
+    margin-top: 18px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(147,166,138,0.10);
+    border: 1px solid rgba(147,166,138,0.22);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--sage);
+    letter-spacing: 0.3px;
+}
+
+.aura-dial {
+    width: 162px;
+    height: 162px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid rgba(227,168,87,0.76);
+    background:
+        radial-gradient(circle, rgba(227,168,87,0.12), transparent 70%),
+        rgba(20,17,14,0.72);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 0 0 1px rgba(227,168,87,0.12),
+        0 22px 50px rgba(0,0,0,0.24);
+}
+
+.aura-dial .num {
+    font-family: var(--font-serif);
+    font-size: 42px;
+    color: var(--text-hi);
+}
+
+.aura-dial .lbl {
+    font-size: 9.5px;
+    color: var(--sage);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-top: 2px;
+}
+
+/* metrics */
+
+.metric-trio {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+
+.metric-card {
+    background:
+        radial-gradient(circle at 18% 0%, rgba(255,255,255,0.035), transparent 30%),
+        rgba(34,28,22,0.90);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 20px;
+    min-height: 108px;
+}
+
+.metric-label {
+    font-size: 10.5px;
+    color: var(--text-low);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.metric-value {
+    font-family: var(--font-serif);
+    font-size: 34px;
+    line-height: 1;
+    margin: 9px 0 12px;
+}
+
+.bar {
+    height: 3px;
+    background: var(--line-strong);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bar div {
+    height: 100%;
+    background: var(--amber);
+}
+
+/* identity cards */
+
+.id-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.id-card {
+    background:
+        radial-gradient(circle at 12% 0%, rgba(227,168,87,0.04), transparent 34%),
+        rgba(34,28,22,0.86);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+    min-height: 118px;
+}
+
+.id-icon {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.id-label {
+    font-size: 10.5px;
+    color: var(--text-low);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.id-value {
+    font-family: var(--font-serif);
+    font-size: 17px;
+    line-height: 1.22;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.id-sub {
+    font-size: 10.8px;
+    color: var(--text-mid);
+    margin-top: 6px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* badges */
+
+.badge-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.badge-card {
+    background: rgba(227,168,87,0.045);
+    border: 1px dashed rgba(227,168,87,0.32);
+    border-radius: 8px;
+    padding: 14px 16px;
+    min-height: 88px;
+}
+
+.badge-card.sage {
+    background: rgba(147,166,138,0.05);
+    border-color: rgba(147,166,138,0.35);
+}
+
+.badge-card.rose {
+    background: rgba(201,138,125,0.05);
+    border-color: rgba(201,138,125,0.35);
+}
+
+.badge-emoji {
+    font-size: 17px;
+    margin-bottom: 6px;
+}
+
+.badge-title {
+    font-family: var(--font-serif);
+    font-size: 13.5px;
+}
+
+.badge-sub {
+    font-size: 10.5px;
+    color: var(--text-mid);
+    margin-top: 4px;
+    line-height: 1.45;
+}
+
+/* share card */
+
+.share-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 14px;
+}
+
+.btn-primary,
+.btn-ghost {
+    height: 44px;
+    border-radius: 7px;
+    padding: 0 20px;
+    font-size: 12px;
+    font-family: var(--font-sans);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--amber);
+    color: #1a1611;
+    border: none;
+    font-weight: 700;
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text-mid);
+    border: 1px solid var(--line-strong);
+}
+
+.theme-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.theme-option {
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--line);
+    background: rgba(20,17,14,0.24);
+}
+
+.theme-option.selected {
+    border-color: var(--amber);
+    background: rgba(227,168,87,0.06);
+}
+
+.theme-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.theme-name {
+    font-size: 12px;
+    color: var(--text-hi);
+    font-weight: 600;
+}
+
+.theme-desc {
+    font-size: 10px;
+    color: var(--text-low);
+}
+
+/* stats */
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.stat-cell {
+    background: var(--bg-card);
+    padding: 18px;
+}
+
+.stat-cell .label {
+    font-size: 10px;
+    color: var(--text-low);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.stat-cell .value {
+    font-family: var(--font-serif);
+    font-size: 19px;
+    margin-top: 6px;
+}
+
+.stat-cell .value.accent {
+    color: var(--amber);
+}
+
+.stat-cell .value.sage {
+    color: var(--sage);
+}
+
+.stat-cell .value.rose {
+    color: var(--rose);
+}
+
+.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* health */
+
+.health-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-mid);
+    margin-bottom: 6px;
+}
+
+.health-row span:last-child {
+    color: var(--text-hi);
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+
+.health-bar {
+    height: 3px;
+    background: var(--line-strong);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+
+.health-bar div {
+    height: 100%;
+    background: var(--sage);
+}
+
+.health-note {
+    font-size: 11.5px;
+    color: var(--text-low);
+    margin-top: 4px;
+    line-height: 1.5;
+}
+
+/* doctor */
+
+.doctor-block {
+    margin-bottom: 14px;
+}
+
+.doctor-block:last-child {
+    margin-bottom: 0;
+}
+
+.doctor-block .head {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-low);
+    margin-bottom: 6px;
+}
+
+.doctor-block {
+    margin-bottom: 12px;
+}
+
+.doctor-block ul {
+    list-style: none;
+    font-size: 12px;
+    color: var(--text-mid);
+    line-height: 1.55;
+}
+
+.doctor-block li::before {
+    content: "— ";
+    color: var(--text-low);
+}
+
+/* listening */
+
+.streak-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.streak-cell {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.streak-cell .label {
+    font-size: 9.5px;
+    color: var(--text-low);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.streak-cell .value {
+    font-family: var(--font-serif);
+    font-size: 15px;
+    margin-top: 5px;
+}
+
+.listening-summary {
+    font-size: 13px;
+    color: var(--text-mid);
+}
+
+.listening-summary strong {
+    color: var(--text-hi);
+    font-weight: 600;
+}
+
+/* rows */
+
+.cleanup-row,
+.fav-row {
+    border-bottom: 1px solid var(--line);
+    padding: 10px 0;
+}
+
+.cleanup-row:last-child,
+.fav-row:last-child {
+    border-bottom: none;
+}
+
+.cleanup-row .title,
+.fav-row .title {
+    font-size: 12.5px;
+    color: var(--text-hi);
+    font-weight: 600;
+}
+
+.cleanup-row .meta {
+    font-size: 11px;
+    color: var(--rose);
+    margin-top: 3px;
+}
+
+.fav-row .meta {
+    font-size: 11px;
+    color: var(--sage);
+    margin-top: 3px;
+}
+
+/* bar lists */
+
+.bar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.bar-list-row .head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.bar-list-row .head .name {
+    color: var(--text-hi);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bar-list-row .head .val {
+    font-family: var(--font-mono);
+    color: var(--text-low);
+    flex-shrink: 0;
+}
+
+.bar-list-row .track {
+    height: 4px;
+    background: var(--line-strong);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bar-list-row .track div {
+    height: 100%;
+    background: var(--amber);
+}
+
+.bar-list-row.sage .track div {
+    background: var(--sage);
+}
+
+.bar-list-row.rose .track div {
+    background: var(--rose);
+}
+
+.rating-list {
+    list-style: none;
+    font-size: 12px;
+    color: var(--text-mid);
+    line-height: 1.9;
+}
+
+.rating-list.top li {
+    color: var(--sage);
+}
+
+.rating-list.low li {
+    color: var(--rose);
+}
+
+.empty {
+    color: var(--text-low);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+::-webkit-scrollbar {
+    width: 9px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(243,236,223,0.035);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(227,168,87,0.42);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(227,168,87,0.70);
+}
+</style>
 </head>
+
 <body>
-$END$
+<main>
+    <div class="page-head">
+        <div class="page-eyebrow">analytics</div>
+        <div id="pageTitle" class="page-title">Playlist Analytics</div>
+        <div id="pageSubtitle" class="page-sub">
+            Understand the health, balance, and listening memory of the playlist you're currently listening to.
+        </div>
+    </div>
+
+    <div class="hero">
+        <div>
+            <div class="hero-eyebrow">your playlist personality</div>
+            <div id="heroTitle" class="hero-title">Analyzing…</div>
+            <div id="heroSubtitle" class="hero-tagline">
+                Analytics will appear once playlist data is available.
+            </div>
+            <div id="heroProfile" class="hero-profile">
+                recommended profile: balanced · low confidence
+            </div>
+        </div>
+
+        <div class="aura-dial">
+            <div id="auraScore" class="num">—</div>
+            <div id="auraStatus" class="lbl">No Data</div>
+        </div>
+    </div>
+
+    <div class="section-label">taste signals</div>
+    <div id="tasteSignals" class="metric-trio"></div>
+
+    <div class="section-label">playlist identity</div>
+    <div id="identityGrid" class="id-grid"></div>
+
+    <div class="section-label">playlist badges</div>
+    <div id="badgeGrid" class="badge-grid"></div>
+
+    <div class="section-label">share your analytics</div>
+    <div class="card">
+        <p style="font-size:12.5px;color:var(--text-mid);margin-bottom:16px;">
+            Export a PNG card you can send to friends or post as your playlist profile.
+        </p>
+
+        <div class="theme-options">
+            <div class="theme-option selected" data-theme="Golden Hour">
+                <div class="theme-swatch" style="background:var(--amber);"></div>
+                <div>
+                    <div class="theme-name">Golden Hour</div>
+                    <div class="theme-desc">warm amber</div>
+                </div>
+            </div>
+
+            <div class="theme-option" data-theme="Late Night">
+                <div class="theme-swatch" style="background:var(--sage);"></div>
+                <div>
+                    <div class="theme-name">Late Night</div>
+                    <div class="theme-desc">deep sage</div>
+                </div>
+            </div>
+
+            <div class="theme-option" data-theme="Rosewood">
+                <div class="theme-swatch" style="background:var(--rose);"></div>
+                <div>
+                    <div class="theme-name">Rosewood</div>
+                    <div class="theme-desc">dusty rose</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="share-row" style="margin-bottom:0;">
+            <button class="btn-primary" style="flex:1;" onclick="window.actions.exportShareCard()">
+                Export Share Card
+            </button>
+        </div>
+    </div>
+
+    <div class="section-label">playlist overview</div>
+    <div id="overviewGrid" class="stat-grid"></div>
+
+    <div class="section-label">playlist health</div>
+    <div class="card">
+        <h3>
+            Health Score
+            <span id="healthHeader" class="muted">0% · No Data</span>
+        </h3>
+
+        <div id="healthBars"></div>
+        <div id="healthNote" class="health-note"></div>
+    </div>
+
+    <div class="section-label">playlist doctor</div>
+    <div class="card">
+        <h3 id="doctorHeadline" style="color:var(--sage);font-style:italic;">
+            Waiting for playlist data.
+        </h3>
+
+        <div class="doctor-block">
+            <div class="head">Strengths</div>
+            <ul id="doctorStrengths"></ul>
+        </div>
+
+        <div class="doctor-block">
+            <div class="head warn">Warnings</div>
+            <ul id="doctorWarnings"></ul>
+        </div>
+
+        <div class="doctor-block">
+            <div class="head">Rating Coverage</div>
+            <ul id="doctorRatingTips"></ul>
+        </div>
+    </div>
+
+    <div class="section-label">listening memory</div>
+    <div class="card">
+        <p id="listeningSummary" class="listening-summary"></p>
+
+        <div class="streak-grid">
+            <div class="streak-cell">
+                <div class="label">Finished Streak</div>
+                <div id="finishedStreak" class="value">0 songs</div>
+            </div>
+
+            <div class="streak-cell">
+                <div class="label">Skip Streak</div>
+                <div id="skipStreak" class="value">0 songs</div>
+            </div>
+
+            <div class="streak-cell">
+                <div class="label">Artist Streak</div>
+                <div id="artistStreak" class="value">N/A ×0</div>
+            </div>
+
+            <div class="streak-cell">
+                <div class="label">Album Streak</div>
+                <div id="albumStreak" class="value">N/A ×0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="two-col" style="margin-top:14px;">
+        <div class="card">
+            <h3>Most Replayed</h3>
+            <div id="mostReplayedList" class="bar-list"></div>
+        </div>
+
+        <div class="card">
+            <h3>Most Skipped</h3>
+            <div id="mostSkippedList" class="bar-list"></div>
+        </div>
+    </div>
+
+    <div class="section-label">smart shuffle recommendation</div>
+    <div class="card">
+        <h3>
+            Recommended Profile:
+            <span id="recommendedProfile">Balanced</span>
+            <span id="recommendationConfidence" class="muted">confidence: low</span>
+        </h3>
+
+        <p id="recommendationReason" style="font-size:12px;color:var(--text-mid);margin-bottom:16px;">
+            Balanced is a safe default until more data is available.
+        </p>
+
+        <div class="two-col">
+            <div>
+                <div class="doctor-block">
+                    <div class="head">Skip-aware cleanup</div>
+                </div>
+                <div id="cleanupList"></div>
+            </div>
+
+            <div>
+                <div class="doctor-block">
+                    <div class="head">Hidden favorites</div>
+                </div>
+                <div id="hiddenFavoritesList"></div>
+            </div>
+        </div>
+
+        <div class="share-row" style="margin-top:20px;margin-bottom:0;">
+            <button class="btn-primary" style="flex:1;" onclick="window.actions.applyRecommendedProfile()">
+                Apply Recommended Profile
+            </button>
+
+            <button class="btn-ghost" style="flex:1;" onclick="window.actions.exportReport()">
+                Export Playlist Report
+            </button>
+        </div>
+    </div>
+
+    <div class="section-label">library breakdown</div>
+    <div class="two-col">
+        <div class="card">
+            <h3>Top Artists</h3>
+            <div id="topArtistsList" class="bar-list"></div>
+        </div>
+
+        <div class="card">
+            <h3>Top Albums</h3>
+            <div id="topAlbumsList" class="bar-list"></div>
+        </div>
+    </div>
+
+    <div class="section-label">rating insights</div>
+    <div class="card">
+        <h3>Rating Distribution</h3>
+        <div id="ratingDistributionList" class="bar-list" style="margin-bottom:20px;"></div>
+
+        <div class="two-col">
+            <div>
+                <div class="doctor-block">
+                    <div class="head">Top Rated</div>
+                </div>
+                <ul id="topRatedList" class="rating-list top"></ul>
+            </div>
+
+            <div>
+                <div class="doctor-block">
+                    <div class="head">Low Rated</div>
+                </div>
+                <ul id="lowRatedList" class="rating-list low"></ul>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+let pyBridge = null;
+let selectedTheme = "Golden Hour";
+let recommendedProfile = "Balanced";
+
+window.actions = {
+    applyRecommendedProfile() {
+        if (pyBridge) {
+            pyBridge.applyProfile(recommendedProfile || "Balanced");
+        }
+    },
+
+    exportReport() {
+        if (pyBridge) {
+            pyBridge.exportReport();
+        }
+    },
+
+    exportShareCard() {
+        if (pyBridge) {
+            pyBridge.exportShareCard(selectedTheme || "Golden Hour");
+        }
+    }
+};
+
+window.analytics = {
+    update(data) {
+        data = data || {};
+
+        updateHero(data.hero || {});
+        updateTasteSignals(data.tasteSignals || []);
+        updateIdentityCards(data.identityCards || []);
+        updateBadges(data.badges || []);
+        updateOverview(data.overview || []);
+        updateHealth(data.health || {});
+        updateDoctor(data.doctor || {});
+        updateListening(data.listening || {});
+        updateBarList("mostReplayedList", data.mostReplayed || [], "amber");
+        updateBarList("mostSkippedList", data.mostSkipped || [], "rose");
+        updateShuffleRecommendation(data.shuffleRecommendation || {});
+        updateBarList("topArtistsList", (data.library || {}).topArtists || [], "amber");
+        updateBarList("topAlbumsList", (data.library || {}).topAlbums || [], "sage");
+        updateBarList("ratingDistributionList", (data.ratings || {}).distribution || [], "amber");
+        updatePlainList("topRatedList", (data.ratings || {}).topRated || []);
+        updatePlainList("lowRatedList", (data.ratings || {}).lowRated || []);
+    }
+};
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function formatPercent(value) {
+    const number = Number(value || 0);
+
+    if (Number.isInteger(number)) {
+        return `${number}%`;
+    }
+
+    return `${number.toFixed(1)}%`;
+}
+
+function updateHero(hero) {
+    recommendedProfile = hero.recommendedProfile || "Balanced";
+
+    document.getElementById("heroTitle").textContent = hero.title || "Analyzing…";
+    document.getElementById("heroSubtitle").textContent =
+        hero.subtitle || "Analytics will appear once playlist data is available.";
+
+    document.getElementById("heroProfile").textContent =
+        `recommended profile: ${String(recommendedProfile).toLowerCase()} · ${String(hero.confidence || "low").toLowerCase()} confidence`;
+
+    document.getElementById("auraScore").textContent =
+        hero.auraScore === null || hero.auraScore === undefined ? "—" : hero.auraScore;
+
+    document.getElementById("auraStatus").textContent =
+        hero.auraStatus || "No Data";
+}
+
+function updateTasteSignals(items) {
+    const root = document.getElementById("tasteSignals");
+    root.innerHTML = "";
+
+    if (!items.length) {
+        root.innerHTML = `<div class="metric-card empty">No taste signals available yet.</div>`;
+        return;
+    }
+
+    items.forEach((item) => {
+        const percent = Math.max(0, Math.min(100, Number(item.percent || 0)));
+
+        root.innerHTML += `
+            <div class="metric-card">
+                <div class="metric-label">${escapeHtml(item.label)}</div>
+                <div class="metric-value">${escapeHtml(item.value)}</div>
+                <div class="bar"><div style="width:${percent}%;"></div></div>
+            </div>
+        `;
+    });
+}
+
+function updateIdentityCards(items) {
+    const root = document.getElementById("identityGrid");
+    root.innerHTML = "";
+
+    if (!items.length) {
+        root.innerHTML = `<div class="id-card empty">No identity cards available yet.</div>`;
+        return;
+    }
+
+    items.forEach((item) => {
+        root.innerHTML += `
+            <div class="id-card">
+                <div class="id-icon">${escapeHtml(item.icon || "✨")}</div>
+                <div class="id-label">${escapeHtml(item.label || "Identity")}</div>
+                <div class="id-value">${escapeHtml(item.value || "—")}</div>
+                <div class="id-sub">${escapeHtml(item.sub || "")}</div>
+            </div>
+        `;
+    });
+}
+
+function updateBadges(items) {
+    const root = document.getElementById("badgeGrid");
+    root.innerHTML = "";
+
+    if (!items.length) {
+        root.innerHTML = `<div class="badge-card empty">No badges unlocked yet.</div>`;
+        return;
+    }
+
+    items.forEach((item, index) => {
+        const tone = index % 4 === 1 ? "sage" : index % 4 === 3 ? "rose" : "";
+
+        root.innerHTML += `
+            <div class="badge-card ${tone}">
+                <div class="badge-emoji">${escapeHtml(item.emoji || "✨")}</div>
+                <div class="badge-title">${escapeHtml(item.title || "Badge")}</div>
+                <div class="badge-sub">${escapeHtml(item.description || "")}</div>
+            </div>
+        `;
+    });
+}
+
+function updateOverview(items) {
+    const root = document.getElementById("overviewGrid");
+    root.innerHTML = "";
+
+    if (!items.length) {
+        root.innerHTML = `<div class="stat-cell empty">No overview data yet.</div>`;
+        return;
+    }
+
+    items.forEach((item) => {
+        root.innerHTML += `
+            <div class="stat-cell">
+                <div class="label">${escapeHtml(item.label)}</div>
+                <div class="value ${escapeHtml(item.tone || "")}">${escapeHtml(item.value)}</div>
+            </div>
+        `;
+    });
+}
+
+function updateHealth(health) {
+    document.getElementById("healthHeader").textContent =
+        `${formatPercent(health.score || 0)} · ${health.status || "No Data"}`;
+
+    document.getElementById("healthNote").textContent =
+        health.note || "";
+
+    const root = document.getElementById("healthBars");
+    root.innerHTML = "";
+
+    const bars = health.bars || [];
+
+    if (!bars.length) {
+        root.innerHTML = `<div class="empty">No health signals available.</div>`;
+        return;
+    }
+
+    bars.forEach((bar) => {
+        const value = Math.max(0, Math.min(100, Number(bar.value || 0)));
+
+        root.innerHTML += `
+            <div class="health-row">
+                <span>${escapeHtml(bar.label)}</span>
+                <span>${formatPercent(value)}</span>
+            </div>
+            <div class="health-bar"><div style="width:${value}%;"></div></div>
+        `;
+    });
+}
+
+function updateDoctor(doctor) {
+    document.getElementById("doctorHeadline").textContent =
+        doctor.headline || "Waiting for playlist data.";
+
+    updateBulletList("doctorStrengths", doctor.strengths || []);
+    updateBulletList("doctorWarnings", doctor.warnings || []);
+    updateBulletList("doctorRatingTips", doctor.ratingTips || []);
+}
+
+function updateBulletList(elementId, items) {
+    const root = document.getElementById(elementId);
+    root.innerHTML = "";
+
+    if (!items.length) {
+        root.innerHTML = `<li>No data yet.</li>`;
+        return;
+    }
+
+    items.forEach((item) => {
+        root.innerHTML += `<li>${escapeHtml(item)}</li>`;
+    });
+}
+
+function updateListening(listening) {
+    document.getElementById("listeningSummary").innerHTML = `
+        <strong>${escapeHtml(listening.totalKnownSongs || 0)}</strong> remembered songs ·
+        <strong>${escapeHtml(listening.totalPlays || 0)}</strong> plays ·
+        <strong>${escapeHtml(listening.totalReplays || 0)}</strong> replays ·
+        <strong>${escapeHtml(listening.completionRate || 0)}%</strong> completion ·
+        <strong>${escapeHtml(listening.skipRate || 0)}%</strong> skip rate
+    `;
+
+    const streaks = listening.streaks || {};
+
+    document.getElementById("finishedStreak").textContent = streaks.finished || "0 songs";
+    document.getElementById("skipStreak").textContent = streaks.skip || "0 songs";
+    document.getElementById("artistStreak").textContent = streaks.artist || "N/A ×0";
+    document.getElementById("albumStreak").textContent = streaks.album || "N/A ×0";
+}
+
+function updateBarList(elementId, items, tone) {
+    const root = document.getElementById(elementId);
+    root.innerHTML = "";
+
+    if (!items.length) {
+        root.innerHTML = `<div class="empty">No data yet.</div>`;
+        return;
+    }
+
+    const maxValue = Math.max(
+        ...items.map((item) => Number(item.value || 0)),
+        1
+    );
+
+    items.forEach((item, index) => {
+        const value = Number(item.value || 0);
+        const width = Math.max(4, Math.min(100, (value / maxValue) * 100));
+        const displayValue = item.displayValue || item.meta || value;
+
+        root.innerHTML += `
+            <div class="bar-list-row ${tone || ""}">
+                <div class="head">
+                    <span class="name">${index + 1}. ${escapeHtml(item.name || item.title || "Unknown")}</span>
+                    <span class="val">${escapeHtml(displayValue)}</span>
+                </div>
+                <div class="track"><div style="width:${width}%;"></div></div>
+            </div>
+        `;
+    });
+}
+
+function updateShuffleRecommendation(data) {
+    recommendedProfile = data.profile || "Balanced";
+
+    document.getElementById("recommendedProfile").textContent = recommendedProfile;
+    document.getElementById("recommendationConfidence").textContent =
+        `confidence: ${String(data.confidence || "low").toLowerCase()}`;
+    document.getElementById("recommendationReason").textContent =
+        data.reason || "Balanced is a safe default until more data is available.";
+
+    updateActionRows("cleanupList", data.cleanup || [], "cleanup-row");
+    updateActionRows("hiddenFavoritesList", data.hiddenFavorites || [], "fav-row");
+}
+
+function updateActionRows(elementId, rows, className) {
+    const root = document.getElementById(elementId);
+    root.innerHTML = "";
+
+    if (!rows.length) {
+        root.innerHTML = `<div class="empty">No data yet.</div>`;
+        return;
+    }
+
+    rows.forEach((row) => {
+        root.innerHTML += `
+            <div class="${className}">
+                <div class="title">${escapeHtml(row.title)}</div>
+                <div class="meta">${escapeHtml(row.meta)}</div>
+            </div>
+        `;
+    });
+}
+
+function updatePlainList(elementId, items) {
+    const root = document.getElementById(elementId);
+    root.innerHTML = "";
+
+    if (!items.length) {
+        root.innerHTML = `<li>No data yet.</li>`;
+        return;
+    }
+
+    items.forEach((item) => {
+        root.innerHTML += `<li>${escapeHtml(item)}</li>`;
+    });
+}
+
+document.querySelectorAll(".theme-option").forEach((option) => {
+    option.addEventListener("click", () => {
+        selectedTheme = option.dataset.theme || "Golden Hour";
+
+        document.querySelectorAll(".theme-option").forEach((item) => {
+            item.classList.remove("selected");
+        });
+
+        option.classList.add("selected");
+    });
+});
+
+new QWebChannel(qt.webChannelTransport, function(channel) {
+    pyBridge = channel.objects.analyticsBridge;
+});
+</script>
 </body>
 </html>
