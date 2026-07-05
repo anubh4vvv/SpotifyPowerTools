@@ -1,10 +1,1491 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Spotify Power Tools Dashboard</title>
+
+<script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+
+<style>
+@font-face {
+    font-family: "PT Fraunces";
+    src: url("../resources/fonts/Fraunces-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "PT Fraunces";
+    src: url("../resources/fonts/Fraunces-Italic.ttf") format("truetype");
+    font-weight: 400;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: "PT Inter";
+    src: url("../resources/fonts/Inter-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "PT Inter";
+    src: url("../resources/fonts/Inter-SemiBold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "PT JetBrains Mono";
+    src: url("../resources/fonts/JetBrainsMono-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+:root {
+    --bg: #0f0d09;
+    --card: #1d1812;
+    --card-deep: #14100c;
+
+    --line: rgba(239, 230, 216, 0.11);
+    --line-strong: rgba(239, 230, 216, 0.20);
+
+    --text: #f3ecdf;
+    --text-2: #c8bda9;
+    --text-3: #8f8574;
+
+    --amber: #e2a142;
+    --amber-soft: #efb667;
+    --amber-deep: #9c6826;
+
+    --sage: #a8b487;
+    --rose: #c98a7d;
+
+    --paper: #efe5d3;
+    --ink: #1a1611;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "PT Inter", "Segoe UI", sans-serif;
+}
+
+body {
+    position: relative;
+    background:
+        radial-gradient(circle at 16% 3%, rgba(226, 161, 66, 0.155), transparent 28%),
+        radial-gradient(circle at 74% 88%, rgba(226, 161, 66, 0.06), transparent 34%),
+        linear-gradient(90deg, rgba(255,255,255,0.018), transparent 34%, rgba(226,161,66,0.025) 74%, transparent),
+        #0f0d09;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0.22;
+    mix-blend-mode: overlay;
+    background-image:
+        radial-gradient(circle, rgba(255,255,255,0.25) 0 0.48px, transparent 0.78px),
+        radial-gradient(circle, rgba(0,0,0,0.50) 0 0.56px, transparent 0.95px);
+    background-size: 3px 3px, 7px 7px;
+    background-position: 0 0, 2px 3px;
+}
+
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 51;
+    opacity: 0.38;
+    background:
+        radial-gradient(circle at 50% 38%, transparent 0%, rgba(0,0,0,0.20) 100%),
+        linear-gradient(to right, rgba(255,255,255,0.024), transparent 12%, transparent 88%, rgba(0,0,0,0.30));
+}
+
+.app {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 265px minmax(0, 1fr);
+}
+
+/* ---------- Sidebar ---------- */
+
+.sidebar {
+    height: 100%;
+    padding: 34px 12px 26px;
+    border-right: 1px solid var(--line-strong);
+    background:
+        radial-gradient(circle at 65% 0%, rgba(226,161,66,0.06), transparent 28%),
+        linear-gradient(180deg, rgba(255,255,255,0.014), transparent 18%),
+        rgba(8, 7, 5, 0.86);
+    display: flex;
+    flex-direction: column;
+}
+
+.brand {
+    padding-left: 18px;
+    margin-bottom: 40px;
+}
+
+.brand-title {
+    font-family: "PT Fraunces", Georgia, serif;
+    font-size: 36px;
+    line-height: 0.95;
+    letter-spacing: -1.35px;
+    color: var(--text);
+}
+
+.brand-title span {
+    color: var(--amber);
+}
+
+.brand-subtitle {
+    margin-top: 14px;
+    color: var(--text-3);
+    font-size: 11px;
+    letter-spacing: 6px;
+    font-weight: 900;
+}
+
+.nav {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.nav-item {
+    height: 57px;
+    padding: 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 17px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    color: var(--text-2);
+    font-size: 17px;
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+}
+
+.nav-item .icon {
+    width: 20px;
+    height: 20px;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-icon {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.nav-item:hover {
+    background: rgba(239,230,216,0.035);
+    border-color: rgba(239,230,216,0.08);
+}
+
+.nav-item.active {
+    background:
+        radial-gradient(circle at 0% 50%, rgba(226,161,66,0.08), transparent 45%),
+        linear-gradient(135deg, rgba(255,255,255,0.04), transparent),
+        rgba(29, 24, 18, 0.96);
+    border-color: var(--line-strong);
+    color: var(--text);
+    font-weight: 800;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.nav-item.active .icon {
+    color: var(--amber);
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 22px 18px 0;
+    border-top: 1px solid var(--line);
+    color: var(--text-2);
+    font-size: 13px;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    margin-right: 9px;
+    border-radius: 50%;
+    background: var(--sage);
+    box-shadow: 0 0 16px rgba(168,180,135,0.45);
+}
+
+/* ---------- Main Layout ---------- */
+
+.main {
+    min-width: 0;
+    height: 100%;
+    padding: 30px 32px 22px;
+}
+
+.shell {
+    width: min(100%, 1198px);
+    height: 100%;
+}
+
+.topbar {
+    height: 70px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 18px;
+}
+
+.greeting {
+    font-family: "PT Fraunces", Georgia, serif;
+    font-size: 38px;
+    line-height: 1;
+    letter-spacing: -0.65px;
+    color: var(--text);
+}
+
+.greeting .accent {
+    color: var(--amber);
+    font-style: italic;
+}
+
+.meta {
+    margin-top: 8px;
+    color: var(--text-3);
+    font-size: 14px;
+}
+
+.profile {
+    height: 58px;
+    min-width: 176px;
+    padding: 8px 18px 8px 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: 29px;
+    background:
+        linear-gradient(135deg, rgba(255,255,255,0.04), transparent),
+        rgba(29,24,18,0.80);
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.025),
+        0 18px 36px rgba(0,0,0,0.18);
+}
+
+.avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 62% 32%, #ef9c9c, transparent 35%),
+        radial-gradient(circle at 36% 70%, #23265f, transparent 42%),
+        linear-gradient(135deg, #e2a142, #c98a7d);
+}
+
+.profile-name {
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.profile-chevron {
+    width: 14px;
+    height: 14px;
+    color: var(--text-2);
+    margin-left: 2px;
+}
+
+/* ---------- Dashboard Grid ---------- */
+
+.dashboard-grid {
+    height: calc(100% - 88px);
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: 410px 104px minmax(220px, 1fr);
+    gap: 18px;
+}
+
+.card {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 18% 0%, rgba(255,255,255,0.04), transparent 32%),
+        linear-gradient(145deg, rgba(255,255,255,0.028), transparent 38%),
+        rgba(29,24,18,0.94);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow:
+        0 28px 70px rgba(0,0,0,0.36),
+        inset 0 1px 0 rgba(255,255,255,0.032);
+}
+
+.card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.13;
+    background-image:
+        radial-gradient(circle, rgba(255,255,255,0.08) 0 0.48px, transparent 0.85px),
+        radial-gradient(circle, rgba(0,0,0,0.20) 0 0.55px, transparent 0.95px);
+    background-size: 5px 5px, 9px 9px;
+}
+
+.label {
+    position: relative;
+    z-index: 2;
+    color: var(--text-3);
+    font-size: 12px;
+    letter-spacing: 5px;
+    font-weight: 950;
+}
+
+/* ---------- Now Playing ---------- */
+
+.now-card {
+    padding: 28px;
+}
+
+.now-body {
+    position: relative;
+    z-index: 2;
+    height: calc(100% - 27px);
+    display: grid;
+    grid-template-columns: 278px minmax(0, 1fr);
+    gap: 30px;
+    align-items: center;
+}
+
+.polaroid {
+    position: relative;
+    width: 262px;
+    height: 308px;
+    padding: 11px 11px 15px;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.44), transparent 32%),
+        var(--paper);
+    transform: rotate(-3.35deg);
+    box-shadow:
+        0 26px 50px rgba(0,0,0,0.42),
+        0 0 0 1px rgba(0,0,0,0.06),
+        inset 0 -12px 24px rgba(0,0,0,0.04);
+}
+
+.polaroid::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.15;
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle, rgba(0,0,0,0.18) 0 0.42px, transparent 0.78px);
+    background-size: 5px 5px;
+}
+
+.cover-wrap {
+    width: 240px;
+    height: 240px;
+    background: #0c0a08;
+    overflow: hidden;
+}
+
+.cover {
+    width: 240px;
+    height: 240px;
+    object-fit: cover;
+    display: block;
+}
+
+.caption {
+    position: relative;
+    z-index: 2;
+    margin-top: 14px;
+    text-align: center;
+    color: #3f352b;
+    font-family: "PT JetBrains Mono", Consolas, monospace;
+    font-size: 14px;
+    letter-spacing: 0.7px;
+}
+
+.track-info {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.track-title {
+    max-width: 100%;
+    margin-bottom: 10px;
+    font-family: "PT Fraunces", Georgia, serif;
+    font-size: clamp(30px, 2.08vw, 37px);
+    line-height: 1.08;
+    color: var(--text);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.artist {
+    margin-bottom: 7px;
+    font-size: 19px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.album {
+    max-width: 100%;
+    margin-bottom: 25px;
+    color: var(--text-2);
+    font-size: 16px;
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.progress-row {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 21px;
+    color: var(--text-2);
+    font-size: 14px;
+}
+
+.progress-track {
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(239,230,216,0.11);
+    cursor: pointer;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.25);
+}
+
+.progress-fill {
+    width: 0%;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--amber), var(--amber-soft));
+    box-shadow: 0 0 16px rgba(226,161,66,0.18);
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 17px;
+}
+
+.circle-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    background: rgba(20,17,14,0.12);
+    color: var(--text-2);
+    font-size: 29px;
+    cursor: pointer;
+}
+
+.circle-btn:hover {
+    border-color: rgba(226,161,66,0.45);
+    color: var(--text);
+}
+
+.play-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: none;
+    background:
+        radial-gradient(circle at 35% 25%, rgba(255,255,255,0.22), transparent 30%),
+        var(--amber);
+    color: #14110e;
+    font-size: 29px;
+    cursor: pointer;
+    box-shadow:
+        0 14px 28px rgba(226,161,66,0.22),
+        inset 0 1px 0 rgba(255,255,255,0.24);
+}
+
+.rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rating-title {
+    color: var(--text-2);
+    font-weight: 900;
+    margin-right: 8px;
+}
+
+.star {
+    color: var(--amber);
+    font-size: 23px;
+    cursor: pointer;
+    text-shadow: 0 0 12px rgba(226,161,66,0.12);
+}
+
+.star.empty {
+    color: rgba(239,230,216,0.27);
+    text-shadow: none;
+}
+
+/* ---------- Smart Shuffle ---------- */
+
+.shuffle-card {
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.shuffle-head {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+.badge {
+    color: var(--sage);
+    background: rgba(168,180,135,0.14);
+    border: 1px solid rgba(168,180,135,0.30);
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.shuffle-copy {
+    position: relative;
+    z-index: 2;
+    margin-bottom: 19px;
+    color: var(--text-2);
+    font-size: 16px;
+    line-height: 1.45;
+}
+
+.queue-box {
+    position: relative;
+    z-index: 2;
+    height: 180px;
+    min-height: 0;
+    padding: 8px 14px;
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background:
+        linear-gradient(90deg, rgba(255,255,255,0.025), transparent),
+        rgba(16,13,10,0.60);
+}
+
+.queue-table {
+    min-width: 640px;
+}
+
+.queue-row {
+    height: 42px;
+    display: grid;
+    grid-template-columns: 45px minmax(235px, 1fr) 145px;
+    align-items: center;
+    border-bottom: 1px solid rgba(239,230,216,0.07);
+}
+
+.queue-index {
+    color: var(--text-3);
+    font-family: "PT Fraunces", Georgia, serif;
+    font-size: 16px;
+}
+
+.queue-song {
+    color: var(--text);
+    font-family: "PT Fraunces", Georgia, serif;
+    font-size: 19px;
+    line-height: 1.05;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.queue-reason {
+    margin-top: 2px;
+    color: var(--text-3);
+    font-size: 10.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.queue-artist {
+    color: var(--text-2);
+    text-align: right;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.empty-preview {
+    height: 100%;
+    min-height: 146px;
+    position: relative;
+    display: grid;
+    place-items: center;
+}
+
+.empty-preview-inner {
+    text-align: center;
+    color: var(--text-3);
+}
+
+.empty-preview-title {
+    color: var(--text-2);
+    font-family: "PT Fraunces", Georgia, serif;
+    font-size: 20px;
+    margin-bottom: 6px;
+}
+
+.empty-preview-copy {
+    font-size: 13px;
+    max-width: 320px;
+    line-height: 1.45;
+}
+
+.empty-ghost-row {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(239,230,216,0.07);
+}
+
+.empty-ghost-row.one {
+    top: 38px;
+}
+
+.empty-ghost-row.two {
+    top: 80px;
+}
+
+.empty-ghost-row.three {
+    top: 122px;
+}
+
+.shuffle-actions {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 0.78fr 3fr;
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.ghost-btn,
+.amber-btn {
+    height: 48px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: 900;
+    font-size: 15px;
+}
+
+.ghost-btn {
+    border: 1px solid var(--line);
+    background: rgba(20,17,14,0.06);
+    color: var(--text-2);
+}
+
+.ghost-btn:hover {
+    border-color: rgba(226,161,66,0.45);
+    color: var(--text);
+}
+
+.amber-btn {
+    border: none;
+    background:
+        radial-gradient(circle at 35% 25%, rgba(255,255,255,0.22), transparent 35%),
+        var(--amber);
+    color: #14110e;
+    letter-spacing: 0.6px;
+    box-shadow:
+        0 12px 28px rgba(226,161,66,0.14),
+        inset 0 1px 0 rgba(255,255,255,0.20);
+}
+
+.amber-btn:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+
+/* ---------- Stats ---------- */
+
+.stats-strip {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.stat {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--line);
+}
+
+.stat:last-child {
+    border-right: none;
+}
+
+.stat-value {
+    font-family: "PT Fraunces", Georgia, serif;
+    font-size: 42px;
+    line-height: 1;
+}
+
+.stat-label {
+    margin-top: 8px;
+    color: var(--text-3);
+    font-size: 12px;
+    font-weight: 950;
+    letter-spacing: 4px;
+}
+
+/* ---------- Identity ---------- */
+
+.identity {
+    grid-column: 1 / -1;
+    min-height: 0;
+    padding: 25px 28px;
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr) 150px;
+    gap: 24px;
+    align-items: center;
+    background:
+        radial-gradient(circle at 38% 20%, rgba(226,161,66,0.16), transparent 34%),
+        linear-gradient(135deg, rgba(29,24,18,0.98), rgba(22,18,14,0.97));
+}
+
+.identity > * {
+    position: relative;
+    z-index: 2;
+}
+
+.identity-title {
+    margin: 9px 0 10px;
+    color: var(--amber);
+    font-family: "PT Fraunces", Georgia, serif;
+    font-size: 43px;
+    line-height: 0.98;
+    font-style: italic;
+    white-space: pre-line;
+}
+
+.identity-copy {
+    color: var(--text-2);
+    font-size: 15px;
+    line-height: 1.38;
+    white-space: pre-line;
+}
+
+.stickers {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    min-width: 0;
+}
+
+.sticker {
+    position: relative;
+    width: 175px;
+    min-height: 72px;
+    padding: 16px 16px;
+    text-align: center;
+    color: #1a1611;
+    border: 1px dashed rgba(20,17,14,0.45);
+    border-radius: 5px;
+    font-family: "PT JetBrains Mono", Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.28;
+    box-shadow: 0 17px 30px rgba(0,0,0,0.30);
+    overflow: hidden;
+}
+
+.sticker::before {
+    content: "";
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    width: 62px;
+    height: 20px;
+    transform: translateX(-50%) rotate(-2deg);
+    background: rgba(239,230,216,0.36);
+    border: 1px solid rgba(239,230,216,0.20);
+}
+
+.sticker.sage {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.12), transparent),
+        #aaa17a;
+    transform: rotate(-5deg);
+}
+
+.sticker.rose {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.12), transparent),
+        #c98a7d;
+    transform: rotate(4deg);
+}
+
+.sticker.amber {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.12), transparent),
+        #c9a66e;
+    transform: rotate(-4deg);
+}
+
+.aura {
+    --aura-angle: 0deg;
+    width: 145px;
+    height: 145px;
+    border-radius: 50%;
+    padding: 5px;
+    position: relative;
+    background:
+        conic-gradient(var(--amber) 0deg var(--aura-angle), rgba(226,161,66,0.18) var(--aura-angle) 360deg);
+    box-shadow:
+        0 0 0 1px rgba(226,161,66,0.12),
+        0 24px 44px rgba(0,0,0,0.22);
+}
+
+.aura::before {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    opacity: 0.28;
+    background:
+        repeating-conic-gradient(
+            from 0deg,
+            rgba(226,161,66,0.65) 0deg 1.2deg,
+            transparent 1.2deg 10deg
+        );
+    mask: radial-gradient(circle, transparent 0 67%, black 68% 71%, transparent 72%);
+    -webkit-mask: radial-gradient(circle, transparent 0 67%, black 68% 71%, transparent 72%);
+}
+
+.aura-inner {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(29,24,18,0.96);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.aura-num {
+    color: var(--amber);
+    font-family: "PT Fraunces", Georgia, serif;
+    font-size: 52px;
+    line-height: 0.9;
+}
+
+.aura-label {
+    margin-top: 9px;
+    color: var(--text-3);
+    font-size: 10.5px;
+    letter-spacing: 3px;
+    font-weight: 950;
+}
+
+/* ---------- Scrollbars ---------- */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(239,230,216,0.045);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(226,161,66,0.45);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(226,161,66,0.75);
+}
+</style>
 </head>
+
 <body>
-$END$
+<div class="app">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-title">Power<span>Tools</span></div>
+            <div class="brand-subtitle">FOR SPOTIFY</div>
+        </div>
+
+        <nav class="nav">
+            <div class="nav-item active" onclick="window.actions.openPage('dashboard')">
+                <span class="icon">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <path d="M4 11.5 12 5l8 6.5"></path>
+                        <path d="M6.5 10.5V20h11v-9.5"></path>
+                    </svg>
+                </span>
+                <span>Dashboard</span>
+            </div>
+
+            <div class="nav-item" onclick="window.actions.openPage('smart_shuffle')">
+                <span class="icon">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <path d="M4 7h3.5c2.2 0 3.6 1.2 5 3.3"></path>
+                        <path d="M4 17h3.5c2.2 0 3.6-1.2 5-3.3"></path>
+                        <path d="M17 5l3 2-3 2"></path>
+                        <path d="M17 15l3 2-3 2"></path>
+                    </svg>
+                </span>
+                <span>Smart Shuffle</span>
+            </div>
+
+            <div class="nav-item" onclick="window.actions.openPage('analytics')">
+                <span class="icon">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <path d="M5 19V11"></path>
+                        <path d="M12 19V5"></path>
+                        <path d="M19 19V8"></path>
+                    </svg>
+                </span>
+                <span>Analytics</span>
+            </div>
+
+            <div class="nav-item" onclick="window.actions.openPage('queue')">
+                <span class="icon">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <path d="M6 7h12"></path>
+                        <path d="M6 12h12"></path>
+                        <path d="M6 17h12"></path>
+                    </svg>
+                </span>
+                <span>Queue</span>
+            </div>
+
+            <div class="nav-item" onclick="window.actions.openPage('search')">
+                <span class="icon">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <circle cx="10.5" cy="10.5" r="5.5"></circle>
+                        <path d="M15 15l5 5"></path>
+                    </svg>
+                </span>
+                <span>Search</span>
+            </div>
+
+            <div class="nav-item" onclick="window.actions.openPage('duplicates')">
+                <span class="icon">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <rect x="8" y="8" width="10" height="10" rx="1.5"></rect>
+                        <path d="M6 16H5.5A1.5 1.5 0 0 1 4 14.5v-9A1.5 1.5 0 0 1 5.5 4h9A1.5 1.5 0 0 1 16 5.5V6"></path>
+                    </svg>
+                </span>
+                <span>Duplicates</span>
+            </div>
+
+            <div class="nav-item" onclick="window.actions.openPage('settings')">
+                <span class="icon">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 3v3"></path>
+                        <path d="M12 18v3"></path>
+                        <path d="M3 12h3"></path>
+                        <path d="M18 12h3"></path>
+                        <path d="m5.6 5.6 2.1 2.1"></path>
+                        <path d="m16.3 16.3 2.1 2.1"></path>
+                        <path d="m18.4 5.6-2.1 2.1"></path>
+                        <path d="m7.7 16.3-2.1 2.1"></path>
+                    </svg>
+                </span>
+                <span>Settings</span>
+            </div>
+
+            <div class="nav-item" onclick="window.actions.openPage('about')">
+                <span class="icon">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="8"></circle>
+                        <path d="M12 11v5"></path>
+                        <path d="M12 8h.01"></path>
+                    </svg>
+                </span>
+                <span>About</span>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <span class="status-dot"></span>connected · adaptive profile
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="shell">
+            <section class="topbar">
+                <div>
+                    <div class="greeting">
+                        <span id="greetingText">good evening</span>
+                        —
+                        <span class="accent">&lt;3</span>
+                    </div>
+                    <div class="meta">
+                        <span id="trackCount">0</span> tracks ·
+                        <span id="duration">0h 0m</span> ·
+                        last synced <span id="lastSynced">just now</span>
+                    </div>
+                </div>
+
+                <div class="profile">
+                    <div class="avatar"></div>
+                    <div class="profile-name">anubhav</div>
+                    <svg class="profile-chevron" viewBox="0 0 24 24">
+                        <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </div>
+            </section>
+
+            <section class="dashboard-grid">
+                <div class="card now-card">
+                    <div class="label">NOW PLAYING</div>
+
+                    <div class="now-body">
+                        <div class="polaroid">
+                            <div class="cover-wrap">
+                                <img id="cover" class="cover" alt="" />
+                            </div>
+                            <div class="caption">side A · track 07</div>
+                        </div>
+
+                        <div class="track-info">
+                            <div id="trackTitle" class="track-title">Nothing Playing</div>
+                            <div id="artist" class="artist"></div>
+                            <div id="album" class="album"></div>
+
+                            <div class="progress-row">
+                                <span id="progressLabel">0:00</span>
+                                <div id="progressTrack" class="progress-track">
+                                    <div id="progressFill" class="progress-fill"></div>
+                                </div>
+                                <span id="durationLabel">0:00</span>
+                            </div>
+
+                            <div class="controls">
+                                <button class="circle-btn" onclick="window.actions.previous()">‹</button>
+                                <button id="playButton" class="play-btn" onclick="window.actions.playPause()">▶</button>
+                                <button class="circle-btn" onclick="window.actions.next()">›</button>
+                            </div>
+
+                            <div class="rating">
+                                <span class="rating-title">Rating</span>
+                                <span class="star empty" data-rating="1">★</span>
+                                <span class="star empty" data-rating="2">★</span>
+                                <span class="star empty" data-rating="3">★</span>
+                                <span class="star empty" data-rating="4">★</span>
+                                <span class="star empty" data-rating="5">★</span>
+                            </div>
+
+                            <div id="metaLine" class="meta" style="margin-top: 16px;">Clean · Unknown</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shuffle-card">
+                    <div class="shuffle-head">
+                        <div class="label">SMART SHUFFLE</div>
+                        <div class="badge">weighted</div>
+                    </div>
+
+                    <div class="shuffle-copy">
+                        Leaning on your finish rate and recent replays — favoring tracks you sit through,
+                        easing off ones you tend to skip early.
+                    </div>
+
+                    <div class="queue-box">
+                        <div id="queueTable" class="queue-table">
+                            <div class="empty-preview">
+                                <div class="empty-ghost-row one"></div>
+                                <div class="empty-ghost-row two"></div>
+                                <div class="empty-ghost-row three"></div>
+                                <div class="empty-preview-inner">
+                                    <div class="empty-preview-title">No preview yet</div>
+                                    <div class="empty-preview-copy">
+                                        Click preview to build a weighted queue from your current playlist.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="shuffle-actions">
+                        <button id="previewBtn" class="ghost-btn" onclick="window.actions.previewShuffle()">preview</button>
+                        <button id="queueBtn" class="amber-btn" disabled onclick="window.actions.queueShuffle()">queue 25 tracks into spotify</button>
+                    </div>
+                </div>
+
+                <div class="card stats-strip">
+                    <div class="stat">
+                        <div id="statOneValue" class="stat-value">0</div>
+                        <div id="statOneLabel" class="stat-label">TRACKS</div>
+                    </div>
+                    <div class="stat">
+                        <div id="statTwoValue" class="stat-value">0</div>
+                        <div id="statTwoLabel" class="stat-label">ARTISTS</div>
+                    </div>
+                    <div class="stat">
+                        <div id="statThreeValue" class="stat-value">0</div>
+                        <div id="statThreeLabel" class="stat-label">ALBUMS</div>
+                    </div>
+                    <div class="stat">
+                        <div id="statFourValue" class="stat-value">0h 0m</div>
+                        <div id="statFourLabel" class="stat-label">DURATION</div>
+                    </div>
+                </div>
+
+                <div class="card identity">
+                    <div>
+                        <div class="label">PLAYLIST IDENTITY</div>
+                        <div id="identityTitle" class="identity-title">Analyzing…</div>
+                        <div id="identityCopy" class="identity-copy">
+                            Playlist identity will appear once analytics are available.
+                        </div>
+                    </div>
+
+                    <div class="stickers">
+                        <div id="stickerOne" class="sticker sage">hidden favorite:<br />—</div>
+                        <div id="stickerTwo" class="sticker rose">playlist villain:<br />—</div>
+                        <div id="stickerThree" class="sticker amber">playlist badge:<br />—</div>
+                    </div>
+
+                    <div id="auraRing" class="aura">
+                        <div class="aura-inner">
+                            <div id="auraNumber" class="aura-num">—</div>
+                            <div class="aura-label">AURA SCORE</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<script>
+let pyBridge = null;
+
+window.actions = {
+    openPage(pageName) {
+        if (pyBridge) pyBridge.openPage(pageName);
+    },
+
+    previous() {
+        if (pyBridge) pyBridge.previous();
+    },
+
+    playPause() {
+        if (pyBridge) pyBridge.playPause();
+    },
+
+    next() {
+        if (pyBridge) pyBridge.next();
+    },
+
+    previewShuffle() {
+        if (pyBridge) pyBridge.previewShuffle();
+    },
+
+    queueShuffle() {
+        if (pyBridge) pyBridge.queueShuffle();
+    },
+
+    rateSong(rating) {
+        if (pyBridge) pyBridge.rateSong(rating);
+    },
+
+    seekToFraction(fraction) {
+        if (pyBridge) pyBridge.seekToFraction(fraction);
+    }
+};
+
+window.dashboard = {
+    updateStats(data) {
+        data = data || {};
+
+        const defaults = [
+            { value: 0, label: "TRACKS" },
+            { value: 0, label: "ARTISTS" },
+            { value: 0, label: "ALBUMS" },
+            { value: "0h 0m", label: "DURATION" },
+        ];
+
+        const items = data.items && data.items.length
+            ? data.items
+            : defaults;
+
+        const slots = [
+            ["statOneValue", "statOneLabel"],
+            ["statTwoValue", "statTwoLabel"],
+            ["statThreeValue", "statThreeLabel"],
+            ["statFourValue", "statFourLabel"],
+        ];
+
+        slots.forEach((slot, index) => {
+            const item = items[index] || defaults[index];
+
+            document.getElementById(slot[0]).textContent = item.value ?? "—";
+            document.getElementById(slot[1]).textContent = item.label || "";
+        });
+    },
+
+    updateIdentity(data) {
+        data = data || {};
+
+        const auraRing = document.getElementById("auraRing");
+
+        if (!data.hasIdentity) {
+            document.getElementById("identityTitle").textContent = "Analyzing…";
+            document.getElementById("identityCopy").textContent =
+                "Playlist identity will appear once analytics are available.";
+            document.getElementById("auraNumber").textContent = "—";
+            document.getElementById("stickerOne").innerHTML = "hidden favorite:<br />—";
+            document.getElementById("stickerTwo").innerHTML = "playlist villain:<br />—";
+            document.getElementById("stickerThree").innerHTML = "playlist badge:<br />—";
+
+            if (auraRing) {
+                auraRing.style.setProperty("--aura-angle", "0deg");
+            }
+
+            return;
+        }
+
+        const title = data.identityTitle || "Playlist Profile";
+        const subtitle = data.identitySubtitle || "";
+        const aura = data.auraScore;
+
+        document.getElementById("identityTitle").textContent = title;
+        document.getElementById("identityCopy").textContent = subtitle;
+
+        document.getElementById("auraNumber").textContent =
+            aura === null || aura === undefined ? "—" : String(aura);
+
+        if (auraRing) {
+            const auraNumber = Number(aura);
+
+            if (!Number.isNaN(auraNumber)) {
+                const angle = Math.max(0, Math.min(100, auraNumber)) * 3.6;
+                auraRing.style.setProperty("--aura-angle", `${angle}deg`);
+            } else {
+                auraRing.style.setProperty("--aura-angle", "0deg");
+            }
+        }
+
+        const badges = data.badges || [];
+
+        const hiddenFavorite = data.hiddenFavorite || "—";
+        const playlistVillain = data.playlistVillain || "—";
+        const thirdBadge = badges.length > 0 ? badges[0] : "—";
+
+        document.getElementById("stickerOne").innerHTML =
+            `hidden favorite:<br />${escapeHtml(hiddenFavorite)}`;
+
+        document.getElementById("stickerTwo").innerHTML =
+            `playlist villain:<br />${escapeHtml(playlistVillain)}`;
+
+        document.getElementById("stickerThree").innerHTML =
+            `playlist badge:<br />${escapeHtml(thirdBadge)}`;
+    },
+
+    updatePlaylistSummary(data) {
+        data = data || {};
+
+        document.getElementById("greetingText").textContent = data.greeting || "good evening";
+        document.getElementById("trackCount").textContent = data.trackCount ?? 0;
+        document.getElementById("duration").textContent = data.duration || "0h 0m";
+        document.getElementById("lastSynced").textContent = data.lastSynced || "just now";
+    },
+
+    updateNowPlaying(data) {
+        data = data || {};
+
+        document.getElementById("trackTitle").textContent = data.title || "Nothing Playing";
+        document.getElementById("artist").textContent = data.artist || "";
+        document.getElementById("album").textContent = data.album || "";
+        document.getElementById("progressLabel").textContent = data.progressLabel || "0:00";
+        document.getElementById("durationLabel").textContent = data.durationLabel || "0:00";
+        document.getElementById("metaLine").textContent = data.meta || "";
+
+        const cover = document.getElementById("cover");
+
+        if (data.imageUrl) {
+            cover.src = data.imageUrl;
+            cover.style.opacity = "1";
+        } else {
+            cover.removeAttribute("src");
+            cover.style.opacity = "0";
+        }
+
+        const progress = Math.max(0, Math.min(1, data.progressFraction || 0));
+        document.getElementById("progressFill").style.width = `${progress * 100}%`;
+
+        document.getElementById("playButton").textContent = data.isPlaying ? "Ⅱ" : "▶";
+
+        this.setRating(data.rating || 0);
+    },
+
+    setRating(rating) {
+        document.querySelectorAll(".star").forEach((star) => {
+            const value = Number(star.dataset.rating);
+            star.classList.toggle("empty", value > rating);
+        });
+    },
+
+    updatePreview(items) {
+        const table = document.getElementById("queueTable");
+        const queueBox = document.querySelector(".queue-box");
+
+        table.innerHTML = "";
+
+        if (!items || items.length === 0) {
+            table.innerHTML = `
+                <div class="empty-preview">
+                    <div class="empty-ghost-row one"></div>
+                    <div class="empty-ghost-row two"></div>
+                    <div class="empty-ghost-row three"></div>
+                    <div class="empty-preview-inner">
+                        <div class="empty-preview-title">No preview yet</div>
+                        <div class="empty-preview-copy">
+                            Click preview to build a weighted queue from your current playlist.
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("queueBtn").disabled = true;
+
+            if (queueBox) {
+                queueBox.scrollTop = 0;
+                queueBox.scrollLeft = 0;
+            }
+
+            return;
+        }
+
+        items.forEach((item, index) => {
+            const row = document.createElement("div");
+            row.className = "queue-row";
+
+            const score = item.score !== null && item.score !== undefined
+                ? `Score ${item.score} · `
+                : "";
+
+            const reasons = item.reasons && item.reasons.length
+                ? item.reasons.slice(0, 2).join(" · ")
+                : "Smart shuffle selection";
+
+            row.innerHTML = `
+                <div class="queue-index">${String(index + 1).padStart(2, "0")}</div>
+                <div>
+                    <div class="queue-song">${escapeHtml(item.name || "Unknown Song")}</div>
+                    <div class="queue-reason">${escapeHtml(score + reasons)}</div>
+                </div>
+                <div class="queue-artist">${escapeHtml(item.artist || "")}</div>
+            `;
+
+            table.appendChild(row);
+        });
+
+        document.getElementById("queueBtn").disabled = false;
+
+        if (queueBox) {
+            queueBox.scrollTop = 0;
+            queueBox.scrollLeft = 0;
+        }
+    },
+
+    setPreviewState(data) {
+        data = data || {};
+
+        const previewBtn = document.getElementById("previewBtn");
+        const queueBtn = document.getElementById("queueBtn");
+
+        previewBtn.textContent = data.buttonText || "preview";
+        queueBtn.disabled = !data.queueEnabled;
+    }
+};
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+document.querySelectorAll(".star").forEach((star) => {
+    star.addEventListener("click", () => {
+        const rating = Number(star.dataset.rating);
+        window.actions.rateSong(rating);
+    });
+});
+
+document.getElementById("progressTrack").addEventListener("click", (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const fraction = (event.clientX - rect.left) / rect.width;
+    window.actions.seekToFraction(fraction);
+});
+
+new QWebChannel(qt.webChannelTransport, function(channel) {
+    pyBridge = channel.objects.dashboardBridge;
+});
+</script>
 </body>
 </html>

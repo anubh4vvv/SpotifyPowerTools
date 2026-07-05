@@ -705,12 +705,19 @@ class Dashboard(QWidget):
             identity_payload
         )
 
-        total_songs = analytics.get(
-            "total_songs"
+        total_songs = first_existing(
+            analytics,
+            "total_songs",
+            "track_count",
+            "songs",
+            default=None
         )
 
-        unique_artists = analytics.get(
-            "unique_artists"
+        unique_artists = first_existing(
+            analytics,
+            "unique_artists",
+            "artist_count",
+            default=None
         )
 
         completion_rate = as_percent(
@@ -720,18 +727,51 @@ class Dashboard(QWidget):
                 "finish_rate",
                 "average_completion_rate",
                 "avg_completion_rate",
+                "strong_completion_rate",
                 default=None
             )
         )
+
+        if completion_rate is None:
+            completion_rate = as_percent(
+                first_existing(
+                    glow,
+                    "completion_rate",
+                    "taste_match",
+                    default=None
+                )
+            )
 
         avg_rating = as_rating(
             first_existing(
                 analytics,
                 "average_rating",
                 "avg_rating",
+                "mean_rating",
                 default=None
             )
         )
+
+        if avg_rating is None:
+            avg_rating = as_rating(
+                first_existing(
+                    intelligence,
+                    "average_rating",
+                    "avg_rating",
+                    "mean_rating",
+                    default=None
+                )
+            )
+
+        if avg_rating is None:
+            avg_rating = as_rating(
+                first_existing(
+                    glow,
+                    "average_rating",
+                    "avg_rating",
+                    default=None
+                )
+            )
 
         stats_items = []
 
@@ -758,6 +798,35 @@ class Dashboard(QWidget):
                 "value": unique_artists,
                 "label": "UNIQUE ARTISTS",
             })
+
+        if len(stats_items) >= 2:
+            while len(stats_items) < 4:
+
+                fallback_index = len(stats_items)
+
+                fallback_items = [
+                    {
+                        "value": round(float(glow.get("variety_score", 0))),
+                        "label": "VARIETY",
+                    },
+                    {
+                        "value": round(float(glow.get("replay_energy", 0))),
+                        "label": "REPLAY ENERGY",
+                    },
+                    {
+                        "value": round(float(glow.get("taste_match", 0))),
+                        "label": "TASTE MATCH",
+                    },
+                ]
+
+                if fallback_index - 1 < len(fallback_items):
+                    fallback = fallback_items[fallback_index - 1]
+
+                    if fallback["value"] > 0:
+                        stats_items.append(fallback)
+                        continue
+
+                break
 
         if len(stats_items) >= 4:
             stats_payload = {
