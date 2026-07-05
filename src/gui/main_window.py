@@ -1,5 +1,7 @@
 import webbrowser
 import time
+from datetime import datetime, timezone
+from pathlib import Path
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -28,6 +30,7 @@ from gui.styles import APP_STYLE
 from gui.settings_page import SettingsPage
 from gui.queue_page import QueuePage
 from gui.search_page import SearchPage
+from gui.share_card_widget import ShareCardWidget
 
 from controllers.spotify_controller import SpotifyController
 
@@ -209,6 +212,10 @@ class MainWindow(QMainWindow):
 
         self.analytics_page.report_export_requested.connect(
             self.export_playlist_report
+        )
+
+        self.analytics_page.share_card_export_requested.connect(
+            self.export_share_card
         )
 
         self.duplicates_page.clean_button.clicked.connect(
@@ -826,6 +833,89 @@ class MainWindow(QMainWindow):
 
             self.status_bar.set_message(
                 "Failed to export playlist report"
+            )
+
+    def export_share_card(self, theme_name):
+
+        try:
+            self.update_cached_playlist(
+                force=False
+            )
+
+            playlist = self.cached_playlist
+            tracks = self.cached_tracks
+
+            analytics = self.get_cached_analytics(
+                playlist,
+                tracks
+            )
+
+            project_root = Path(__file__).resolve().parents[2]
+
+            output_dir = project_root / "data" / "share_cards"
+
+            output_dir.mkdir(
+                parents=True,
+                exist_ok=True
+            )
+
+            timestamp = datetime.now(
+                timezone.utc
+            ).strftime("%Y%m%d_%H%M%S")
+
+            output_path = output_dir / f"playlist_share_card_{timestamp}.png"
+
+            share_card = ShareCardWidget(
+                theme_name=theme_name
+            )
+
+            share_card.update_data(
+                playlist,
+                analytics
+            )
+
+            saved = share_card.save_to_png(
+                str(output_path)
+            )
+
+            share_card.deleteLater()
+
+            if not saved:
+                raise RuntimeError(
+                    "Could not save share card image."
+                )
+
+            self.status_bar.set_message(
+                f"Share card exported: {output_path}"
+            )
+
+            reply = QMessageBox.question(
+                self,
+                "Share Card Exported",
+                (
+                    f"Exported share card to:\n\n"
+                    f"{output_path}\n\n"
+                    f"Open the image now?"
+                ),
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes
+            )
+
+            if reply == QMessageBox.Yes:
+                webbrowser.open(
+                    output_path.as_uri()
+                )
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Share Card Export Error",
+                str(error)
+            )
+
+            self.status_bar.set_message(
+                "Failed to export share card"
             )
 
     def clear_analysis_caches(self):

@@ -4,6 +4,9 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QLabel,
     QScrollArea,
+    QPushButton,
+    QComboBox,
+    QHBoxLayout,
 )
 
 from PySide6.QtCore import Qt, Signal
@@ -33,6 +36,7 @@ from services.analytics_service import calculate_playlist_analytics
 class AnalyticsPage(QWidget):
     profile_apply_requested = Signal(str)
     report_export_requested = Signal()
+    share_card_export_requested = Signal(str)
 
     def __init__(self):
         super().__init__()
@@ -130,6 +134,50 @@ class AnalyticsPage(QWidget):
 
         layout.addWidget(
             self.badge_cloud_card
+        )
+
+        self.share_card_tools = Card("Share Your Analytics")
+
+        share_help = QLabel(
+            "Export a beautiful PNG card you can send to friends or post as your playlist profile."
+        )
+        share_help.setObjectName("SectionSubtitle")
+        share_help.setWordWrap(True)
+
+        share_row = QHBoxLayout()
+        share_row.setSpacing(12)
+
+        self.share_theme_combo = QComboBox()
+        self.share_theme_combo.addItems([
+            "Aurora",
+            "Midnight",
+            "Neon Pop",
+        ])
+
+        self.export_share_card_button = QPushButton("Export Share Card")
+
+        share_row.addWidget(
+            self.share_theme_combo
+        )
+
+        share_row.addWidget(
+            self.export_share_card_button
+        )
+
+        self.share_card_tools.layout.addWidget(
+            share_help
+        )
+
+        self.share_card_tools.layout.addLayout(
+            share_row
+        )
+
+        layout.addWidget(
+            self.share_card_tools
+        )
+
+        self.export_share_card_button.clicked.connect(
+            self.emit_share_card_export
         )
 
         # ---------- Main Stats ----------
@@ -303,6 +351,12 @@ class AnalyticsPage(QWidget):
         )
 
         return label
+
+    def emit_share_card_export(self):
+
+        self.share_card_export_requested.emit(
+            self.share_theme_combo.currentText()
+        )
 
     def update_analytics(self, playlist, tracks):
         """
