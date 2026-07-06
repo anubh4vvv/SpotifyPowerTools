@@ -167,11 +167,25 @@ main {
     z-index: 2;
 }
 
+.card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 20px;
+}
+
 .card h3 {
     font-family: var(--font-serif);
     font-size: 18px;
     font-weight: 500;
-    margin-bottom: 20px;
+}
+
+.card-sub {
+    margin-top: 5px;
+    font-size: 11.8px;
+    color: var(--text-low);
+    line-height: 1.5;
 }
 
 .field {
@@ -276,14 +290,19 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .btn-primary,
-.btn-ghost {
-    flex: 1;
-    height: 43px;
+.btn-ghost,
+.btn-small {
     border-radius: 7px;
     padding: 0 13px;
     font-size: 12.5px;
     font-family: var(--font-sans);
     cursor: pointer;
+}
+
+.btn-primary,
+.btn-ghost {
+    flex: 1;
+    height: 43px;
 }
 
 .btn-primary {
@@ -299,7 +318,16 @@ input[type="range"]::-webkit-slider-thumb {
     border: 1px solid var(--line-strong);
 }
 
-.btn-ghost:hover {
+.btn-small {
+    height: 34px;
+    background: transparent;
+    color: var(--text-mid);
+    border: 1px solid var(--line-strong);
+    white-space: nowrap;
+}
+
+.btn-ghost:hover,
+.btn-small:hover {
     border-color: rgba(227,168,87,0.38);
     color: var(--text-hi);
 }
@@ -309,6 +337,141 @@ input[type="range"]::-webkit-slider-thumb {
     min-height: 16px;
     color: var(--sage);
     font-size: 11.5px;
+}
+
+.toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 13px 15px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background:
+        linear-gradient(135deg, rgba(255,255,255,0.018), transparent),
+        rgba(26,22,17,0.58);
+    margin-bottom: 16px;
+}
+
+.toggle-title {
+    font-size: 12.8px;
+    color: var(--text-hi);
+    font-weight: 700;
+}
+
+.toggle-sub {
+    margin-top: 4px;
+    font-size: 11.5px;
+    color: var(--text-low);
+}
+
+.switch {
+    position: relative;
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch-slider {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+    background: rgba(243,236,223,0.10);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    transition: 160ms ease;
+}
+
+.switch-slider::before {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 4px;
+    top: 3px;
+    border-radius: 50%;
+    background: var(--text-mid);
+    transition: 160ms ease;
+}
+
+.switch input:checked + .switch-slider {
+    background: rgba(227,168,87,0.28);
+    border-color: rgba(227,168,87,0.55);
+}
+
+.switch input:checked + .switch-slider::before {
+    transform: translateX(21px);
+    background: var(--amber);
+}
+
+.hotkey-grid {
+    display: grid;
+    gap: 10px;
+}
+
+.hotkey-row {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) 220px 84px;
+    gap: 12px;
+    align-items: center;
+    min-height: 48px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background:
+        linear-gradient(135deg, rgba(255,255,255,0.014), transparent),
+        rgba(26,22,17,0.48);
+}
+
+.hotkey-name {
+    font-size: 12.5px;
+    color: var(--text-hi);
+    font-weight: 700;
+}
+
+.hotkey-default {
+    margin-top: 4px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-low);
+}
+
+.hotkey-pill {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    border: 1px solid rgba(227,168,87,0.28);
+    border-radius: 7px;
+    background:
+        radial-gradient(circle at 20% 0%, rgba(227,168,87,0.10), transparent 45%),
+        rgba(20,17,14,0.55);
+    color: var(--amber);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hotkey-pill.capturing {
+    color: var(--text-hi);
+    border-color: rgba(147,166,138,0.45);
+    background: rgba(147,166,138,0.10);
+}
+
+.hotkey-help {
+    margin-top: 14px;
+    font-size: 11.5px;
+    color: var(--text-low);
+    line-height: 1.55;
 }
 
 .memory-desc {
@@ -380,7 +543,14 @@ input[type="range"]::-webkit-slider-thumb {
     <div class="page-sub">Customize Spotify Power Tools and save your defaults.</div>
 
     <section class="card">
-        <h3>Default Shuffle Settings</h3>
+        <div class="card-head">
+            <div>
+                <h3>Default Shuffle Settings</h3>
+                <div class="card-sub">
+                    These settings control the default shuffle profile and queue behavior.
+                </div>
+            </div>
+        </div>
 
         <div class="field">
             <span class="field-label">Default Profile</span>
@@ -429,6 +599,40 @@ input[type="range"]::-webkit-slider-thumb {
     </section>
 
     <section class="card">
+        <div class="card-head">
+            <div>
+                <h3>Global Hotkeys</h3>
+                <div class="card-sub">
+                    Control playback and smart shuffle without opening the app.
+                </div>
+            </div>
+
+            <button class="btn-small" onclick="window.actions.resetHotkeys()">Reset Hotkeys</button>
+        </div>
+
+        <div class="toggle-row">
+            <div>
+                <div class="toggle-title">Enable Global Hotkeys</div>
+                <div class="toggle-sub">
+                    Turn this off if a game or another app conflicts with these shortcuts.
+                </div>
+            </div>
+
+            <label class="switch">
+                <input id="hotkeysEnabled" type="checkbox" checked />
+                <span class="switch-slider"></span>
+            </label>
+        </div>
+
+        <div id="hotkeyGrid" class="hotkey-grid"></div>
+
+        <div class="hotkey-help">
+            Click Change, then press the shortcut you want. Use combinations like
+            Ctrl + Alt + P, Ctrl + Shift + Q, or Alt + Space. Press Escape while capturing to cancel.
+        </div>
+    </section>
+
+    <section class="card">
         <h3>Memory Tools</h3>
 
         <div class="memory-desc">
@@ -454,23 +658,40 @@ input[type="range"]::-webkit-slider-thumb {
 
 <script>
 let pyBridge = null;
+let hotkeyState = {};
+let hotkeyDefaults = {};
+let hotkeyMeta = [];
+let capturingKey = null;
 
 window.actions = {
     saveSettings() {
         if (!pyBridge) return;
+
+        if (hasDuplicateHotkeys()) {
+            setLocalMessage("Two actions cannot use the same hotkey.");
+            return;
+        }
 
         pyBridge.saveSettings(
             document.getElementById("profile").value,
             Number(document.getElementById("queueSize").value),
             Number(document.getElementById("artistWeight").value),
             Number(document.getElementById("albumWeight").value),
-            Number(document.getElementById("randomness").value)
+            Number(document.getElementById("randomness").value),
+            Boolean(document.getElementById("hotkeysEnabled").checked),
+            JSON.stringify(hotkeyState)
         );
     },
 
     resetSettings() {
         if (pyBridge) {
             pyBridge.resetSettings();
+        }
+    },
+
+    resetHotkeys() {
+        if (pyBridge) {
+            pyBridge.resetHotkeys();
         }
     },
 
@@ -490,6 +711,20 @@ window.actions = {
         if (pyBridge) {
             pyBridge.clearImageCache();
         }
+    },
+
+    startHotkeyCapture(key) {
+        capturingKey = key;
+        renderHotkeys();
+        setLocalMessage("Press a new shortcut. Press Escape to cancel.");
+    },
+
+    resetSingleHotkey(key) {
+        if (!hotkeyDefaults[key]) return;
+
+        hotkeyState[key] = hotkeyDefaults[key];
+        renderHotkeys();
+        setLocalMessage("");
     }
 };
 
@@ -500,6 +735,7 @@ window.settingsPage = {
         const settings = data.settings || {};
         const profiles = data.profiles || [];
         const queueSizes = data.queueSizes || [];
+        const hotkeys = data.hotkeys || [];
 
         const profileSelect = document.getElementById("profile");
         const queueSelect = document.getElementById("queueSize");
@@ -527,6 +763,21 @@ window.settingsPage = {
         setSlider("artistWeight", "artistValue", settings.artist_weight ?? 50);
         setSlider("albumWeight", "albumValue", settings.album_weight ?? 50);
         setSlider("randomness", "randomValue", settings.randomness ?? 50);
+
+        document.getElementById("hotkeysEnabled").checked =
+            settings.hotkeys_enabled !== false;
+
+        hotkeyMeta = hotkeys;
+        hotkeyState = {};
+        hotkeyDefaults = {};
+
+        hotkeys.forEach((item) => {
+            hotkeyState[item.key] = item.value;
+            hotkeyDefaults[item.key] = item.default;
+        });
+
+        capturingKey = null;
+        renderHotkeys();
     },
 
     setMessage(data) {
@@ -545,6 +796,150 @@ function setSlider(sliderId, labelId, value) {
     slider.style.setProperty("--progress", `${value}%`);
 }
 
+function renderHotkeys() {
+    const grid = document.getElementById("hotkeyGrid");
+
+    grid.innerHTML = "";
+
+    hotkeyMeta.forEach((item) => {
+        const isCapturing = capturingKey === item.key;
+        const value = hotkeyState[item.key] || item.default;
+
+        const row = document.createElement("div");
+        row.className = "hotkey-row";
+
+        row.innerHTML = `
+            <div>
+                <div class="hotkey-name">${escapeHtml(item.label)}</div>
+                <div class="hotkey-default">Default: ${formatShortcut(item.default)}</div>
+            </div>
+
+            <div class="hotkey-pill ${isCapturing ? "capturing" : ""}">
+                ${isCapturing ? "Press shortcut..." : formatShortcut(value)}
+            </div>
+
+            <div style="display:flex; gap:8px;">
+                <button class="btn-small" onclick="window.actions.startHotkeyCapture('${item.key}')">Change</button>
+            </div>
+        `;
+
+        grid.appendChild(row);
+    });
+}
+
+function buildShortcutFromEvent(event) {
+    const parts = [];
+
+    if (event.ctrlKey) {
+        parts.push("ctrl");
+    }
+
+    if (event.altKey) {
+        parts.push("alt");
+    }
+
+    if (event.shiftKey) {
+        parts.push("shift");
+    }
+
+    if (event.metaKey) {
+        parts.push("windows");
+    }
+
+    let key = event.key;
+
+    const keyMap = {
+        " ": "space",
+        "Spacebar": "space",
+        "ArrowLeft": "left",
+        "ArrowRight": "right",
+        "ArrowUp": "up",
+        "ArrowDown": "down",
+        "Escape": "esc",
+        "Esc": "esc",
+    };
+
+    key = keyMap[key] || key;
+
+    key = String(key || "")
+        .trim()
+        .toLowerCase();
+
+    if (!key) {
+        return "";
+    }
+
+    if (["control", "ctrl", "alt", "shift", "meta", "windows"].includes(key)) {
+        return "";
+    }
+
+    parts.push(key);
+
+    return parts.join("+");
+}
+
+function formatShortcut(value) {
+    return String(value || "")
+        .split("+")
+        .filter(Boolean)
+        .map((part) => {
+            const map = {
+                ctrl: "Ctrl",
+                alt: "Alt",
+                shift: "Shift",
+                windows: "Win",
+                space: "Space",
+                left: "Left",
+                right: "Right",
+                up: "Up",
+                down: "Down",
+                esc: "Esc",
+            };
+
+            if (map[part]) {
+                return map[part];
+            }
+
+            if (part.length === 1) {
+                return part.toUpperCase();
+            }
+
+            return part.charAt(0).toUpperCase() + part.slice(1);
+        })
+        .join(" + ");
+}
+
+function normalizeShortcut(value) {
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replaceAll(" ", "");
+}
+
+function hasDuplicateHotkeys() {
+    const seen = new Set();
+
+    for (const item of hotkeyMeta) {
+        const value = normalizeShortcut(hotkeyState[item.key]);
+
+        if (!value) {
+            continue;
+        }
+
+        if (seen.has(value)) {
+            return true;
+        }
+
+        seen.add(value);
+    }
+
+    return false;
+}
+
+function setLocalMessage(message) {
+    document.getElementById("message").textContent = message || "";
+}
+
 ["artistWeight", "albumWeight", "randomness"].forEach((sliderId) => {
     const labelId = {
         artistWeight: "artistValue",
@@ -556,17 +951,59 @@ function setSlider(sliderId, labelId, value) {
 
     slider.addEventListener("input", () => {
         setSlider(sliderId, labelId, Number(slider.value));
-        document.getElementById("message").textContent = "";
+        setLocalMessage("");
     });
 });
 
-["profile", "queueSize"].forEach((id) => {
+["profile", "queueSize", "hotkeysEnabled"].forEach((id) => {
     const element = document.getElementById(id);
 
     element.addEventListener("change", () => {
-        document.getElementById("message").textContent = "";
+        setLocalMessage("");
     });
 });
+
+document.addEventListener("keydown", (event) => {
+    if (!capturingKey) {
+        return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (event.key === "Escape") {
+        capturingKey = null;
+        renderHotkeys();
+        setLocalMessage("");
+        return;
+    }
+
+    const shortcut = buildShortcutFromEvent(event);
+
+    if (!shortcut) {
+        return;
+    }
+
+    hotkeyState[capturingKey] = shortcut;
+    capturingKey = null;
+
+    renderHotkeys();
+
+    if (hasDuplicateHotkeys()) {
+        setLocalMessage("Duplicate shortcut detected. Change one before saving.");
+    } else {
+        setLocalMessage("");
+    }
+});
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
 
 new QWebChannel(qt.webChannelTransport, function(channel) {
     pyBridge = channel.objects.settingsBridge;

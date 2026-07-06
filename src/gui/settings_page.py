@@ -11,19 +11,32 @@ from services.settings_service import (
     load_settings,
     save_settings,
     reset_settings,
+    reset_hotkeys,
+    hotkey_items_from_settings,
     VALID_PROFILES,
     VALID_QUEUE_SIZES,
 )
 
 
 class SettingsBridge(QObject):
-    saveRequested = Signal(str, int, int, int, int)
+
+    saveRequested = Signal(
+        str,
+        int,
+        int,
+        int,
+        int,
+        bool,
+        str,
+    )
+
     resetRequested = Signal()
+    resetHotkeysRequested = Signal()
     memoryExportRequested = Signal()
     memoryClearRequested = Signal()
     imageCacheClearRequested = Signal()
 
-    @Slot(str, int, int, int, int)
+    @Slot(str, int, int, int, int, bool, str)
     def saveSettings(
         self,
         profile,
@@ -31,6 +44,8 @@ class SettingsBridge(QObject):
         artist_weight,
         album_weight,
         randomness,
+        hotkeys_enabled,
+        hotkeys_json,
     ):
         self.saveRequested.emit(
             str(profile),
@@ -38,11 +53,17 @@ class SettingsBridge(QObject):
             int(artist_weight),
             int(album_weight),
             int(randomness),
+            bool(hotkeys_enabled),
+            str(hotkeys_json or "{}"),
         )
 
     @Slot()
     def resetSettings(self):
         self.resetRequested.emit()
+
+    @Slot()
+    def resetHotkeys(self):
+        self.resetHotkeysRequested.emit()
 
     @Slot()
     def exportMemory(self):
@@ -58,6 +79,7 @@ class SettingsBridge(QObject):
 
 
 class SettingsPage(QWidget):
+
     settings_saved = Signal(dict)
     memory_export_requested = Signal()
     memory_clear_requested = Signal()
@@ -98,6 +120,10 @@ class SettingsPage(QWidget):
 
         self.bridge.resetRequested.connect(
             self.reset_to_defaults
+        )
+
+        self.bridge.resetHotkeysRequested.connect(
+            self.reset_hotkeys_to_defaults
         )
 
         self.bridge.memoryExportRequested.connect(
@@ -157,6 +183,9 @@ class SettingsPage(QWidget):
             "settings": self.current_settings,
             "profiles": VALID_PROFILES,
             "queueSizes": VALID_QUEUE_SIZES,
+            "hotkeys": hotkey_items_from_settings(
+                self.current_settings
+            ),
         }
 
     def push_settings(self):
@@ -180,7 +209,23 @@ class SettingsPage(QWidget):
         self.push_settings()
 
     def get_settings(self):
-        return dict(self.current_settings)
+        return dict(
+            self.current_settings
+        )
+
+    def decode_hotkeys(self, hotkeys_json):
+        try:
+            data = json.loads(
+                hotkeys_json or "{}"
+            )
+
+            if isinstance(data, dict):
+                return data
+
+        except Exception:
+            pass
+
+        return {}
 
     def save_from_web(
         self,
@@ -189,16 +234,29 @@ class SettingsPage(QWidget):
         artist_weight,
         album_weight,
         randomness,
+        hotkeys_enabled,
+        hotkeys_json,
     ):
+        hotkeys = self.decode_hotkeys(
+            hotkeys_json
+        )
+
         settings = {
             "shuffle_profile": profile,
             "queue_size": queue_size,
             "artist_weight": artist_weight,
             "album_weight": album_weight,
             "randomness": randomness,
+            "hotkeys_enabled": hotkeys_enabled,
         }
 
-        self.current_settings = save_settings(settings)
+        settings.update(
+            hotkeys
+        )
+
+        self.current_settings = save_settings(
+            settings
+        )
 
         self.push_settings()
         self.push_message("Settings saved.")
@@ -214,6 +272,18 @@ class SettingsPage(QWidget):
 
         self.push_settings()
         self.push_message("Settings saved.")
+
+        self.settings_saved.emit(
+            self.current_settings
+        )
+
+    def reset_hotkeys_to_defaults(self):
+        self.current_settings = reset_hotkeys(
+            self.current_settings
+        )
+
+        self.push_settings()
+        self.push_message("Hotkeys restored to defaults.")
 
         self.settings_saved.emit(
             self.current_settings

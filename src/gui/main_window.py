@@ -555,6 +555,19 @@ class MainWindow(QMainWindow):
         self.tray_icon.show()
 
     def setup_global_hotkeys(self):
+        if self.hotkeys is not None:
+            self.hotkeys.stop()
+            self.hotkeys.deleteLater()
+            self.hotkeys = None
+
+        settings = load_settings()
+
+        if not settings.get("hotkeys_enabled", True):
+            self.status_bar.set_message(
+                "Global hotkeys disabled"
+            )
+            return
+
         try:
             self.hotkeys = HotkeyManager(self)
 
@@ -586,19 +599,32 @@ class MainWindow(QMainWindow):
                 self.restore_from_tray
             )
 
-            self.hotkeys.start()
-
-            self.status_bar.set_message(
-                "Tray and global hotkeys enabled"
+            started = self.hotkeys.start(
+                settings
             )
 
+            if started:
+                self.status_bar.set_message(
+                    "Tray and global hotkeys enabled"
+                )
+            else:
+                self.status_bar.set_message(
+                    "Global hotkeys disabled"
+                )
+
         except Exception as error:
+            if self.hotkeys is not None:
+                self.hotkeys.stop()
+                self.hotkeys.deleteLater()
 
             self.hotkeys = None
 
             self.status_bar.set_message(
                 f"Hotkeys unavailable: {error}"
             )
+
+    def restart_global_hotkeys(self):
+        self.setup_global_hotkeys()
 
     def handle_tray_activated(self, reason):
         if reason in (
@@ -671,6 +697,8 @@ class MainWindow(QMainWindow):
 
         if self.hotkeys is not None:
             self.hotkeys.stop()
+            self.hotkeys.deleteLater()
+            self.hotkeys = None
 
         if self.tray_icon is not None:
             self.tray_icon.hide()
@@ -1182,6 +1210,9 @@ class MainWindow(QMainWindow):
         self.dashboard.update_active_profile(
             settings
         )
+
+        if self.hotkeys is not None or settings.get("hotkeys_enabled", True):
+            self.restart_global_hotkeys()
 
         if show_message:
             self.status_bar.set_message(
