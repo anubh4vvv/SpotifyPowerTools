@@ -23,6 +23,7 @@ class QueuePreviewRow(QWidget):
 
         self.setObjectName("QueuePreviewRow")
         self.setFixedHeight(46)
+        self.setMinimumWidth(760)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(10, 4, 10, 4)
@@ -30,7 +31,7 @@ class QueuePreviewRow(QWidget):
 
         self.index_label = QLabel("01")
         self.index_label.setObjectName("QueuePreviewIndex")
-        self.index_label.setFixedWidth(30)
+        self.index_label.setFixedWidth(34)
         self.index_label.setAlignment(Qt.AlignCenter)
 
         text_block = QVBoxLayout()
@@ -39,14 +40,16 @@ class QueuePreviewRow(QWidget):
 
         self.song_label = QLabel("")
         self.song_label.setObjectName("QueuePreviewSong")
+        self.song_label.setMinimumWidth(330)
 
         self.reason_label = QLabel("")
         self.reason_label.setObjectName("QueuePreviewReason")
+        self.reason_label.setMinimumWidth(430)
 
         self.artist_label = QLabel("")
         self.artist_label.setObjectName("QueuePreviewArtist")
         self.artist_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        self.artist_label.setMinimumWidth(115)
+        self.artist_label.setMinimumWidth(150)
 
         text_block.addWidget(self.song_label)
         text_block.addWidget(self.reason_label)
@@ -84,7 +87,7 @@ class QueuePreviewRow(QWidget):
             if reason not in cleaned:
                 cleaned.append(reason)
 
-        cleaned = cleaned[:2]
+        cleaned = cleaned[:3]
 
         if cleaned:
             reason_text = " • ".join(cleaned)
@@ -125,7 +128,6 @@ class ShufflePanel(Card):
             "100 songs",
         ])
 
-        # Kept for settings/backend compatibility, hidden for mockup cleanliness.
         self.profile.setVisible(False)
         self.queue_size.setVisible(False)
 
@@ -208,13 +210,14 @@ class ShufflePanel(Card):
 
         self.scroll = QScrollArea()
         self.scroll.setObjectName("QueuePreviewScroll")
-        self.scroll.setWidgetResizable(True)
+        self.scroll.setWidgetResizable(False)
         self.scroll.setFrameShape(QScrollArea.NoFrame)
-        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
         self.scroll_content = QWidget()
         self.scroll_content.setObjectName("QueuePreviewScrollContent")
+        self.scroll_content.setMinimumWidth(790)
 
         self.rows_layout = QVBoxLayout(self.scroll_content)
         self.rows_layout.setContentsMargins(0, 0, 0, 0)
@@ -358,6 +361,13 @@ class ShufflePanel(Card):
             self.rows_layout.addWidget(row)
 
         self.rows_layout.addStretch()
+
+        required_height = max(
+            160,
+            len(self.rows) * 50 + 12
+        )
+
+        self.scroll_content.setMinimumHeight(required_height)
 
     def show_tracks(self, tracks):
         self.clear_rows()

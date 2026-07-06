@@ -425,10 +425,27 @@ body::after {
 }
 
 .cover-wrap {
+    position: relative;
     width: 230px;
     height: 230px;
     background: #0c0a08;
     overflow: hidden;
+}
+
+/* Warm color-grade overlay — multiply-blends a warm tan tone over
+   whatever album art Spotify hands back, so a neon or pastel cover
+   still reads as "this app" instead of clashing with the palette.
+   This is the CSS equivalent of the CompositionMode_Multiply trick
+   used on the native PySide6 PolaroidAlbumArt widget, so both
+   versions of the app grade covers the same way. */
+.cover-wrap::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: rgba(232, 196, 140, 0.28);
+    mix-blend-mode: multiply;
 }
 
 .cover {
@@ -628,8 +645,10 @@ body::after {
     z-index: 2;
     height: 166px;
     min-height: 0;
-    padding: 7px 14px;
-    overflow: hidden;
+    padding: 7px 10px 7px 14px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
     border: 1px solid rgba(239, 230, 216, 0.105);
     border-radius: 9px;
     background:
@@ -638,8 +657,20 @@ body::after {
 }
 
 .queue-box::-webkit-scrollbar {
-    width: 0;
-    height: 0;
+    width: 5px;
+}
+
+.queue-box::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.queue-box::-webkit-scrollbar-thumb {
+    background: rgba(226, 161, 66, 0.35);
+    border-radius: 999px;
+}
+
+.queue-box::-webkit-scrollbar-thumb:hover {
+    background: rgba(226, 161, 66, 0.6);
 }
 
 .queue-table {
@@ -800,6 +831,11 @@ body::after {
     border-right: none;
 }
 
+/* font-style: italic removed on purpose — italic Fraunces is reserved
+   for the identity layer (aura score, "Replay Addict", the "<3" accent)
+   so it still reads as a deliberate signal there. Applying it to every
+   stat tile too flattened that signal: everything looked emphasized,
+   so nothing did. These stay regular-weight serif. */
 .stat-value {
     font-family: "PT Fraunces", Georgia, serif;
     font-size: 43px;

@@ -3,8 +3,8 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 class SearchWorker(QObject):
 
-    finished = Signal(list)
-    error = Signal(str)
+    finished = Signal(str, list)
+    error = Signal(str, str)
 
     def __init__(self, controller, query, limit=10):
         super().__init__()
@@ -22,7 +22,13 @@ class SearchWorker(QObject):
                 limit=self.limit
             )
 
-            self.finished.emit(results)
+            self.finished.emit(
+                self.query,
+                results
+            )
 
         except Exception as error:
-            self.error.emit(str(error))
+            self.error.emit(
+                self.query,
+                str(error)
+            )

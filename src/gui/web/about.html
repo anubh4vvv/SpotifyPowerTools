@@ -1,10 +1,312 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Spotify Power Tools — About</title>
+
+<style>
+@font-face {
+    font-family: "PT Fraunces";
+    src: url("../resources/fonts/Fraunces-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "PT Fraunces";
+    src: url("../resources/fonts/Fraunces-Italic.ttf") format("truetype");
+    font-weight: 400;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: "PT Inter";
+    src: url("../resources/fonts/Inter-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "PT Inter";
+    src: url("../resources/fonts/Inter-SemiBold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "PT JetBrains Mono";
+    src: url("../resources/fonts/JetBrainsMono-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+:root {
+    --bg-deep: #14110e;
+    --bg-panel: #1a1611;
+    --bg-card: #221c16;
+
+    --line: rgba(243,236,223,0.08);
+    --line-strong: rgba(243,236,223,0.14);
+
+    --text-hi: #f3ecdf;
+    --text-mid: #c9bfae;
+    --text-low: #8f8574;
+
+    --amber: #e3a857;
+    --sage: #93a68a;
+    --rose: #c98a7d;
+
+    --font-serif: "PT Fraunces", Georgia, serif;
+    --font-sans: "PT Inter", "Segoe UI", sans-serif;
+    --font-mono: "PT JetBrains Mono", Consolas, monospace;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    min-height: 100%;
+    background: var(--bg-deep);
+    color: var(--text-hi);
+    font-family: var(--font-sans);
+}
+
+body {
+    position: relative;
+    overflow-x: hidden;
+    background:
+        radial-gradient(circle at 18% 0%, rgba(227,168,87,0.070), transparent 29%),
+        radial-gradient(circle at 85% 20%, rgba(147,166,138,0.034), transparent 24%),
+        linear-gradient(90deg, rgba(255,255,255,0.010), transparent 34%, rgba(227,168,87,0.014) 70%, transparent),
+        var(--bg-deep);
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0.15;
+    mix-blend-mode: overlay;
+    background-image:
+        radial-gradient(circle, rgba(255,255,255,0.20) 0 0.45px, transparent 0.8px),
+        radial-gradient(circle, rgba(0,0,0,0.46) 0 0.52px, transparent 0.95px);
+    background-size: 3px 3px, 7px 7px;
+    background-position: 0 0, 2px 3px;
+}
+
+main {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 1040px);
+    margin: 0 auto;
+    padding: 40px 38px 46px;
+}
+
+.page-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
+    color: var(--text-low);
+}
+
+.page-title {
+    font-family: var(--font-serif);
+    font-size: 30px;
+    font-weight: 500;
+    margin-top: 8px;
+    letter-spacing: -0.35px;
+}
+
+.page-sub {
+    font-size: 12.5px;
+    color: var(--text-mid);
+    margin-top: 8px;
+    max-width: 580px;
+    line-height: 1.55;
+}
+
+.card {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 18% 0%, rgba(255,255,255,0.030), transparent 30%),
+        linear-gradient(145deg, rgba(255,255,255,0.020), transparent 38%),
+        rgba(34,28,22,0.92);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 23px 25px;
+    margin-top: 18px;
+    box-shadow:
+        0 22px 52px rgba(0,0,0,0.20),
+        inset 0 1px 0 rgba(255,255,255,0.020);
+}
+
+.card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.080;
+    background-image:
+        radial-gradient(circle, rgba(255,255,255,0.08) 0 0.45px, transparent 0.85px),
+        radial-gradient(circle, rgba(0,0,0,0.18) 0 0.55px, transparent 0.95px);
+    background-size: 5px 5px, 9px 9px;
+}
+
+.card > * {
+    position: relative;
+    z-index: 2;
+}
+
+.card h3 {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 13px;
+}
+
+.card p {
+    font-size: 12.5px;
+    color: var(--text-mid);
+    line-height: 1.62;
+    margin-bottom: 9px;
+}
+
+.card p:last-child {
+    margin-bottom: 0;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px 24px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+    color: var(--text-mid);
+}
+
+.feature-check {
+    color: var(--sage);
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.tech-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tech-pill {
+    font-family: var(--font-mono);
+    font-size: 10.8px;
+    color: var(--text-mid);
+    background: rgba(26,22,17,0.82);
+    border: 1px solid var(--line-strong);
+    border-radius: 5px;
+    padding: 6px 12px;
+}
+
+.safety-note {
+    background: rgba(147,166,138,0.05);
+    border: 1px solid rgba(147,166,138,0.24);
+    border-radius: 8px;
+    padding: 13px 16px;
+    margin-top: 11px;
+    font-size: 12px;
+    color: var(--sage);
+    line-height: 1.55;
+}
+
+::-webkit-scrollbar {
+    width: 9px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(243,236,223,0.035);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(227,168,87,0.42);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(227,168,87,0.70);
+}
+</style>
 </head>
+
 <body>
-$END$
+<main>
+    <div class="page-eyebrow">about</div>
+    <div class="page-title">About Spotify Power Tools</div>
+    <div class="page-sub">
+        A smart Spotify desktop companion for better shuffle, playlist insights, duplicate detection, and safe playlist cleaning.
+    </div>
+
+    <section class="card">
+        <h3>What This App Does</h3>
+        <p>Spotify Power Tools helps you improve how you listen to playlists.</p>
+        <p>
+            It generates smarter shuffle previews, adds smart-shuffled songs directly to your Spotify queue,
+            analyzes playlist health, finds duplicate tracks, and creates cleaned playlist copies without modifying the original playlist.
+        </p>
+    </section>
+
+    <section class="card">
+        <h3>Current Features</h3>
+
+        <div class="feature-grid">
+            <div class="feature-item"><span class="feature-check">✓</span>Smart Shuffle Preview</div>
+            <div class="feature-item"><span class="feature-check">✓</span>Queue Smart Shuffle</div>
+            <div class="feature-item"><span class="feature-check">✓</span>Queue size control</div>
+            <div class="feature-item"><span class="feature-check">✓</span>Persistent settings</div>
+            <div class="feature-item"><span class="feature-check">✓</span>Playlist analytics</div>
+            <div class="feature-item"><span class="feature-check">✓</span>Visual analytics charts</div>
+            <div class="feature-item"><span class="feature-check">✓</span>Playlist health score</div>
+            <div class="feature-item"><span class="feature-check">✓</span>Duplicate finder</div>
+            <div class="feature-item"><span class="feature-check">✓</span>Safe playlist cleaner</div>
+            <div class="feature-item"><span class="feature-check">✓</span>Open created playlists in Spotify</div>
+            <div class="feature-item"><span class="feature-check">✓</span>Listening memory</div>
+            <div class="feature-item"><span class="feature-check">✓</span>Share card export</div>
+        </div>
+    </section>
+
+    <section class="card">
+        <h3>Safety Design</h3>
+        <p>Spotify Power Tools is designed to be safe by default.</p>
+        <div class="safety-note">
+            The app does not overwrite your original playlists. Cleaner features create new playlist copies instead of deleting or modifying your existing playlists.
+        </div>
+    </section>
+
+    <section class="card">
+        <h3>Tech Stack</h3>
+
+        <div class="tech-row">
+            <span class="tech-pill">Python</span>
+            <span class="tech-pill">PySide6</span>
+            <span class="tech-pill">QWebEngine</span>
+            <span class="tech-pill">Spotipy</span>
+            <span class="tech-pill">Spotify Web API</span>
+            <span class="tech-pill">Git + GitHub</span>
+        </div>
+    </section>
+</main>
 </body>
 </html>

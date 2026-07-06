@@ -1,115 +1,149 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QLabel,
-    QScrollArea,
-    QPushButton,
-)
+import json
+from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QObject, Signal, Slot, Qt, QUrl
+from PySide6.QtWebChannel import QWebChannel
+from PySide6.QtWebEngineCore import QWebEngineSettings
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtWidgets import QWidget, QVBoxLayout
 
-from gui.card import Card
-from gui.queue_item import QueueItem
+
+def format_duration(ms):
+    try:
+        total_seconds = int(ms) // 1000
+    except (TypeError, ValueError):
+        return "—"
+
+    minutes = total_seconds // 60
+    seconds = total_seconds % 60
+
+    return f"{minutes}:{seconds:02d}"
+
+
+def song_to_payload(song):
+    if song is None:
+        return None
+
+    return {
+        "name": getattr(song, "name", "Unknown Song"),
+        "artist": getattr(song, "artist", "Unknown Artist"),
+        "album": getattr(song, "album", ""),
+        "duration": format_duration(getattr(song, "duration_ms", 0)),
+        "imageUrl": getattr(song, "image_url", ""),
+    }
+
+
+class QueueBridge(QObject):
+    refreshRequested = Signal()
+
+    @Slot()
+    def refreshQueue(self):
+        self.refreshRequested.emit()
 
 
 class QueuePage(QWidget):
-
     MAX_ITEMS = 25
+
+    refresh_requested = Signal()
 
     def __init__(self):
         super().__init__()
+
+        self.setObjectName("QueuePage")
+
+        self.web_ready = False
+
+        self.latest_payload = {
+            "isLoading": False,
+            "currentlyPlaying": None,
+            "queue": [],
+            "message": "No queue data yet.",
+        }
 
         root_layout = QVBoxLayout(self)
         root_layout.setContentsMargins(0, 0, 0, 0)
         root_layout.setSpacing(0)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QScrollArea.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarAlwaysOff
+        self.web_view = QWebEngineView()
+        self.web_view.setObjectName("WebQueueView")
+        self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
+
+        self.web_view.settings().setAttribute(
+            QWebEngineSettings.LocalContentCanAccessRemoteUrls,
+            True,
         )
 
-        content = QWidget()
-
-        layout = QVBoxLayout(content)
-        layout.setContentsMargins(25, 25, 25, 25)
-        layout.setSpacing(24)
-
-        title = QLabel("Spotify Queue")
-        title.setObjectName("SectionTitle")
-
-        subtitle = QLabel(
-            "View the songs currently waiting in your Spotify queue."
-        )
-        subtitle.setWordWrap(True)
-        subtitle.setStyleSheet(
-            "color:#A0A0A0; font-size:11pt;"
+        self.web_view.settings().setAttribute(
+            QWebEngineSettings.LocalContentCanAccessFileUrls,
+            True,
         )
 
-        self.refresh_button = QPushButton("Refresh Queue")
+        self.bridge = QueueBridge()
 
-        layout.addWidget(title)
-        layout.addWidget(subtitle)
-        layout.addWidget(self.refresh_button)
-
-        self.now_playing_card = Card("Currently Playing")
-
-        self.now_playing_label = QLabel("No active playback")
-        self.now_playing_label.setWordWrap(True)
-        self.now_playing_label.setStyleSheet(
-            "color:#DADADA; font-size:12pt;"
+        self.bridge.refreshRequested.connect(
+            self.refresh_requested.emit
         )
 
-        self.now_playing_card.layout.addWidget(
-            self.now_playing_label
+        self.channel = QWebChannel(self.web_view.page())
+        self.channel.registerObject("queueBridge", self.bridge)
+        self.web_view.page().setWebChannel(self.channel)
+
+        self.web_view.loadFinished.connect(
+            self.on_web_loaded
         )
 
-        layout.addWidget(self.now_playing_card)
-
-        self.queue_card = Card("Upcoming Queue")
-
-        self.empty_label = QLabel("No queue data yet.")
-        self.empty_label.setWordWrap(True)
-        self.empty_label.setStyleSheet(
-            "color:#A0A0A0; font-size:11pt;"
+        html_path = (
+            Path(__file__).resolve().parent
+            / "web"
+            / "queue.html"
         )
 
-        self.queue_card.layout.addWidget(
-            self.empty_label
+        self.web_view.setUrl(
+            QUrl.fromLocalFile(str(html_path))
         )
 
-        self.queue_items = []
+        root_layout.addWidget(self.web_view)
 
-        for _ in range(self.MAX_ITEMS):
+    def on_web_loaded(self, ok):
+        self.web_ready = bool(ok)
 
-            item = QueueItem()
-            item.hide()
+        if self.web_ready:
+            self.push_payload(
+                self.latest_payload
+            )
 
-            self.queue_items.append(item)
+    def run_js_function(self, function_name, payload):
+        if not self.web_ready:
+            return
 
-            self.queue_card.layout.addWidget(item)
+        js_payload = json.dumps(
+            payload,
+            ensure_ascii=False,
+        )
 
-        layout.addWidget(self.queue_card)
-        layout.addStretch()
+        self.web_view.page().runJavaScript(
+            f"{function_name}({js_payload});"
+        )
 
-        scroll.setWidget(content)
+    def push_payload(self, payload):
+        self.latest_payload = payload
 
-        root_layout.addWidget(scroll)
+        self.run_js_function(
+            "window.queuePage.update",
+            payload,
+        )
 
     def set_loading(self, loading):
+        payload = dict(self.latest_payload)
+        payload["isLoading"] = bool(loading)
 
         if loading:
-            self.refresh_button.setEnabled(False)
-            self.refresh_button.setText("Loading Queue...")
-            self.empty_label.show()
-            self.empty_label.setText("Loading Spotify queue...")
-        else:
-            self.refresh_button.setEnabled(True)
-            self.refresh_button.setText("Refresh Queue")
+            payload["message"] = "Loading Spotify queue..."
 
+        self.push_payload(payload)
 
     def update_queue(self, queue_data):
+        queue_data = queue_data or {}
 
         currently_playing = queue_data.get(
             "currently_playing"
@@ -120,28 +154,21 @@ class QueuePage(QWidget):
             []
         )
 
-        if currently_playing is None:
-            self.now_playing_label.setText(
-                "No active playback"
-            )
-        else:
-            self.now_playing_label.setText(
-                f"{currently_playing.name} — {currently_playing.artist}"
-            )
+        limited_queue = queue[:self.MAX_ITEMS]
 
-        for item in self.queue_items:
-            item.hide()
-
-        if not queue:
-            self.empty_label.show()
-            self.empty_label.setText(
+        payload = {
+            "isLoading": False,
+            "currentlyPlaying": song_to_payload(currently_playing),
+            "queue": [
+                song_to_payload(song)
+                for song in limited_queue
+                if song is not None
+            ],
+            "message": (
                 "Your Spotify queue is currently empty, or Spotify did not return queue data."
-            )
-            return
+                if not queue
+                else ""
+            ),
+        }
 
-        self.empty_label.hide()
-
-        for widget, song in zip(self.queue_items, queue):
-
-            widget.update_song(song)
-            widget.show()
+        self.push_payload(payload)

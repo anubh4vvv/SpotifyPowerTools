@@ -1,39 +1,79 @@
 from PySide6.QtWidgets import (
-    QGridLayout,
+    QFrame,
+    QLabel,
+    QHBoxLayout,
+    QVBoxLayout,
 )
 
-from gui.card import Card
-from gui.stat_tile import StatTile
+from PySide6.QtCore import Qt
 
 
-class PlaylistCard(Card):
+class StatStripItem(QFrame):
+
+    def __init__(self, label):
+        super().__init__()
+
+        self.setObjectName("StatStripItem")
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(1)
+
+        self.value_label = QLabel("--")
+        self.value_label.setObjectName("StatStripValue")
+        self.value_label.setAlignment(Qt.AlignCenter)
+
+        self.label_label = QLabel(label.upper())
+        self.label_label.setObjectName("StatStripLabel")
+        self.label_label.setAlignment(Qt.AlignCenter)
+
+        layout.addStretch()
+        layout.addWidget(self.value_label)
+        layout.addWidget(self.label_label)
+        layout.addStretch()
+
+    def set_value(self, value):
+        self.value_label.setText(str(value))
+
+
+class StatDivider(QFrame):
 
     def __init__(self):
+        super().__init__()
 
-        super().__init__("Playlist Statistics")
+        self.setObjectName("StatDivider")
+        self.setFixedWidth(1)
 
-        self.setMinimumHeight(135)
-        self.setMaximumHeight(155)
+
+class PlaylistCard(QFrame):
+
+    def __init__(self):
+        super().__init__()
+
+        self.setObjectName("StatsStrip")
+        self.setMinimumHeight(106)
+        self.setMaximumHeight(116)
 
         self.last_cache_key = None
 
-        grid = QGridLayout()
-        grid.setSpacing(15)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(26, 10, 26, 10)
+        layout.setSpacing(0)
 
-        self.song_tile = StatTile("Songs")
-        self.artist_tile = StatTile("Artists")
-        self.album_tile = StatTile("Albums")
-        self.duration_tile = StatTile("Duration")
+        self.song_tile = StatStripItem("Tracks")
+        self.artist_tile = StatStripItem("Artists")
+        self.album_tile = StatStripItem("Albums")
+        self.duration_tile = StatStripItem("Duration")
 
-        grid.addWidget(self.song_tile, 0, 0)
-        grid.addWidget(self.artist_tile, 0, 1)
-        grid.addWidget(self.album_tile, 0, 2)
-        grid.addWidget(self.duration_tile, 0, 3)
-
-        self.layout.addLayout(grid)
+        layout.addWidget(self.song_tile)
+        layout.addWidget(StatDivider())
+        layout.addWidget(self.artist_tile)
+        layout.addWidget(StatDivider())
+        layout.addWidget(self.album_tile)
+        layout.addWidget(StatDivider())
+        layout.addWidget(self.duration_tile)
 
     def make_cache_key(self, playlist, tracks):
-
         if playlist is None:
             return ("none", 0)
 
@@ -44,7 +84,6 @@ class PlaylistCard(Card):
         )
 
     def update_playlist(self, playlist, tracks):
-
         tracks = tracks or []
 
         cache_key = self.make_cache_key(
@@ -58,47 +97,33 @@ class PlaylistCard(Card):
         self.last_cache_key = cache_key
 
         if playlist is None:
-
             self.song_tile.set_value("--")
             self.artist_tile.set_value("--")
             self.album_tile.set_value("--")
             self.duration_tile.set_value("--")
-
             return
 
         artists = len({
-            t.artist
-            for t in tracks
+            track.artist
+            for track in tracks
+            if getattr(track, "artist", "")
         })
 
         albums = len({
-            t.album
-            for t in tracks
+            track.album
+            for track in tracks
+            if getattr(track, "album", "")
         })
 
         duration = sum(
-            t.duration_ms
-            for t in tracks
+            getattr(track, "duration_ms", 0)
+            for track in tracks
         )
 
         hours = duration // 1000 // 3600
+        minutes = (duration // 1000 % 3600) // 60
 
-        minutes = (
-            duration // 1000 % 3600
-        ) // 60
-
-        self.song_tile.set_value(
-            len(tracks)
-        )
-
-        self.artist_tile.set_value(
-            artists
-        )
-
-        self.album_tile.set_value(
-            albums
-        )
-
-        self.duration_tile.set_value(
-            f"{hours}h {minutes}m"
-        )
+        self.song_tile.set_value(len(tracks))
+        self.artist_tile.set_value(artists)
+        self.album_tile.set_value(albums)
+        self.duration_tile.set_value(f"{hours}h {minutes}m")

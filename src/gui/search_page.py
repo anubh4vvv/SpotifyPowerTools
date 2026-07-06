@@ -1,169 +1,239 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QScrollArea,
-)
+import json
+from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QObject, Signal, Slot, Qt, QUrl
+from PySide6.QtWebChannel import QWebChannel
+from PySide6.QtWebEngineCore import QWebEngineSettings
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtWidgets import QWidget, QVBoxLayout
 
-from gui.card import Card
-from gui.search_result_item import SearchResultItem
+
+def song_to_payload(song, index):
+    return {
+        "index": index,
+        "name": getattr(song, "name", "Unknown Song"),
+        "artist": getattr(song, "artist", "Unknown Artist"),
+        "album": getattr(song, "album", ""),
+        "durationMs": getattr(song, "duration_ms", 0),
+        "imageUrl": getattr(song, "image_url", ""),
+    }
+
+
+class SearchBridge(QObject):
+    searchRequested = Signal(str)
+    addRequested = Signal(int)
+    clearRequested = Signal()
+
+    @Slot(str)
+    def search(self, query):
+        query = str(query or "").strip()
+
+        if query:
+            self.searchRequested.emit(query)
+
+    @Slot(int)
+    def addToQueue(self, index):
+        self.addRequested.emit(int(index))
+
+    @Slot()
+    def clearSearch(self):
+        self.clearRequested.emit()
 
 
 class SearchPage(QWidget):
-
     search_requested = Signal(str)
     add_to_queue_requested = Signal(object)
 
     def __init__(self):
         super().__init__()
 
+        self.setObjectName("SearchPage")
+
+        self.web_ready = False
+        self.current_results = []
+        self.last_query = ""
+        self.active_query = ""
+
+        self.latest_payload = {
+            "isLoading": False,
+            "query": "",
+            "results": [],
+            "message": "No search yet. Type a song name and press Search.",
+        }
+
         root_layout = QVBoxLayout(self)
         root_layout.setContentsMargins(0, 0, 0, 0)
         root_layout.setSpacing(0)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QScrollArea.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarAlwaysOff
+        self.web_view = QWebEngineView()
+        self.web_view.setObjectName("WebSearchView")
+        self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
+
+        self.web_view.settings().setAttribute(
+            QWebEngineSettings.LocalContentCanAccessRemoteUrls,
+            True,
         )
 
-        content = QWidget()
-
-        layout = QVBoxLayout(content)
-        layout.setContentsMargins(25, 25, 25, 25)
-        layout.setSpacing(24)
-
-        title = QLabel("Search Spotify")
-        title.setObjectName("SectionTitle")
-
-        subtitle = QLabel(
-            "Search for tracks and add them directly to your Spotify queue."
-        )
-        subtitle.setWordWrap(True)
-        subtitle.setStyleSheet(
-            "color:#A0A0A0; font-size:11pt;"
+        self.web_view.settings().setAttribute(
+            QWebEngineSettings.LocalContentCanAccessFileUrls,
+            True,
         )
 
-        layout.addWidget(title)
-        layout.addWidget(subtitle)
+        self.bridge = SearchBridge()
 
-        search_card = Card("Find a Song")
-
-        search_row = QHBoxLayout()
-
-        self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText(
-            "Search song, artist, album..."
-        )
-        self.search_input.setMinimumHeight(42)
-
-        self.search_button = QPushButton("Search")
-        self.search_button.setMinimumHeight(42)
-
-        search_row.addWidget(self.search_input, 1)
-        search_row.addWidget(self.search_button)
-
-        search_card.layout.addLayout(search_row)
-
-        layout.addWidget(search_card)
-
-        self.results_card = Card("Results")
-
-        self.empty_label = QLabel(
-            "No search yet. Type a song name and press Search."
-        )
-        self.empty_label.setWordWrap(True)
-        self.empty_label.setStyleSheet(
-            "color:#A0A0A0; font-size:11pt;"
-        )
-
-        self.results_layout = QVBoxLayout()
-        self.results_layout.setSpacing(12)
-
-        self.results_card.layout.addWidget(
-            self.empty_label
-        )
-
-        self.results_card.layout.addLayout(
-            self.results_layout
-        )
-
-        layout.addWidget(self.results_card)
-        layout.addStretch()
-
-        scroll.setWidget(content)
-        root_layout.addWidget(scroll)
-
-        self.search_button.clicked.connect(
+        self.bridge.searchRequested.connect(
             self.emit_search
         )
 
-        self.search_input.returnPressed.connect(
-            self.emit_search
+        self.bridge.addRequested.connect(
+            self.emit_add_to_queue
         )
 
-    def emit_search(self):
+        self.bridge.clearRequested.connect(
+            self.clear_results
+        )
 
-        query = self.search_input.text().strip()
+        self.channel = QWebChannel(self.web_view.page())
+        self.channel.registerObject("searchBridge", self.bridge)
+        self.web_view.page().setWebChannel(self.channel)
+
+        self.web_view.loadFinished.connect(
+            self.on_web_loaded
+        )
+
+        html_path = (
+            Path(__file__).resolve().parent
+            / "web"
+            / "search.html"
+        )
+
+        self.web_view.setUrl(
+            QUrl.fromLocalFile(str(html_path))
+        )
+
+        root_layout.addWidget(self.web_view)
+
+    def on_web_loaded(self, ok):
+        self.web_ready = bool(ok)
+
+        if self.web_ready:
+            self.push_payload(
+                self.latest_payload
+            )
+
+    def run_js_function(self, function_name, payload):
+        if not self.web_ready:
+            return
+
+        js_payload = json.dumps(
+            payload,
+            ensure_ascii=False,
+        )
+
+        self.web_view.page().runJavaScript(
+            f"{function_name}({js_payload});"
+        )
+
+    def push_payload(self, payload):
+        self.latest_payload = payload
+
+        self.run_js_function(
+            "window.searchPage.update",
+            payload,
+        )
+
+    def emit_search(self, query=None):
+        query = str(query or "").strip()
 
         if not query:
+            self.clear_results()
             return
+
+        if query == self.active_query and self.latest_payload.get("isLoading"):
+            return
+
+        self.last_query = query
+        self.active_query = query
 
         self.search_requested.emit(
             query
         )
 
-    def set_loading(self, loading):
-
-        if loading:
-            self.search_button.setEnabled(False)
-            self.search_button.setText("Searching...")
-            self.empty_label.show()
-            self.empty_label.setText("Searching Spotify...")
-        else:
-            self.search_button.setEnabled(True)
-            self.search_button.setText("Search")
-
-    def clear_results(self):
-
-        while self.results_layout.count():
-
-            item = self.results_layout.takeAt(0)
-
-            widget = item.widget()
-
-            if widget is not None:
-                widget.deleteLater()
-
-    def show_results(self, songs):
-
-        self.clear_results()
-
-        if not songs:
-            self.empty_label.show()
-            self.empty_label.setText(
-                "No tracks found. Try a different search."
-            )
+    def emit_add_to_queue(self, index):
+        if index < 0 or index >= len(self.current_results):
             return
 
-        self.empty_label.hide()
+        self.add_to_queue_requested.emit(
+            self.current_results[index]
+        )
 
-        for song in songs:
+    def set_loading(self, loading, query=None):
+        query = str(query or self.active_query or self.last_query or "").strip()
 
-            item = SearchResultItem(
-                song
-            )
+        payload = dict(self.latest_payload)
+        payload["isLoading"] = bool(loading)
+        payload["query"] = query
 
-            item.add_clicked.connect(
-                self.add_to_queue_requested.emit
-            )
+        if loading:
+            payload["message"] = "Searching Spotify..."
+            payload["results"] = []
 
-            self.results_layout.addWidget(
-                item
-            )
+        self.push_payload(
+            payload
+        )
+
+    def clear_results(self):
+        self.current_results = []
+        self.last_query = ""
+        self.active_query = ""
+
+        self.push_payload({
+            "isLoading": False,
+            "query": "",
+            "results": [],
+            "message": "No search yet. Type a song name and press Search.",
+        })
+
+    def show_results(self, query, songs):
+        query = str(query or "").strip()
+
+        if query != self.active_query:
+            return
+
+        songs = songs or []
+
+        self.last_query = query
+        self.current_results = songs
+
+        if not songs:
+            self.push_payload({
+                "isLoading": False,
+                "query": query,
+                "results": [],
+                "message": "No tracks found. Try a different search.",
+            })
+
+            return
+
+        self.push_payload({
+            "isLoading": False,
+            "query": query,
+            "results": [
+                song_to_payload(song, index)
+                for index, song in enumerate(songs)
+            ],
+            "message": "",
+        })
+
+    def show_search_error(self, query, message):
+        query = str(query or "").strip()
+
+        if query != self.active_query:
+            return
+
+        self.push_payload({
+            "isLoading": False,
+            "query": query,
+            "results": [],
+            "message": message or "Search failed. Try again.",
+        })
