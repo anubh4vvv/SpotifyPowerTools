@@ -235,6 +235,10 @@ class Dashboard(QWidget):
         self.latest_preview_tracks = []
         self.latest_identity_summary = None
         self.latest_stats_summary = None
+        self.latest_shuffle_settings = {
+            "queueSize": 25,
+            "profile": "Balanced",
+        }
         saved_settings = load_settings()
 
         self.latest_app_context = {
@@ -510,6 +514,9 @@ class Dashboard(QWidget):
             self.latest_preview_tracks
         )
 
+        self.apply_dashboard_cleanup()
+        self.push_shuffle_settings_to_web()
+
     def run_js_function(self, function_name, payload):
         if not self.web_ready:
             return
@@ -521,6 +528,106 @@ class Dashboard(QWidget):
 
         self.web_view.page().runJavaScript(
             f"{function_name}({js_payload});"
+        )
+
+    def run_raw_js(self, code):
+        if not self.web_ready:
+            return
+
+        self.web_view.page().runJavaScript(
+            code
+        )
+
+    def apply_dashboard_cleanup(self):
+        """
+        Removes redundant dashboard-side navigation entries that no longer
+        represent standalone pages.
+        """
+
+        self.run_raw_js(
+            """
+            (function () {
+                const navItems = Array.from(
+                    document.querySelectorAll(".nav-item")
+                );
+
+                navItems.forEach((item) => {
+                    const text = String(
+                        item.textContent || ""
+                    ).toLowerCase();
+
+                    if (text.includes("smart shuffle")) {
+                        item.remove();
+                    }
+                });
+            })();
+            """
+        )
+
+    def update_shuffle_settings(self, settings):
+        settings = settings or {}
+
+        queue_size = settings.get(
+            "queue_size",
+            25
+        )
+
+        profile = settings.get(
+            "shuffle_profile",
+            "Balanced"
+        )
+
+        try:
+            queue_size = int(
+                queue_size
+            )
+
+        except Exception:
+            queue_size = 25
+
+        self.latest_shuffle_settings = {
+            "queueSize": queue_size,
+            "profile": str(profile or "Balanced"),
+        }
+
+        self.push_shuffle_settings_to_web()
+
+    def push_shuffle_settings_to_web(self):
+        if not self.web_ready:
+            return
+
+        payload = json.dumps(
+            self.latest_shuffle_settings,
+            ensure_ascii=False
+        )
+
+        self.run_raw_js(
+            f"""
+            (function () {{
+                const data = {payload};
+
+                const queueSize = Number(
+                    data.queueSize || 25
+                );
+
+                const profile = String(
+                    data.profile || "Balanced"
+                );
+
+                const queueButton = document.getElementById("queueBtn");
+
+                if (queueButton) {{
+                    queueButton.textContent =
+                        `queue ${{queueSize}} tracks into spotify`;
+                }}
+
+                const badge = document.getElementById("shuffleBadge");
+
+                if (badge) {{
+                    badge.textContent = profile.toLowerCase();
+                }}
+            }})();
+            """
         )
 
     def update_app_context(

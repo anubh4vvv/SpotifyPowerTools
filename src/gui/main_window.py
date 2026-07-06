@@ -155,6 +155,10 @@ class MainWindow(QMainWindow):
         self.sidebar = Sidebar()
         self.sidebar.setVisible(False)
 
+        if hasattr(self.sidebar, "shuffle_btn"):
+            self.sidebar.shuffle_btn.setVisible(False)
+            self.sidebar.shuffle_btn.setEnabled(False)
+
 
         self.stack = QStackedWidget()
 
@@ -773,21 +777,21 @@ class MainWindow(QMainWindow):
         )
 
     def show_smart_shuffle(self):
-
         self.sidebar.set_active_button(
-            self.sidebar.shuffle_btn
+            self.sidebar.dashboard_btn
         )
 
         self.set_page(
             self.dashboard
         )
 
-        self.dashboard.shuffle_panel.highlight()
-
-        self.dashboard.shuffle_panel.preview_button.setFocus()
-
         self.status_bar.set_message(
-            "Smart Shuffle selected"
+            "Smart Shuffle controls are available on the Dashboard"
+        )
+
+        QTimer.singleShot(
+            0,
+            self.load_dashboard_playlist
         )
 
     def handle_web_page_request(self, page_name):
@@ -1210,6 +1214,11 @@ class MainWindow(QMainWindow):
         self.dashboard.update_active_profile(
             settings
         )
+
+        if hasattr(self.dashboard, "update_shuffle_settings"):
+            self.dashboard.update_shuffle_settings(
+                settings
+            )
 
         if self.hotkeys is not None or settings.get("hotkeys_enabled", True):
             self.restart_global_hotkeys()
