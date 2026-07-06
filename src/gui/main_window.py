@@ -10,6 +10,19 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QStackedWidget,
     QGraphicsOpacityEffect,
+    QApplication,
+    QSystemTrayIcon,
+    QMenu,
+)
+from PySide6.QtGui import (
+    QAction,
+    QIcon,
+    QPixmap,
+    QPainter,
+    QColor,
+    QPen,
+    QBrush,
+    QFont,
 )
 
 from PySide6.QtCore import (
@@ -17,7 +30,9 @@ from PySide6.QtCore import (
     QThread,
     QPropertyAnimation,
     QEasingCurve,
+    QSize
 )
+from PySide6.QtCore import Qt
 
 from gui.dashboard import Dashboard
 from gui.analytics_page import AnalyticsPage
@@ -59,12 +74,20 @@ from gui.image_loader import (
     cache_size,
 )
 
+from hotkeys import HotkeyManager
+
 class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
 
         self.controller = SpotifyController()
+
+        self.is_quitting = False
+        self.tray_icon = None
+        self.tray_menu = None
+        self.tray_message_shown = False
+        self.hotkeys = None
 
         self.preview_thread = None
         self.preview_worker = None
@@ -326,6 +349,10 @@ class MainWindow(QMainWindow):
         )
 
         self.refresh_devices()
+        self.setup_system_tray()
+        self.setup_global_hotkeys()
+
+
 
     def load_spotify_user_profile(self):
         try:
@@ -340,7 +367,342 @@ class MainWindow(QMainWindow):
                 f"Could not load Spotify user profile: {error}"
             )
 
+    def get_app_icon(self):
+        base_dir = Path(__file__).resolve().parents[1]
+
+        candidates = [
+            base_dir / "gui" / "resources" / "icons" / "app_icon.ico",
+            base_dir / "gui" / "resources" / "icons" / "app_icon.png",
+        ]
+
+        for path in candidates:
+            if path.exists():
+                return QIcon(str(path))
+
+        return self.windowIcon()
+
+    def get_tray_icon(self):
+        """
+        Creates a tray-optimized icon directly in Qt.
+
+        This avoids Windows showing the default Python icon when the tray
+        icon file is cached, ignored, or not rendered correctly at 16x16.
+        """
+
+        pixmap = QPixmap(64, 64)
+        pixmap.fill(Qt.transparent)
+
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+
+        # Base rounded square
+        painter.setPen(
+            QPen(QColor(226, 161, 66, 150), 2)
+        )
+        painter.setBrush(
+            QBrush(QColor(18, 14, 10, 255))
+        )
+        painter.drawRoundedRect(
+            3,
+            3,
+            58,
+            58,
+            14,
+            14
+        )
+
+        # Inner amber glow circle
+        painter.setPen(
+            QPen(QColor(226, 161, 66, 190), 3)
+        )
+        painter.setBrush(Qt.NoBrush)
+        painter.drawEllipse(
+            12,
+            12,
+            40,
+            40
+        )
+
+        # Small progress/aura arc
+        painter.setPen(
+            QPen(QColor(243, 236, 223, 230), 3)
+        )
+        painter.drawArc(
+            12,
+            12,
+            40,
+            40,
+            25 * 16,
+            105 * 16
+        )
+
+        # PT monogram
+        font = QFont("Georgia")
+        font.setBold(True)
+        font.setPointSize(21)
+
+        painter.setFont(font)
+        painter.setPen(
+            QColor(243, 236, 223, 255)
+        )
+        painter.drawText(
+            pixmap.rect(),
+            Qt.AlignCenter,
+            "PT"
+        )
+
+        # Amber underline / accent
+        painter.setPen(
+            QPen(QColor(226, 161, 66, 255), 3)
+        )
+        painter.drawLine(
+            23,
+            50,
+            41,
+            50
+        )
+
+        painter.end()
+
+        icon = QIcon()
+        icon.addPixmap(
+            pixmap
+        )
+
+        return icon
+
+    def setup_system_tray(self):
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            return
+
+        icon = self.get_tray_icon()
+
+        if not icon.isNull():
+            self.setWindowIcon(icon)
+
+        self.tray_icon = QSystemTrayIcon(self)
+        self.tray_icon.setIcon(icon)
+        self.tray_icon.setToolTip("Spotify Power Tools")
+
+        self.tray_menu = QMenu(self)
+
+        show_action = QAction("Show Spotify Power Tools", self)
+        dashboard_action = QAction("Show Dashboard", self)
+
+        self.tray_menu.addAction(show_action)
+        self.tray_menu.addAction(dashboard_action)
+        self.tray_menu.addSeparator()
+
+        play_pause_action = QAction("Play / Pause", self)
+        next_action = QAction("Next Track", self)
+        previous_action = QAction("Previous Track", self)
+
+        self.tray_menu.addAction(play_pause_action)
+        self.tray_menu.addAction(next_action)
+        self.tray_menu.addAction(previous_action)
+        self.tray_menu.addSeparator()
+
+        preview_action = QAction("Preview Smart Shuffle", self)
+        queue_action = QAction("Queue Smart Shuffle", self)
+
+        self.tray_menu.addAction(preview_action)
+        self.tray_menu.addAction(queue_action)
+        self.tray_menu.addSeparator()
+
+        quit_action = QAction("Quit", self)
+        self.tray_menu.addAction(quit_action)
+
+        show_action.triggered.connect(
+            self.restore_from_tray
+        )
+
+        dashboard_action.triggered.connect(
+            self.show_dashboard_from_tray
+        )
+
+        play_pause_action.triggered.connect(
+            self.toggle_playback_from_tray
+        )
+
+        next_action.triggered.connect(
+            self.next_song_from_tray
+        )
+
+        previous_action.triggered.connect(
+            self.previous_song_from_tray
+        )
+
+        preview_action.triggered.connect(
+            self.preview_shuffle_from_tray
+        )
+
+        queue_action.triggered.connect(
+            self.queue_shuffle_from_tray
+        )
+
+        quit_action.triggered.connect(
+            self.quit_from_tray
+        )
+
+        self.tray_icon.setContextMenu(
+            self.tray_menu
+        )
+
+        self.tray_icon.activated.connect(
+            self.handle_tray_activated
+        )
+
+        self.tray_icon.show()
+
+    def setup_global_hotkeys(self):
+        try:
+            self.hotkeys = HotkeyManager(self)
+
+            self.hotkeys.play_pause_requested.connect(
+                self.toggle_playback_from_hotkey
+            )
+
+            self.hotkeys.next_requested.connect(
+                self.next_song_from_hotkey
+            )
+
+            self.hotkeys.previous_requested.connect(
+                self.previous_song_from_hotkey
+            )
+
+            self.hotkeys.preview_shuffle_requested.connect(
+                self.preview_shuffle_from_hotkey
+            )
+
+            self.hotkeys.queue_shuffle_requested.connect(
+                self.queue_shuffle_from_hotkey
+            )
+
+            self.hotkeys.show_dashboard_requested.connect(
+                self.show_dashboard_from_hotkey
+            )
+
+            self.hotkeys.show_app_requested.connect(
+                self.restore_from_tray
+            )
+
+            self.hotkeys.start()
+
+            self.status_bar.set_message(
+                "Tray and global hotkeys enabled"
+            )
+
+        except Exception as error:
+
+            self.hotkeys = None
+
+            self.status_bar.set_message(
+                f"Hotkeys unavailable: {error}"
+            )
+
+    def handle_tray_activated(self, reason):
+        if reason in (
+                QSystemTrayIcon.Trigger,
+                QSystemTrayIcon.DoubleClick,
+        ):
+            self.restore_from_tray()
+
+    def restore_from_tray(self):
+        if self.isMinimized():
+            self.showNormal()
+        else:
+            self.show()
+
+        self.raise_()
+        self.activateWindow()
+
+        self.status_bar.set_message(
+            "Spotify Power Tools restored"
+        )
+
+    def show_dashboard_from_tray(self):
+        self.restore_from_tray()
+        self.show_dashboard()
+
+    def toggle_playback_from_tray(self):
+        self.toggle_playback()
+
+    def next_song_from_tray(self):
+        self.next_song()
+
+    def previous_song_from_tray(self):
+        self.previous_song()
+
+    def preview_shuffle_from_tray(self):
+        self.restore_from_tray()
+        self.show_smart_shuffle()
+        self.preview_shuffle()
+
+    def queue_shuffle_from_tray(self):
+        self.restore_from_tray()
+        self.show_smart_shuffle()
+        self.queue_shuffle()
+
+    def toggle_playback_from_hotkey(self):
+        self.toggle_playback()
+
+    def next_song_from_hotkey(self):
+        self.next_song()
+
+    def previous_song_from_hotkey(self):
+        self.previous_song()
+
+    def preview_shuffle_from_hotkey(self):
+        self.restore_from_tray()
+        self.show_smart_shuffle()
+        self.preview_shuffle()
+
+    def queue_shuffle_from_hotkey(self):
+        self.restore_from_tray()
+        self.show_smart_shuffle()
+        self.queue_shuffle()
+
+    def show_dashboard_from_hotkey(self):
+        self.restore_from_tray()
+        self.show_dashboard()
+
+    def quit_from_tray(self):
+        self.is_quitting = True
+
+        if self.hotkeys is not None:
+            self.hotkeys.stop()
+
+        if self.tray_icon is not None:
+            self.tray_icon.hide()
+
+        self.close()
+        QApplication.quit()
+
     def closeEvent(self, event):
+
+        if (
+                not self.is_quitting
+                and self.tray_icon is not None
+                and self.tray_icon.isVisible()
+        ):
+            event.ignore()
+
+            self.hide()
+
+            if not self.tray_message_shown:
+                self.tray_icon.showMessage(
+                    "Spotify Power Tools is still running",
+                    "Use the tray icon to restore or quit the app.",
+                    QSystemTrayIcon.Information,
+                    2500
+                )
+
+                self.tray_message_shown = True
+
+            return
+
+        if self.hotkeys is not None:
+            self.hotkeys.stop()
 
         try:
 
