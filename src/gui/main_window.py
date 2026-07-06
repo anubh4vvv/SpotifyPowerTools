@@ -43,6 +43,7 @@ from workers.search_worker import SearchWorker
 
 from services.analytics_service import calculate_playlist_analytics
 from services.duplicate_service import analyze_duplicates
+from services.settings_service import load_settings
 
 from services.listening_history_service import (
     export_listening_memory as export_listening_memory_service,
@@ -169,6 +170,15 @@ class MainWindow(QMainWindow):
         self.film_grain_overlay.raise_()
 
         self.dashboard.shuffle_panel.update_queue_button_text()
+        self.apply_saved_settings(
+            load_settings(),
+            show_message=False
+        )
+
+        QTimer.singleShot(
+            800,
+            self.load_spotify_user_profile
+        )
 
         self.sidebar.dashboard_btn.clicked.connect(
             self.show_dashboard
@@ -261,7 +271,7 @@ class MainWindow(QMainWindow):
             self.queue_shuffle
         )
 
-        self.queue_page.refresh_button.clicked.connect(
+        self.queue_page.refresh_requested.connect(
             self.refresh_queue_page
         )
 
@@ -316,6 +326,19 @@ class MainWindow(QMainWindow):
         )
 
         self.refresh_devices()
+
+    def load_spotify_user_profile(self):
+        try:
+            profile = self.controller.get_current_user_profile()
+
+            self.dashboard.update_user_profile(
+                profile
+            )
+
+        except Exception as error:
+            print(
+                f"Could not load Spotify user profile: {error}"
+            )
 
     def closeEvent(self, event):
 
@@ -466,7 +489,19 @@ class MainWindow(QMainWindow):
 
     def search_tracks(self, query):
 
-        self.search_page.set_loading(True)
+        query = str(query or "").strip()
+
+        if not query:
+            self.search_page.clear_results()
+            self.status_bar.set_message(
+                "Search Spotify"
+            )
+            return
+
+        self.search_page.set_loading(
+            True,
+            query=query
+        )
 
         self.status_bar.set_message(
             f"Searching Spotify for '{query}'..."
@@ -500,27 +535,39 @@ class MainWindow(QMainWindow):
             self.search_thread.quit
         )
 
+        self.search_worker.error.connect(
+            self.search_thread.quit
+        )
+
         self.search_thread.finished.connect(
             self.search_thread.deleteLater
         )
 
         self.search_thread.start()
 
-    def search_finished(self, songs):
-
-        self.search_page.set_loading(False)
+    def search_finished(self, query, songs):
 
         self.search_page.show_results(
+            query,
             songs
         )
+
+        if query != self.search_page.active_query:
+            return
 
         self.status_bar.set_message(
             f"Search complete • {len(songs)} results"
         )
 
-    def search_error(self, message):
+    def search_error(self, query, message):
 
-        self.search_page.set_loading(False)
+        self.search_page.show_search_error(
+            query,
+            message
+        )
+
+        if query != self.search_page.active_query:
+            return
 
         QMessageBox.critical(
             self,
@@ -758,15 +805,26 @@ class MainWindow(QMainWindow):
             "About Spotify Power Tools"
         )
 
-    def apply_saved_settings(self, settings):
+    def apply_saved_settings(self, settings, show_message=True):
 
         self.dashboard.shuffle_panel.apply_settings(
             settings
         )
 
-        self.status_bar.set_message(
-            "Settings saved"
+        if hasattr(
+                self.dashboard.shuffle_panel,
+                "update_queue_button_text"
+        ):
+            self.dashboard.shuffle_panel.update_queue_button_text()
+
+        self.dashboard.update_active_profile(
+            settings
         )
+
+        if show_message:
+            self.status_bar.set_message(
+                "Settings saved"
+            )
 
     def animate_page(self, widget):
 
@@ -867,6 +925,9 @@ class MainWindow(QMainWindow):
         )
 
         self.dashboard.shuffle_panel.highlight()
+        self.dashboard.update_active_profile(
+            profile_name
+        )
 
         self.status_bar.set_message(
             f"Applied recommended profile: {profile_name}"

@@ -13,6 +13,7 @@ from gui.player_controls_card import PlayerControlsCard
 from gui.playlist_card import PlaylistCard
 from gui.shuffle_panel import ShufflePanel
 from gui.web_dashboard_bridge import WebDashboardBridge
+from services.settings_service import load_settings
 
 
 def format_duration(total_ms):
@@ -234,6 +235,16 @@ class Dashboard(QWidget):
         self.latest_preview_tracks = []
         self.latest_identity_summary = None
         self.latest_stats_summary = None
+        saved_settings = load_settings()
+
+        self.latest_app_context = {
+            "profileName": "Spotify User",
+            "profileImageUrl": "",
+            "activeProfile": saved_settings.get(
+                "shuffle_profile",
+                "Balanced"
+            ),
+        }
 
         root_layout = QVBoxLayout(self)
         root_layout.setContentsMargins(0, 0, 0, 0)
@@ -465,6 +476,10 @@ class Dashboard(QWidget):
 
         if not self.web_ready:
             return
+        self.run_js_function(
+            "window.dashboard.updateAppContext",
+            self.latest_app_context
+        )
 
         if self.latest_playlist_summary is not None:
             self.run_js_function(
@@ -506,6 +521,67 @@ class Dashboard(QWidget):
 
         self.web_view.page().runJavaScript(
             f"{function_name}({js_payload});"
+        )
+
+    def update_app_context(
+            self,
+            profile_name=None,
+            profile_image_url=None,
+            active_profile=None
+    ):
+        context = dict(
+            self.latest_app_context or {}
+        )
+
+        if profile_name is not None:
+            context["profileName"] = (
+                    str(profile_name).strip()
+                    or "Spotify User"
+            )
+
+        if profile_image_url is not None:
+            context["profileImageUrl"] = (
+                str(profile_image_url).strip()
+            )
+
+        if active_profile is not None:
+            context["activeProfile"] = (
+                    str(active_profile).strip()
+                    or "Balanced"
+            )
+
+        self.latest_app_context = context
+
+        self.run_js_function(
+            "window.dashboard.updateAppContext",
+            context
+        )
+
+    def update_user_profile(self, profile):
+        profile = profile or {}
+
+        self.update_app_context(
+            profile_name=profile.get(
+                "display_name",
+                "Spotify User"
+            ),
+            profile_image_url=profile.get(
+                "image_url",
+                ""
+            )
+        )
+
+    def update_active_profile(self, settings_or_profile):
+        if isinstance(settings_or_profile, dict):
+            profile_name = settings_or_profile.get(
+                "shuffle_profile",
+                "Balanced"
+            )
+        else:
+            profile_name = settings_or_profile
+
+        self.update_app_context(
+            active_profile=profile_name
         )
 
     def update_playlist_summary(self, playlist, tracks):

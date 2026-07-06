@@ -88,6 +88,33 @@ class SpotifyController:
     def current_playback(self):
         return self.sp.current_playback()
 
+    def get_current_user_profile(self):
+        """
+        Returns the logged-in Spotify user's display profile.
+        """
+
+        user = self.sp.current_user() or {}
+
+        display_name = (
+                user.get("display_name")
+                or user.get("id")
+                or "Spotify User"
+        )
+
+        images = user.get("images") or []
+
+        image_url = ""
+
+        if images:
+            first_image = images[0] or {}
+            image_url = first_image.get("url", "")
+
+        return {
+            "display_name": display_name,
+            "image_url": image_url,
+            "spotify_id": user.get("id", ""),
+        }
+
     def get_song_rating(self, track_id):
         """
         Gets locally saved rating for one song.

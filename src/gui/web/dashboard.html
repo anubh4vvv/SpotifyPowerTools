@@ -84,9 +84,9 @@ body {
 body {
     position: relative;
     background:
-        radial-gradient(circle at 17% 2%, rgba(226,161,66,0.125), transparent 27%),
-        radial-gradient(circle at 78% 88%, rgba(226,161,66,0.050), transparent 34%),
-        linear-gradient(90deg, rgba(255,255,255,0.014), transparent 33%, rgba(226,161,66,0.020) 76%, transparent),
+        radial-gradient(circle at 17% 2%, rgba(226, 161, 66, 0.125), transparent 27%),
+        radial-gradient(circle at 78% 88%, rgba(226, 161, 66, 0.050), transparent 34%),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.014), transparent 33%, rgba(226, 161, 66, 0.020) 76%, transparent),
         #0d0b08;
 }
 
@@ -99,8 +99,8 @@ body::before {
     opacity: 0.22;
     mix-blend-mode: overlay;
     background-image:
-        radial-gradient(circle, rgba(255,255,255,0.25) 0 0.48px, transparent 0.78px),
-        radial-gradient(circle, rgba(0,0,0,0.50) 0 0.56px, transparent 0.95px);
+        radial-gradient(circle, rgba(255, 255, 255, 0.25) 0 0.48px, transparent 0.78px),
+        radial-gradient(circle, rgba(0, 0, 0, 0.50) 0 0.56px, transparent 0.95px);
     background-size: 3px 3px, 7px 7px;
     background-position: 0 0, 2px 3px;
 }
@@ -113,8 +113,8 @@ body::after {
     z-index: 51;
     opacity: 0.38;
     background:
-        radial-gradient(circle at 50% 38%, transparent 0%, rgba(0,0,0,0.20) 100%),
-        linear-gradient(to right, rgba(255,255,255,0.024), transparent 12%, transparent 88%, rgba(0,0,0,0.30));
+        radial-gradient(circle at 50% 38%, transparent 0%, rgba(0, 0, 0, 0.20) 100%),
+        linear-gradient(to right, rgba(255, 255, 255, 0.024), transparent 12%, transparent 88%, rgba(0, 0, 0, 0.30));
 }
 
 .app {
@@ -123,7 +123,7 @@ body::after {
     width: 100%;
     height: 100%;
     display: grid;
-    grid-template-columns: 270px minmax(0, 1fr);
+    grid-template-columns: 282px minmax(0, 1fr);
 }
 
 /* ---------- Sidebar ---------- */
@@ -133,23 +133,23 @@ body::after {
     padding: 38px 12px 28px;
     border-right: 1px solid var(--line-strong);
     background:
-        radial-gradient(circle at 65% 0%, rgba(226,161,66,0.06), transparent 28%),
-        linear-gradient(180deg, rgba(255,255,255,0.014), transparent 18%),
+        radial-gradient(circle at 65% 0%, rgba(226, 161, 66, 0.06), transparent 28%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.014), transparent 18%),
         rgba(8, 7, 5, 0.86);
     display: flex;
     flex-direction: column;
 }
 
 .brand {
-    padding-left: 18px;
-    margin-bottom: 46px;
+    padding-left: 20px;
+    margin-bottom: 48px;
 }
 
 .brand-title {
     font-family: "PT Fraunces", Georgia, serif;
-    font-size: 38px;
+    font-size: 39px;
     line-height: 0.95;
-    letter-spacing: -1.45px;
+    letter-spacing: -1.55px;
     color: var(--text);
 }
 
@@ -158,10 +158,10 @@ body::after {
 }
 
 .brand-subtitle {
-    margin-top: 14px;
+    margin-top: 15px;
     color: var(--text-3);
     font-size: 11px;
-    letter-spacing: 6px;
+    letter-spacing: 6.2px;
     font-weight: 900;
 }
 
@@ -173,7 +173,7 @@ body::after {
 
 .nav-item {
     height: 58px;
-    padding: 0 20px;
+    padding: 0 21px;
     display: flex;
     align-items: center;
     gap: 17px;
@@ -206,21 +206,21 @@ body::after {
 }
 
 .nav-item:hover {
-    background: rgba(239,230,216,0.035);
-    border-color: rgba(239,230,216,0.08);
+    background: rgba(239, 230, 216, 0.035);
+    border-color: rgba(239, 230, 216, 0.08);
 }
 
 .nav-item.active {
     background:
-        radial-gradient(circle at 0% 50%, rgba(226,161,66,0.115), transparent 47%),
-        linear-gradient(135deg, rgba(255,255,255,0.045), transparent),
-        rgba(29,24,18,0.98);
-    border-color: rgba(239,230,216,0.18);
+        radial-gradient(circle at 0% 50%, rgba(226, 161, 66, 0.115), transparent 47%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.045), transparent),
+        rgba(29, 24, 18, 0.98);
+    border-color: rgba(239, 230, 216, 0.18);
     color: var(--text);
     font-weight: 800;
     box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.04),
-        0 16px 32px rgba(0,0,0,0.18);
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        0 16px 32px rgba(0, 0, 0, 0.18);
 }
 
 .nav-item.active .icon {
@@ -242,7 +242,7 @@ body::after {
     margin-right: 9px;
     border-radius: 50%;
     background: var(--sage);
-    box-shadow: 0 0 16px rgba(168,180,135,0.45);
+    box-shadow: 0 0 16px rgba(168, 180, 135, 0.45);
 }
 
 /* ---------- Main Layout ---------- */
@@ -250,27 +250,27 @@ body::after {
 .main {
     min-width: 0;
     height: 100%;
-    padding: 30px 34px 24px;
+    padding: 28px 32px 20px;
 }
 
 .shell {
-    width: min(100%, 1220px);
+    width: min(100%, 1238px);
     height: 100%;
 }
 
 .topbar {
-    height: 74px;
+    height: 66px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .greeting {
     font-family: "PT Fraunces", Georgia, serif;
     font-size: 40px;
-    line-height: 1;
-    letter-spacing: -0.75px;
+    line-height: 0.98;
+    letter-spacing: -0.8px;
     color: var(--text);
 }
 
@@ -281,25 +281,25 @@ body::after {
 
 .meta {
     margin-top: 8px;
-    color: rgba(200,189,169,0.78);
+    color: rgba(200, 189, 169, 0.78);
     font-size: 14px;
 }
 
 .profile {
-    height: 60px;
+    height: 58px;
     min-width: 184px;
     padding: 8px 18px 8px 10px;
     border: 1px solid var(--line-strong);
     border-radius: 32px;
     background:
-        linear-gradient(135deg, rgba(255,255,255,0.04), transparent),
-        rgba(29,24,18,0.80);
+        linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent),
+        rgba(29, 24, 18, 0.80);
     display: flex;
     align-items: center;
     gap: 13px;
     box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.025),
-        0 18px 36px rgba(0,0,0,0.18);
+        inset 0 1px 0 rgba(255, 255, 255, 0.025),
+        0 18px 36px rgba(0, 0, 0, 0.18);
 }
 
 .avatar {
@@ -310,11 +310,22 @@ body::after {
         radial-gradient(circle at 62% 32%, #ef9c9c, transparent 35%),
         radial-gradient(circle at 36% 70%, #23265f, transparent 42%),
         linear-gradient(135deg, #e2a142, #c98a7d);
+    background-size: cover;
+    background-position: center;
+}
+
+.avatar.has-image {
+    background-size: cover;
+    background-position: center;
 }
 
 .profile-name {
     font-size: 16px;
     font-weight: 800;
+    max-width: 118px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .profile-chevron {
@@ -327,27 +338,27 @@ body::after {
 /* ---------- Dashboard Grid ---------- */
 
 .dashboard-grid {
-    height: calc(100% - 94px);
+    height: calc(100% - 82px);
     min-height: 0;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: 430px 106px minmax(210px, 1fr);
-    gap: 18px;
+    grid-template-rows: 386px 92px minmax(246px, 1fr);
+    gap: 16px;
 }
 
 .card {
     position: relative;
     overflow: hidden;
     background:
-        radial-gradient(circle at 18% 0%, rgba(255,255,255,0.048), transparent 32%),
-        radial-gradient(circle at 78% 100%, rgba(226,161,66,0.045), transparent 38%),
-        linear-gradient(145deg, rgba(255,255,255,0.030), transparent 38%),
-        rgba(29,24,18,0.955);
-    border: 1px solid rgba(239,230,216,0.135);
+        radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.046), transparent 32%),
+        radial-gradient(circle at 78% 100%, rgba(226, 161, 66, 0.040), transparent 38%),
+        linear-gradient(145deg, rgba(255, 255, 255, 0.028), transparent 38%),
+        rgba(29, 24, 18, 0.955);
+    border: 1px solid rgba(239, 230, 216, 0.135);
     border-radius: 10px;
     box-shadow:
-        0 30px 76px rgba(0,0,0,0.39),
-        inset 0 1px 0 rgba(255,255,255,0.036);
+        0 30px 76px rgba(0, 0, 0, 0.39),
+        inset 0 1px 0 rgba(255, 255, 255, 0.036);
 }
 
 .card::before {
@@ -357,49 +368,49 @@ body::after {
     pointer-events: none;
     opacity: 0.13;
     background-image:
-        radial-gradient(circle, rgba(255,255,255,0.08) 0 0.48px, transparent 0.85px),
-        radial-gradient(circle, rgba(0,0,0,0.20) 0 0.55px, transparent 0.95px);
+        radial-gradient(circle, rgba(255, 255, 255, 0.08) 0 0.48px, transparent 0.85px),
+        radial-gradient(circle, rgba(0, 0, 0, 0.20) 0 0.55px, transparent 0.95px);
     background-size: 5px 5px, 9px 9px;
 }
 
 .label {
     position: relative;
     z-index: 2;
-    color: rgba(143,133,116,0.95);
+    color: rgba(143, 133, 116, 0.95);
     font-size: 12px;
-    letter-spacing: 5.5px;
+    letter-spacing: 5.4px;
     font-weight: 950;
 }
 
 /* ---------- Now Playing ---------- */
 
 .now-card {
-    padding: 30px;
+    padding: 27px 30px;
 }
 
 .now-body {
     position: relative;
     z-index: 2;
-    height: calc(100% - 27px);
+    height: calc(100% - 25px);
     display: grid;
-    grid-template-columns: 292px minmax(0, 1fr);
-    gap: 38px;
+    grid-template-columns: 268px minmax(0, 1fr);
+    gap: 24px;
     align-items: center;
 }
 
 .polaroid {
     position: relative;
-    width: 272px;
-    height: 320px;
-    padding: 12px 12px 16px;
+    width: 252px;
+    height: 296px;
+    padding: 11px 11px 15px;
     background:
-        linear-gradient(180deg, rgba(255,255,255,0.44), transparent 32%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.44), transparent 32%),
         var(--paper);
-    transform: rotate(-3.6deg);
+    transform: rotate(-3.4deg);
     box-shadow:
-        0 26px 50px rgba(0,0,0,0.42),
-        0 0 0 1px rgba(0,0,0,0.06),
-        inset 0 -12px 24px rgba(0,0,0,0.04);
+        0 26px 50px rgba(0, 0, 0, 0.42),
+        0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -12px 24px rgba(0, 0, 0, 0.04);
 }
 
 .polaroid::after {
@@ -409,20 +420,20 @@ body::after {
     opacity: 0.15;
     pointer-events: none;
     background-image:
-        radial-gradient(circle, rgba(0,0,0,0.18) 0 0.42px, transparent 0.78px);
+        radial-gradient(circle, rgba(0, 0, 0, 0.18) 0 0.42px, transparent 0.78px);
     background-size: 5px 5px;
 }
 
 .cover-wrap {
-    width: 248px;
-    height: 248px;
+    width: 230px;
+    height: 230px;
     background: #0c0a08;
     overflow: hidden;
 }
 
 .cover {
-    width: 248px;
-    height: 248px;
+    width: 230px;
+    height: 230px;
     object-fit: cover;
     display: block;
 }
@@ -430,12 +441,12 @@ body::after {
 .caption {
     position: relative;
     z-index: 2;
-    margin-top: 14px;
+    margin-top: 13px;
     text-align: center;
     color: #3f352b;
     font-family: "PT JetBrains Mono", Consolas, monospace;
-    font-size: 14px;
-    letter-spacing: 1px;
+    font-size: 13px;
+    letter-spacing: 1.2px;
 }
 
 .track-info {
@@ -445,10 +456,10 @@ body::after {
 
 .track-title {
     max-width: 100%;
-    margin-bottom: 11px;
+    margin-bottom: 10px;
     font-family: "PT Fraunces", Georgia, serif;
-    font-size: clamp(33px, 2.35vw, 43px);
-    line-height: 1.02;
+    font-size: clamp(31px, 2.15vw, 38px);
+    line-height: 1.03;
     color: var(--text);
     font-style: italic;
     letter-spacing: -0.35px;
@@ -469,9 +480,9 @@ body::after {
 
 .album {
     max-width: 100%;
-    margin-bottom: 26px;
+    margin-bottom: 22px;
     color: var(--text-2);
-    font-size: 16px;
+    font-size: 15.5px;
     font-style: italic;
     white-space: nowrap;
     overflow: hidden;
@@ -480,20 +491,20 @@ body::after {
 
 .progress-row {
     display: grid;
-    grid-template-columns: 44px minmax(0, 1fr) 44px;
-    gap: 12px;
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+    gap: 11px;
     align-items: center;
-    margin-bottom: 23px;
+    margin-bottom: 20px;
     color: var(--text-2);
-    font-size: 14px;
+    font-size: 13.5px;
 }
 
 .progress-track {
     height: 7px;
     border-radius: 999px;
-    background: rgba(239,230,216,0.11);
+    background: rgba(239, 230, 216, 0.11);
     cursor: pointer;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.25);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
 .progress-fill {
@@ -501,46 +512,46 @@ body::after {
     height: 100%;
     border-radius: 999px;
     background: linear-gradient(90deg, var(--amber), var(--amber-soft));
-    box-shadow: 0 0 16px rgba(226,161,66,0.18);
+    box-shadow: 0 0 16px rgba(226, 161, 66, 0.18);
 }
 
 .controls {
     display: flex;
     align-items: center;
-    gap: 22px;
-    margin-bottom: 19px;
+    gap: 20px;
+    margin-bottom: 17px;
 }
 
 .circle-btn {
-    width: 62px;
-    height: 62px;
+    width: 58px;
+    height: 58px;
     border-radius: 50%;
     border: 1px solid var(--line-strong);
-    background: rgba(20,17,14,0.12);
+    background: rgba(20, 17, 14, 0.12);
     color: var(--text-2);
-    font-size: 29px;
+    font-size: 28px;
     cursor: pointer;
 }
 
 .circle-btn:hover {
-    border-color: rgba(226,161,66,0.45);
+    border-color: rgba(226, 161, 66, 0.45);
     color: var(--text);
 }
 
 .play-btn {
-    width: 72px;
-    height: 72px;
+    width: 68px;
+    height: 68px;
     border-radius: 50%;
     border: none;
     background:
-        radial-gradient(circle at 35% 25%, rgba(255,255,255,0.22), transparent 30%),
+        radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.22), transparent 30%),
         var(--amber);
     color: #14110e;
-    font-size: 29px;
+    font-size: 28px;
     cursor: pointer;
     box-shadow:
-        0 14px 28px rgba(226,161,66,0.22),
-        inset 0 1px 0 rgba(255,255,255,0.24);
+        0 14px 28px rgba(226, 161, 66, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.24);
 }
 
 .rating {
@@ -551,27 +562,32 @@ body::after {
 
 .rating-title {
     color: var(--text-2);
-    font-size: 15px;
+    font-size: 14.5px;
     font-weight: 900;
     margin-right: 8px;
 }
 
 .star {
     color: var(--amber);
-    font-size: 24px;
+    font-size: 23px;
     cursor: pointer;
-    text-shadow: 0 0 12px rgba(226,161,66,0.12);
+    text-shadow: 0 0 12px rgba(226, 161, 66, 0.12);
 }
 
 .star.empty {
-    color: rgba(239,230,216,0.27);
+    color: rgba(239, 230, 216, 0.27);
     text-shadow: none;
+}
+
+#metaLine {
+    margin-top: 13px;
+    font-size: 13.5px;
 }
 
 /* ---------- Smart Shuffle ---------- */
 
 .shuffle-card {
-    padding: 30px;
+    padding: 27px 30px;
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -583,13 +599,13 @@ body::after {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 22px;
 }
 
 .badge {
     color: var(--sage);
-    background: rgba(168,180,135,0.14);
-    border: 1px solid rgba(168,180,135,0.30);
+    background: rgba(168, 180, 135, 0.14);
+    border: 1px solid rgba(168, 180, 135, 0.30);
     padding: 8px 15px;
     border-radius: 999px;
     font-size: 14px;
@@ -600,26 +616,25 @@ body::after {
 .shuffle-copy {
     position: relative;
     z-index: 2;
-    margin-bottom: 20px;
-    max-width: 95%;
+    margin-bottom: 18px;
+    max-width: 96%;
     color: var(--text-2);
     font-size: 16px;
-    line-height: 1.48;
+    line-height: 1.45;
 }
 
 .queue-box {
     position: relative;
     z-index: 2;
-    height: 190px;
+    height: 166px;
     min-height: 0;
     padding: 7px 14px;
-    overflow-x: hidden;
-    overflow-y: auto;
-    border: 1px solid rgba(239,230,216,0.105);
+    overflow: hidden;
+    border: 1px solid rgba(239, 230, 216, 0.105);
     border-radius: 9px;
     background:
-        linear-gradient(90deg, rgba(255,255,255,0.020), transparent),
-        rgba(16,13,10,0.52);
+        linear-gradient(90deg, rgba(255, 255, 255, 0.020), transparent),
+        rgba(16, 13, 10, 0.52);
 }
 
 .queue-box::-webkit-scrollbar {
@@ -633,11 +648,11 @@ body::after {
 }
 
 .queue-row {
-    height: 43px;
+    height: 40px;
     display: grid;
-    grid-template-columns: 46px minmax(0, 1fr) 132px;
+    grid-template-columns: 44px minmax(0, 1fr) 128px;
     align-items: center;
-    border-bottom: 1px solid rgba(239,230,216,0.07);
+    border-bottom: 1px solid rgba(239, 230, 216, 0.07);
 }
 
 .queue-index {
@@ -649,7 +664,7 @@ body::after {
 .queue-song {
     color: var(--text);
     font-family: "PT Fraunces", Georgia, serif;
-    font-size: 19px;
+    font-size: 18px;
     line-height: 1.05;
     letter-spacing: -0.15px;
     white-space: nowrap;
@@ -664,7 +679,7 @@ body::after {
 .queue-artist {
     color: var(--text-2);
     text-align: right;
-    font-size: 14px;
+    font-size: 13.5px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -701,33 +716,33 @@ body::after {
     left: 0;
     right: 0;
     height: 1px;
-    background: rgba(239,230,216,0.07);
+    background: rgba(239, 230, 216, 0.07);
 }
 
 .empty-ghost-row.one {
-    top: 38px;
+    top: 34px;
 }
 
 .empty-ghost-row.two {
-    top: 80px;
+    top: 76px;
 }
 
 .empty-ghost-row.three {
-    top: 122px;
+    top: 118px;
 }
 
 .shuffle-actions {
     position: relative;
     z-index: 2;
     display: grid;
-    grid-template-columns: 136px minmax(0, 1fr);
+    grid-template-columns: 138px minmax(0, 1fr);
     gap: 14px;
     margin-top: 15px;
 }
 
 .ghost-btn,
 .amber-btn {
-    height: 49px;
+    height: 48px;
     border-radius: 8px;
     cursor: pointer;
     font-weight: 900;
@@ -736,25 +751,25 @@ body::after {
 
 .ghost-btn {
     border: 1px solid var(--line);
-    background: rgba(20,17,14,0.06);
+    background: rgba(20, 17, 14, 0.06);
     color: var(--text-2);
 }
 
 .ghost-btn:hover {
-    border-color: rgba(226,161,66,0.45);
+    border-color: rgba(226, 161, 66, 0.45);
     color: var(--text);
 }
 
 .amber-btn {
     border: none;
     background:
-        radial-gradient(circle at 35% 25%, rgba(255,255,255,0.22), transparent 35%),
+        radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.22), transparent 35%),
         var(--amber);
     color: #14110e;
     letter-spacing: 0.6px;
     box-shadow:
-        0 12px 28px rgba(226,161,66,0.14),
-        inset 0 1px 0 rgba(255,255,255,0.20);
+        0 12px 28px rgba(226, 161, 66, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.20);
 }
 
 .amber-btn:disabled {
@@ -766,7 +781,7 @@ body::after {
 
 .stats-strip {
     grid-column: 1 / -1;
-    min-height: 106px;
+    min-height: 92px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
 }
@@ -787,17 +802,17 @@ body::after {
 
 .stat-value {
     font-family: "PT Fraunces", Georgia, serif;
-    font-size: 46px;
-    line-height: 0.95;
+    font-size: 43px;
+    line-height: 0.92;
     font-style: italic;
 }
 
 .stat-label {
-    margin-top: 10px;
+    margin-top: 9px;
     color: var(--text-3);
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 950;
-    letter-spacing: 4.2px;
+    letter-spacing: 4.4px;
 }
 
 /* ---------- Identity ---------- */
@@ -805,15 +820,15 @@ body::after {
 .identity {
     grid-column: 1 / -1;
     min-height: 0;
-    padding: 27px 30px;
+    padding: 25px 30px;
     display: grid;
-    grid-template-columns: 322px minmax(0, 1fr) 164px;
-    gap: 26px;
+    grid-template-columns: 330px minmax(0, 1fr) 156px;
+    gap: 24px;
     align-items: center;
     background:
-        radial-gradient(circle at 38% 20%, rgba(226,161,66,0.18), transparent 34%),
-        radial-gradient(circle at 72% 68%, rgba(226,161,66,0.065), transparent 30%),
-        linear-gradient(135deg, rgba(29,24,18,0.98), rgba(22,18,14,0.97));
+        radial-gradient(circle at 38% 20%, rgba(226, 161, 66, 0.18), transparent 34%),
+        radial-gradient(circle at 72% 68%, rgba(226, 161, 66, 0.065), transparent 30%),
+        linear-gradient(135deg, rgba(29, 24, 18, 0.98), rgba(22, 18, 14, 0.97));
 }
 
 .identity > * {
@@ -825,7 +840,7 @@ body::after {
     margin: 9px 0 10px;
     color: var(--amber);
     font-family: "PT Fraunces", Georgia, serif;
-    font-size: 46px;
+    font-size: 45px;
     line-height: 0.96;
     letter-spacing: -0.55px;
     font-style: italic;
@@ -835,7 +850,7 @@ body::after {
 .identity-copy {
     max-width: 340px;
     color: var(--text-2);
-    font-size: 15.5px;
+    font-size: 15.2px;
     line-height: 1.42;
     white-space: pre-line;
 }
@@ -844,23 +859,23 @@ body::after {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 22px;
+    gap: 20px;
     min-width: 0;
 }
 
 .sticker {
     position: relative;
-    width: 184px;
-    min-height: 78px;
-    padding: 17px 15px;
+    width: 174px;
+    min-height: 76px;
+    padding: 16px 14px;
     text-align: center;
     color: #1a1611;
-    border: 1px dashed rgba(20,17,14,0.45);
+    border: 1px dashed rgba(20, 17, 14, 0.45);
     border-radius: 5px;
     font-family: "PT JetBrains Mono", Consolas, monospace;
-    font-size: 12.5px;
-    line-height: 1.28;
-    box-shadow: 0 17px 30px rgba(0,0,0,0.30);
+    font-size: 12px;
+    line-height: 1.25;
+    box-shadow: 0 17px 30px rgba(0, 0, 0, 0.30);
     overflow: hidden;
 }
 
@@ -869,46 +884,46 @@ body::after {
     position: absolute;
     top: -12px;
     left: 50%;
-    width: 62px;
-    height: 20px;
+    width: 60px;
+    height: 19px;
     transform: translateX(-50%) rotate(-2deg);
-    background: rgba(239,230,216,0.36);
-    border: 1px solid rgba(239,230,216,0.20);
+    background: rgba(239, 230, 216, 0.36);
+    border: 1px solid rgba(239, 230, 216, 0.20);
 }
 
 .sticker.sage {
     background:
-        linear-gradient(180deg, rgba(255,255,255,0.12), transparent),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent),
         #aaa17a;
-    transform: rotate(-5.5deg);
+    transform: rotate(-5.2deg);
 }
 
 .sticker.rose {
     background:
-        linear-gradient(180deg, rgba(255,255,255,0.12), transparent),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent),
         #c98a7d;
-    transform: rotate(4.5deg);
+    transform: rotate(4.2deg);
 }
 
 .sticker.amber {
     background:
-        linear-gradient(180deg, rgba(255,255,255,0.12), transparent),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent),
         #c9a66e;
-    transform: rotate(-4deg);
+    transform: rotate(-3.8deg);
 }
 
 .aura {
     --aura-angle: 0deg;
-    width: 154px;
-    height: 154px;
+    width: 146px;
+    height: 146px;
     border-radius: 50%;
     padding: 5px;
     position: relative;
     background:
-        conic-gradient(var(--amber) 0deg var(--aura-angle), rgba(226,161,66,0.18) var(--aura-angle) 360deg);
+        conic-gradient(var(--amber) 0deg var(--aura-angle), rgba(226, 161, 66, 0.18) var(--aura-angle) 360deg);
     box-shadow:
-        0 0 0 1px rgba(226,161,66,0.12),
-        0 24px 44px rgba(0,0,0,0.22);
+        0 0 0 1px rgba(226, 161, 66, 0.12),
+        0 24px 44px rgba(0, 0, 0, 0.22);
 }
 
 .aura::before {
@@ -920,7 +935,7 @@ body::after {
     background:
         repeating-conic-gradient(
             from 0deg,
-            rgba(226,161,66,0.65) 0deg 1.2deg,
+            rgba(226, 161, 66, 0.65) 0deg 1.2deg,
             transparent 1.2deg 10deg
         );
     mask: radial-gradient(circle, transparent 0 67%, black 68% 71%, transparent 72%);
@@ -933,7 +948,7 @@ body::after {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: rgba(29,24,18,0.96);
+    background: rgba(29, 24, 18, 0.96);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -943,16 +958,121 @@ body::after {
 .aura-num {
     color: var(--amber);
     font-family: "PT Fraunces", Georgia, serif;
-    font-size: 56px;
+    font-size: 53px;
     line-height: 0.9;
 }
 
 .aura-label {
-    margin-top: 9px;
+    margin-top: 8px;
     color: var(--text-3);
-    font-size: 10.5px;
-    letter-spacing: 3.3px;
+    font-size: 10px;
+    letter-spacing: 3.2px;
     font-weight: 950;
+}
+
+/* ---------- Shorter App Window Fit ---------- */
+
+@media (max-height: 910px) {
+    .main {
+        padding-top: 22px;
+        padding-bottom: 16px;
+    }
+
+    .topbar {
+        height: 60px;
+        margin-bottom: 13px;
+    }
+
+    .greeting {
+        font-size: 36px;
+    }
+
+    .dashboard-grid {
+        height: calc(100% - 73px);
+        grid-template-rows: 360px 86px minmax(230px, 1fr);
+        gap: 14px;
+    }
+
+    .now-card,
+    .shuffle-card {
+        padding: 23px 26px;
+    }
+
+    .now-body {
+        grid-template-columns: 246px minmax(0, 1fr);
+        gap: 22px;
+    }
+
+    .polaroid {
+        width: 232px;
+        height: 274px;
+    }
+
+    .cover-wrap,
+    .cover {
+        width: 210px;
+        height: 210px;
+    }
+
+    .track-title {
+        font-size: clamp(29px, 2vw, 34px);
+    }
+
+    .artist {
+        font-size: 18px;
+    }
+
+    .album {
+        margin-bottom: 18px;
+    }
+
+    .progress-row {
+        margin-bottom: 17px;
+    }
+
+    .controls {
+        margin-bottom: 14px;
+    }
+
+    .circle-btn {
+        width: 54px;
+        height: 54px;
+    }
+
+    .play-btn {
+        width: 64px;
+        height: 64px;
+    }
+
+    .queue-box {
+        height: 148px;
+    }
+
+    .stat-value {
+        font-size: 39px;
+    }
+
+    .identity-title {
+        font-size: 41px;
+    }
+
+    .identity-copy {
+        font-size: 14.5px;
+    }
+
+    .sticker {
+        width: 164px;
+        font-size: 11.4px;
+    }
+
+    .aura {
+        width: 136px;
+        height: 136px;
+    }
+
+    .aura-num {
+        font-size: 49px;
+    }
 }
 
 /* ---------- Scrollbars ---------- */
@@ -963,17 +1083,17 @@ body::after {
 }
 
 ::-webkit-scrollbar-track {
-    background: rgba(239,230,216,0.045);
+    background: rgba(239, 230, 216, 0.045);
     border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(226,161,66,0.45);
+    background: rgba(226, 161, 66, 0.45);
     border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(226,161,66,0.75);
+    background: rgba(226, 161, 66, 0.75);
 }
 </style>
 </head>
@@ -1081,7 +1201,7 @@ body::after {
         </nav>
 
         <div class="sidebar-footer">
-            <span class="status-dot"></span>connected · adaptive profile
+            <span class="status-dot"></span>connected · <span id="footerProfile">adaptive</span> profile
         </div>
     </aside>
 
@@ -1094,6 +1214,7 @@ body::after {
                         —
                         <span class="accent">&lt;3</span>
                     </div>
+
                     <div class="meta">
                         <span id="trackCount">0</span> tracks ·
                         <span id="duration">0h 0m</span> ·
@@ -1102,8 +1223,9 @@ body::after {
                 </div>
 
                 <div class="profile">
-                    <div class="avatar"></div>
-                    <div class="profile-name">anubhav</div>
+                    <div id="profileAvatar" class="avatar"></div>
+                    <div id="profileName" class="profile-name">Spotify User</div>
+
                     <svg class="profile-chevron" viewBox="0 0 24 24">
                         <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
                     </svg>
@@ -1119,6 +1241,7 @@ body::after {
                             <div class="cover-wrap">
                                 <img id="cover" class="cover" alt="" />
                             </div>
+
                             <div class="caption">side A · track 07</div>
                         </div>
 
@@ -1129,9 +1252,11 @@ body::after {
 
                             <div class="progress-row">
                                 <span id="progressLabel">0:00</span>
+
                                 <div id="progressTrack" class="progress-track">
                                     <div id="progressFill" class="progress-fill"></div>
                                 </div>
+
                                 <span id="durationLabel">0:00</span>
                             </div>
 
@@ -1150,7 +1275,7 @@ body::after {
                                 <span class="star empty" data-rating="5">★</span>
                             </div>
 
-                            <div id="metaLine" class="meta" style="margin-top: 16px;">Clean · Unknown</div>
+                            <div id="metaLine" class="meta">Clean · Unknown</div>
                         </div>
                     </div>
                 </div>
@@ -1158,7 +1283,7 @@ body::after {
                 <div class="card shuffle-card">
                     <div class="shuffle-head">
                         <div class="label">SMART SHUFFLE</div>
-                        <div id="shuffleBadge" class="badge">weighted</div>
+                        <div id="shuffleBadge" class="badge">adaptive</div>
                     </div>
 
                     <div class="shuffle-copy">
@@ -1172,8 +1297,10 @@ body::after {
                                 <div class="empty-ghost-row one"></div>
                                 <div class="empty-ghost-row two"></div>
                                 <div class="empty-ghost-row three"></div>
+
                                 <div class="empty-preview-inner">
                                     <div class="empty-preview-title">No preview yet</div>
+
                                     <div class="empty-preview-copy">
                                         Click preview to build a weighted queue from your current playlist.
                                     </div>
@@ -1193,14 +1320,17 @@ body::after {
                         <div id="statOneValue" class="stat-value">0</div>
                         <div id="statOneLabel" class="stat-label">TRACKS</div>
                     </div>
+
                     <div class="stat">
                         <div id="statTwoValue" class="stat-value">0</div>
                         <div id="statTwoLabel" class="stat-label">ARTISTS</div>
                     </div>
+
                     <div class="stat">
                         <div id="statThreeValue" class="stat-value">0</div>
                         <div id="statThreeLabel" class="stat-label">ALBUMS</div>
                     </div>
+
                     <div class="stat">
                         <div id="statFourValue" class="stat-value">0h 0m</div>
                         <div id="statFourLabel" class="stat-label">DURATION</div>
@@ -1210,7 +1340,9 @@ body::after {
                 <div class="card identity">
                     <div>
                         <div class="label">PLAYLIST IDENTITY</div>
+
                         <div id="identityTitle" class="identity-title">Analyzing…</div>
+
                         <div id="identityCopy" class="identity-copy">
                             Playlist identity will appear once analytics are available.
                         </div>
@@ -1239,47 +1371,119 @@ let pyBridge = null;
 
 window.actions = {
     openPage(pageName) {
-        if (pyBridge) pyBridge.openPage(pageName);
+        if (pyBridge) {
+            pyBridge.openPage(pageName);
+        }
     },
 
     previous() {
-        if (pyBridge) pyBridge.previous();
+        if (pyBridge) {
+            pyBridge.previous();
+        }
     },
 
     playPause() {
-        if (pyBridge) pyBridge.playPause();
+        if (pyBridge) {
+            pyBridge.playPause();
+        }
     },
 
     next() {
-        if (pyBridge) pyBridge.next();
+        if (pyBridge) {
+            pyBridge.next();
+        }
     },
 
     previewShuffle() {
-        if (pyBridge) pyBridge.previewShuffle();
+        if (pyBridge) {
+            pyBridge.previewShuffle();
+        }
     },
 
     queueShuffle() {
-        if (pyBridge) pyBridge.queueShuffle();
+        if (pyBridge) {
+            pyBridge.queueShuffle();
+        }
     },
 
     rateSong(rating) {
-        if (pyBridge) pyBridge.rateSong(rating);
+        if (pyBridge) {
+            pyBridge.rateSong(rating);
+        }
     },
 
     seekToFraction(fraction) {
-        if (pyBridge) pyBridge.seekToFraction(fraction);
+        if (pyBridge) {
+            pyBridge.seekToFraction(fraction);
+        }
     }
 };
 
 window.dashboard = {
+    updateAppContext(data) {
+        data = data || {};
+
+        const activeProfile = cleanProfileLabel(
+            data.activeProfile || "Balanced"
+        );
+
+        const profileName = String(
+            data.profileName || "Spotify User"
+        ).trim() || "Spotify User";
+
+        const profileImageUrl = String(
+            data.profileImageUrl || ""
+        ).trim();
+
+        const profileNameEl = document.getElementById("profileName");
+        const profileAvatar = document.getElementById("profileAvatar");
+        const shuffleBadge = document.getElementById("shuffleBadge");
+        const footerProfile = document.getElementById("footerProfile");
+
+        if (profileNameEl) {
+            profileNameEl.textContent = profileName;
+            profileNameEl.title = profileName;
+        }
+
+        if (shuffleBadge) {
+            shuffleBadge.textContent = activeProfile.toLowerCase();
+        }
+
+        if (footerProfile) {
+            footerProfile.textContent = activeProfile.toLowerCase();
+        }
+
+        if (profileAvatar) {
+            if (profileImageUrl) {
+                profileAvatar.classList.add("has-image");
+                profileAvatar.style.backgroundImage = `url("${safeCssUrl(profileImageUrl)}")`;
+            } else {
+                profileAvatar.classList.remove("has-image");
+                profileAvatar.style.backgroundImage = "";
+            }
+        }
+    },
+
     updateStats(data) {
         data = data || {};
 
         const defaults = [
-            { value: 0, label: "TRACKS" },
-            { value: 0, label: "ARTISTS" },
-            { value: 0, label: "ALBUMS" },
-            { value: "0h 0m", label: "DURATION" },
+            {
+                value: 0,
+                label: "TRACKS",
+            },
+            {
+                value: 0,
+                label: "ARTISTS",
+            },
+            {
+                value: 0,
+                label: "ALBUMS",
+            },
+            {
+                value: "0h 0m",
+                label: "DURATION",
+            },
         ];
 
         const items = data.items && data.items.length
@@ -1305,16 +1509,13 @@ window.dashboard = {
         data = data || {};
 
         const auraRing = document.getElementById("auraRing");
-        const shuffleBadge = document.getElementById("shuffleBadge");
-
-        if (shuffleBadge && data.recommendedProfile) {
-            shuffleBadge.textContent = String(data.recommendedProfile).toLowerCase();
-        }
 
         if (!data.hasIdentity) {
             document.getElementById("identityTitle").textContent = "Analyzing…";
+
             document.getElementById("identityCopy").textContent =
                 "Playlist identity will appear once analytics are available.";
+
             document.getElementById("auraNumber").textContent = "—";
             document.getElementById("stickerOne").innerHTML = "hidden favorite:<br />—";
             document.getElementById("stickerTwo").innerHTML = "playlist villain:<br />—";
@@ -1335,7 +1536,9 @@ window.dashboard = {
         document.getElementById("identityCopy").textContent = subtitle;
 
         document.getElementById("auraNumber").textContent =
-            aura === null || aura === undefined ? "—" : String(aura);
+            aura === null || aura === undefined
+                ? "—"
+                : String(aura);
 
         if (auraRing) {
             const auraNumber = Number(aura);
@@ -1352,7 +1555,9 @@ window.dashboard = {
 
         const hiddenFavorite = data.hiddenFavorite || "—";
         const playlistVillain = data.playlistVillain || "—";
-        const thirdBadge = badges.length > 0 ? badges[0] : "—";
+        const thirdBadge = badges.length > 0
+            ? badges[0]
+            : "—";
 
         document.getElementById("stickerOne").innerHTML =
             `hidden favorite:<br />${escapeHtml(hiddenFavorite)}`;
@@ -1367,21 +1572,39 @@ window.dashboard = {
     updatePlaylistSummary(data) {
         data = data || {};
 
-        document.getElementById("greetingText").textContent = data.greeting || "good evening";
-        document.getElementById("trackCount").textContent = data.trackCount ?? 0;
-        document.getElementById("duration").textContent = data.duration || "0h 0m";
-        document.getElementById("lastSynced").textContent = data.lastSynced || "just now";
+        document.getElementById("greetingText").textContent =
+            data.greeting || "good evening";
+
+        document.getElementById("trackCount").textContent =
+            data.trackCount ?? 0;
+
+        document.getElementById("duration").textContent =
+            data.duration || "0h 0m";
+
+        document.getElementById("lastSynced").textContent =
+            data.lastSynced || "just now";
     },
 
     updateNowPlaying(data) {
         data = data || {};
 
-        document.getElementById("trackTitle").textContent = data.title || "Nothing Playing";
-        document.getElementById("artist").textContent = data.artist || "";
-        document.getElementById("album").textContent = data.album || "";
-        document.getElementById("progressLabel").textContent = data.progressLabel || "0:00";
-        document.getElementById("durationLabel").textContent = data.durationLabel || "0:00";
-        document.getElementById("metaLine").textContent = data.meta || "";
+        document.getElementById("trackTitle").textContent =
+            data.title || "Nothing Playing";
+
+        document.getElementById("artist").textContent =
+            data.artist || "";
+
+        document.getElementById("album").textContent =
+            data.album || "";
+
+        document.getElementById("progressLabel").textContent =
+            data.progressLabel || "0:00";
+
+        document.getElementById("durationLabel").textContent =
+            data.durationLabel || "0:00";
+
+        document.getElementById("metaLine").textContent =
+            data.meta || "";
 
         const cover = document.getElementById("cover");
 
@@ -1393,10 +1616,16 @@ window.dashboard = {
             cover.style.opacity = "0";
         }
 
-        const progress = Math.max(0, Math.min(1, data.progressFraction || 0));
-        document.getElementById("progressFill").style.width = `${progress * 100}%`;
+        const progress = Math.max(
+            0,
+            Math.min(1, data.progressFraction || 0)
+        );
 
-        document.getElementById("playButton").textContent = data.isPlaying ? "Ⅱ" : "▶";
+        document.getElementById("progressFill").style.width =
+            `${progress * 100}%`;
+
+        document.getElementById("playButton").textContent =
+            data.isPlaying ? "Ⅱ" : "▶";
 
         this.setRating(data.rating || 0);
     },
@@ -1420,8 +1649,10 @@ window.dashboard = {
                     <div class="empty-ghost-row one"></div>
                     <div class="empty-ghost-row two"></div>
                     <div class="empty-ghost-row three"></div>
+
                     <div class="empty-preview-inner">
                         <div class="empty-preview-title">No preview yet</div>
+
                         <div class="empty-preview-copy">
                             Click preview to build a weighted queue from your current playlist.
                         </div>
@@ -1453,10 +1684,12 @@ window.dashboard = {
 
             row.innerHTML = `
                 <div class="queue-index">${String(index + 1).padStart(2, "0")}</div>
+
                 <div>
                     <div class="queue-song">${escapeHtml(item.name || "Unknown Song")}</div>
                     <div class="queue-reason">${escapeHtml(score + reasons)}</div>
                 </div>
+
                 <div class="queue-artist">${escapeHtml(item.artist || "")}</div>
             `;
 
@@ -1482,6 +1715,25 @@ window.dashboard = {
     }
 };
 
+function cleanProfileLabel(value) {
+    const label = String(value || "").trim();
+
+    if (!label) {
+        return "Balanced";
+    }
+
+    return label;
+}
+
+function safeCssUrl(value) {
+    return String(value || "")
+        .replaceAll("\\", "\\\\")
+        .replaceAll('"', "%22")
+        .replaceAll("'", "%27")
+        .replaceAll(")", "%29")
+        .replaceAll("(", "%28");
+}
+
 function escapeHtml(value) {
     return String(value ?? "")
         .replaceAll("&", "&amp;")
@@ -1501,6 +1753,7 @@ document.querySelectorAll(".star").forEach((star) => {
 document.getElementById("progressTrack").addEventListener("click", (event) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const fraction = (event.clientX - rect.left) / rect.width;
+
     window.actions.seekToFraction(fraction);
 });
 
