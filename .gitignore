@@ -20,3 +20,22 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Environment / secrets
+.env
+
+# Spotify auth cache
+.spotify_power_tools_cache
+.spotify_power_tools_cache*
+
+# Local app runtime data
+data/settings.json
+data/listening_history.json
+data/song_ratings.json
+data/listening_memory_export_*.json
+data/share_cards/
