@@ -736,21 +736,16 @@ class MainWindow(QMainWindow):
 
         if show_message:
             if enabled:
-                message = "Gaming Mode enabled • quieter background refresh"
+                message = "Gaming Mode enabled • hotkeys stay silent"
             else:
                 message = "Gaming Mode disabled"
 
-            self.status_bar.set_message(
-                message
+            self.notify_quietly(
+                "Spotify Power Tools",
+                message,
+                QSystemTrayIcon.Information,
+                1800
             )
-
-            if self.tray_icon is not None and self.tray_icon.isVisible():
-                self.tray_icon.showMessage(
-                    "Spotify Power Tools",
-                    message,
-                    QSystemTrayIcon.Information,
-                    1800
-                )
 
     def toggle_gaming_mode_from_tray(self):
         self.set_gaming_mode(
@@ -758,6 +753,91 @@ class MainWindow(QMainWindow):
             save=True,
             show_message=True,
         )
+
+    def notify_quietly(
+            self,
+            title,
+            message,
+            icon=None,
+            timeout=2200,
+    ):
+        message = str(
+            message or ""
+        )
+
+        if not message:
+            return
+
+        self.status_bar.set_message(
+            message
+        )
+
+        if icon is None:
+            icon = QSystemTrayIcon.Information
+
+        if (
+                self.tray_icon is not None
+                and self.tray_icon.isVisible()
+        ):
+            self.tray_icon.showMessage(
+                title,
+                message,
+                icon,
+                timeout
+            )
+
+    def show_info_message(
+            self,
+            title,
+            message,
+    ):
+        if self.gaming_mode_enabled:
+            self.notify_quietly(
+                title,
+                message,
+                QSystemTrayIcon.Information,
+                2200
+            )
+
+            return
+
+        QMessageBox.information(
+            self,
+            title,
+            message
+        )
+
+    def show_error_message(
+            self,
+            title,
+            message,
+    ):
+        if self.gaming_mode_enabled:
+            self.notify_quietly(
+                title,
+                message,
+                QSystemTrayIcon.Warning,
+                2800
+            )
+
+            return
+
+        QMessageBox.critical(
+            self,
+            title,
+            message
+        )
+
+    def prepare_background_shuffle_action(self):
+        """
+        In normal mode, smart shuffle hotkeys bring the app forward.
+        In Gaming Mode, they run quietly in the background.
+        """
+
+        if not self.gaming_mode_enabled:
+            self.restore_from_tray()
+
+        self.show_smart_shuffle()
 
     def handle_tray_activated(self, reason):
         if reason in (
@@ -793,13 +873,11 @@ class MainWindow(QMainWindow):
         self.previous_song()
 
     def preview_shuffle_from_tray(self):
-        self.restore_from_tray()
-        self.show_smart_shuffle()
+        self.prepare_background_shuffle_action()
         self.preview_shuffle()
 
     def queue_shuffle_from_tray(self):
-        self.restore_from_tray()
-        self.show_smart_shuffle()
+        self.prepare_background_shuffle_action()
         self.queue_shuffle()
 
     def toggle_playback_from_hotkey(self):
@@ -812,13 +890,11 @@ class MainWindow(QMainWindow):
         self.previous_song()
 
     def preview_shuffle_from_hotkey(self):
-        self.restore_from_tray()
-        self.show_smart_shuffle()
+        self.prepare_background_shuffle_action()
         self.preview_shuffle()
 
     def queue_shuffle_from_hotkey(self):
-        self.restore_from_tray()
-        self.show_smart_shuffle()
+        self.prepare_background_shuffle_action()
         self.queue_shuffle()
 
     def show_dashboard_from_hotkey(self):
@@ -2287,8 +2363,7 @@ class MainWindow(QMainWindow):
 
         except Exception as error:
 
-            QMessageBox.critical(
-                self,
+            self.show_error_message(
                 "Playback Error",
                 str(error)
             )
@@ -2311,8 +2386,7 @@ class MainWindow(QMainWindow):
 
         except Exception as error:
 
-            QMessageBox.critical(
-                self,
+            self.show_error_message(
                 "Playback Error",
                 str(error)
             )
@@ -2472,8 +2546,7 @@ class MainWindow(QMainWindow):
 
         except Exception as error:
 
-            QMessageBox.critical(
-                self,
+            self.show_error_message(
                 "Playback Error",
                 str(error)
             )
@@ -2625,12 +2698,6 @@ class MainWindow(QMainWindow):
 
     def preview_error(self, message):
 
-        QMessageBox.critical(
-            self,
-            "Preview Error",
-            message
-        )
-
         self.dashboard.shuffle_panel.preview_button.setEnabled(True)
 
         self.dashboard.shuffle_panel.preview_button.setText(
@@ -2645,6 +2712,11 @@ class MainWindow(QMainWindow):
 
         self.status_bar.set_message(
             "Preview failed"
+        )
+
+        self.show_error_message(
+            "Preview Error",
+            message
         )
 
     def queue_shuffle(self):
@@ -2705,19 +2777,35 @@ class MainWindow(QMainWindow):
 
         self.dashboard.shuffle_panel.preview_button.setEnabled(True)
 
-        self.status_bar.set_message(
+        status_message = (
             f"Queued {result['queued_count']} songs from {result['playlist_name']}"
         )
+
+        self.status_bar.set_message(
+            status_message
+        )
+
+        message = (
+            f"Queued {result['queued_count']} smart-shuffled songs.\n\n"
+            f"Playlist: {result['playlist_name']}\n\n"
+            f"Starting after: {result['current_song_name']}\n\n"
+            f"Music will continue from your current Spotify playback."
+        )
+
+        if self.gaming_mode_enabled:
+            self.notify_quietly(
+                "Smart Shuffle Queued",
+                status_message,
+                QSystemTrayIcon.Information,
+                2400
+            )
+
+            return
 
         QMessageBox.information(
             self,
             "Smart Shuffle Queued",
-            (
-                f"Queued {result['queued_count']} smart-shuffled songs.\n\n"
-                f"Playlist: {result['playlist_name']}\n\n"
-                f"Starting after: {result['current_song_name']}\n\n"
-                f"Music will continue from your current Spotify playback."
-            )
+            message
         )
 
     def queue_error(self, message):
@@ -2734,8 +2822,7 @@ class MainWindow(QMainWindow):
             "Queue Smart Shuffle failed"
         )
 
-        QMessageBox.critical(
-            self,
+        self.show_error_message(
             "Queue Smart Shuffle Error",
             message
         )
