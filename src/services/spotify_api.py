@@ -1,13 +1,11 @@
-from pathlib import Path
-
+from services.app_paths import spotify_cache_file
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
 from config import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-CACHE_PATH = BASE_DIR / ".spotify_power_tools_cache"
+CACHE_PATH = spotify_cache_file()
 
 
 SCOPE = (

@@ -1,11 +1,14 @@
 import json
 
-from pathlib import Path
+from services.app_paths import (
+    data_file,
+    get_data_dir,
+    project_root,
+)
 
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DATA_DIR = PROJECT_ROOT / "data"
-RATINGS_FILE = DATA_DIR / "song_ratings.json"
+PROJECT_ROOT = project_root()
+DATA_DIR = get_data_dir()
+RATINGS_FILE = data_file("song_ratings.json")
 
 
 def load_ratings():

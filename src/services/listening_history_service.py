@@ -1,12 +1,17 @@
 import json
 
 from datetime import datetime, timezone
-from pathlib import Path
+
+from services.app_paths import (
+    data_file,
+    get_data_dir,
+    project_root,
+)
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DATA_DIR = PROJECT_ROOT / "data"
-HISTORY_FILE = DATA_DIR / "listening_history.json"
+PROJECT_ROOT = project_root()
+DATA_DIR = get_data_dir()
+HISTORY_FILE = data_file("listening_history.json")
 
 MAX_HISTORY_ITEMS = 1000
 

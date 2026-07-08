@@ -1,7 +1,10 @@
 import json
 
-from pathlib import Path
-
+from services.app_paths import (
+    data_file,
+    get_data_dir,
+    project_root,
+)
 
 DEFAULT_HOTKEYS = {
     "hotkey_play_pause": "ctrl+alt+space",
@@ -55,9 +58,9 @@ VALID_HOTKEY_KEYS = list(
 )
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DATA_DIR = PROJECT_ROOT / "data"
-SETTINGS_FILE = DATA_DIR / "settings.json"
+PROJECT_ROOT = project_root()
+DATA_DIR = get_data_dir()
+SETTINGS_FILE = data_file("settings.json")
 
 
 def clamp(value, minimum, maximum):
