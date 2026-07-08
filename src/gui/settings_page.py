@@ -27,6 +27,7 @@ class SettingsBridge(QObject):
         int,
         int,
         bool,
+        bool,
         str,
     )
 
@@ -36,7 +37,7 @@ class SettingsBridge(QObject):
     memoryClearRequested = Signal()
     imageCacheClearRequested = Signal()
 
-    @Slot(str, int, int, int, int, bool, str)
+    @Slot(str, int, int, int, int, bool, bool, str)
     def saveSettings(
         self,
         profile,
@@ -45,6 +46,7 @@ class SettingsBridge(QObject):
         album_weight,
         randomness,
         hotkeys_enabled,
+        gaming_mode_enabled,
         hotkeys_json,
     ):
         self.saveRequested.emit(
@@ -54,6 +56,7 @@ class SettingsBridge(QObject):
             int(album_weight),
             int(randomness),
             bool(hotkeys_enabled),
+            bool(gaming_mode_enabled),
             str(hotkeys_json or "{}"),
         )
 
@@ -235,6 +238,7 @@ class SettingsPage(QWidget):
         album_weight,
         randomness,
         hotkeys_enabled,
+        gaming_mode_enabled,
         hotkeys_json,
     ):
         hotkeys = self.decode_hotkeys(
@@ -248,6 +252,7 @@ class SettingsPage(QWidget):
             "album_weight": album_weight,
             "randomness": randomness,
             "hotkeys_enabled": hotkeys_enabled,
+            "gaming_mode_enabled": gaming_mode_enabled,
         }
 
         settings.update(

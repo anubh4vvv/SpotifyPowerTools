@@ -58,7 +58,7 @@ from workers.search_worker import SearchWorker
 
 from services.analytics_service import calculate_playlist_analytics
 from services.duplicate_service import analyze_duplicates
-from services.settings_service import load_settings
+from services.settings_service import load_settings, save_settings
 
 from services.listening_history_service import (
     export_listening_memory as export_listening_memory_service,
@@ -88,6 +88,15 @@ class MainWindow(QMainWindow):
         self.tray_menu = None
         self.tray_message_shown = False
         self.hotkeys = None
+
+        self.gaming_mode_enabled = False
+        self.gaming_mode_action = None
+
+        self.normal_fast_refresh_interval = 1000
+        self.normal_slow_refresh_interval = 8000
+
+        self.gaming_fast_refresh_interval = 5000
+        self.gaming_slow_refresh_interval = 30000
 
         self.preview_thread = None
         self.preview_worker = None
@@ -279,11 +288,15 @@ class MainWindow(QMainWindow):
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.refresh)
-        self.timer.start(1000)
+        self.timer.start(
+            self.normal_fast_refresh_interval
+        )
 
         self.slow_timer = QTimer(self)
         self.slow_timer.timeout.connect(self.slow_refresh)
-        self.slow_timer.start(8000)
+        self.slow_timer.start(
+            self.normal_slow_refresh_interval
+        )
 
         QTimer.singleShot(
             300,
@@ -513,6 +526,14 @@ class MainWindow(QMainWindow):
         self.tray_menu.addAction(queue_action)
         self.tray_menu.addSeparator()
 
+        self.gaming_mode_action = QAction("Gaming Mode: Off", self)
+        self.gaming_mode_action.setCheckable(True)
+
+        self.tray_menu.addAction(
+            self.gaming_mode_action
+        )
+        self.tray_menu.addSeparator()
+
         quit_action = QAction("Quit", self)
         self.tray_menu.addAction(quit_action)
 
@@ -544,6 +565,10 @@ class MainWindow(QMainWindow):
             self.queue_shuffle_from_tray
         )
 
+        self.gaming_mode_action.triggered.connect(
+            self.toggle_gaming_mode_from_tray
+        )
+
         quit_action.triggered.connect(
             self.quit_from_tray
         )
@@ -557,6 +582,8 @@ class MainWindow(QMainWindow):
         )
 
         self.tray_icon.show()
+
+        self.update_gaming_mode_tray_state()
 
     def setup_global_hotkeys(self):
         if self.hotkeys is not None:
@@ -629,6 +656,108 @@ class MainWindow(QMainWindow):
 
     def restart_global_hotkeys(self):
         self.setup_global_hotkeys()
+
+    def update_gaming_mode_tray_state(self):
+        if self.gaming_mode_action is not None:
+            self.gaming_mode_action.setChecked(
+                self.gaming_mode_enabled
+            )
+
+            if self.gaming_mode_enabled:
+                self.gaming_mode_action.setText(
+                    "Gaming Mode: On"
+                )
+            else:
+                self.gaming_mode_action.setText(
+                    "Gaming Mode: Off"
+                )
+
+        if self.tray_icon is not None:
+            if self.gaming_mode_enabled:
+                self.tray_icon.setToolTip(
+                    "Spotify Power Tools • Gaming Mode On"
+                )
+            else:
+                self.tray_icon.setToolTip(
+                    "Spotify Power Tools"
+                )
+
+    def update_refresh_timers_for_gaming_mode(self):
+        if not hasattr(self, "timer"):
+            return
+
+        if not hasattr(self, "slow_timer"):
+            return
+
+        if self.gaming_mode_enabled:
+            self.timer.start(
+                self.gaming_fast_refresh_interval
+            )
+
+            self.slow_timer.start(
+                self.gaming_slow_refresh_interval
+            )
+
+        else:
+            self.timer.start(
+                self.normal_fast_refresh_interval
+            )
+
+            self.slow_timer.start(
+                self.normal_slow_refresh_interval
+            )
+
+    def set_gaming_mode(
+            self,
+            enabled,
+            save=False,
+            show_message=True,
+    ):
+        enabled = bool(
+            enabled
+        )
+
+        self.gaming_mode_enabled = enabled
+
+        self.update_refresh_timers_for_gaming_mode()
+        self.update_gaming_mode_tray_state()
+
+        if save:
+            settings = load_settings()
+            settings["gaming_mode_enabled"] = enabled
+
+            saved_settings = save_settings(
+                settings
+            )
+
+            if hasattr(self, "settings_page"):
+                self.settings_page.current_settings = saved_settings
+                self.settings_page.push_settings()
+
+        if show_message:
+            if enabled:
+                message = "Gaming Mode enabled • quieter background refresh"
+            else:
+                message = "Gaming Mode disabled"
+
+            self.status_bar.set_message(
+                message
+            )
+
+            if self.tray_icon is not None and self.tray_icon.isVisible():
+                self.tray_icon.showMessage(
+                    "Spotify Power Tools",
+                    message,
+                    QSystemTrayIcon.Information,
+                    1800
+                )
+
+    def toggle_gaming_mode_from_tray(self):
+        self.set_gaming_mode(
+            not self.gaming_mode_enabled,
+            save=True,
+            show_message=True,
+        )
 
     def handle_tray_activated(self, reason):
         if reason in (
@@ -1219,6 +1348,15 @@ class MainWindow(QMainWindow):
             self.dashboard.update_shuffle_settings(
                 settings
             )
+
+        self.set_gaming_mode(
+            settings.get(
+                "gaming_mode_enabled",
+                False
+            ),
+            save=False,
+            show_message=False,
+        )
 
         if self.hotkeys is not None or settings.get("hotkeys_enabled", True):
             self.restart_global_hotkeys()

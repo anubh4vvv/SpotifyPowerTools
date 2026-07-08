@@ -353,6 +353,14 @@ input[type="range"]::-webkit-slider-thumb {
     margin-bottom: 16px;
 }
 
+.toggle-row.gaming {
+    border-color: rgba(227,168,87,0.24);
+    background:
+        radial-gradient(circle at 8% 0%, rgba(227,168,87,0.075), transparent 32%),
+        linear-gradient(135deg, rgba(255,255,255,0.018), transparent),
+        rgba(26,22,17,0.64);
+}
+
 .toggle-title {
     font-size: 12.8px;
     color: var(--text-hi);
@@ -363,6 +371,22 @@ input[type="range"]::-webkit-slider-thumb {
     margin-top: 4px;
     font-size: 11.5px;
     color: var(--text-low);
+    line-height: 1.45;
+}
+
+.mode-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(227,168,87,0.26);
+    color: var(--amber);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: rgba(227,168,87,0.075);
 }
 
 .switch {
@@ -601,6 +625,33 @@ input[type="range"]::-webkit-slider-thumb {
     <section class="card">
         <div class="card-head">
             <div>
+                <h3>Gaming Mode</h3>
+                <div class="card-sub">
+                    A quieter background mode for gaming, studying, or working.
+                </div>
+            </div>
+
+            <span id="gamingModePill" class="mode-pill">off</span>
+        </div>
+
+        <div class="toggle-row gaming">
+            <div>
+                <div class="toggle-title">Enable Gaming Mode</div>
+                <div class="toggle-sub">
+                    Keeps hotkeys active while reducing background refresh pressure. Later, this mode will suppress popups and use silent toast feedback.
+                </div>
+            </div>
+
+            <label class="switch">
+                <input id="gamingModeEnabled" type="checkbox" />
+                <span class="switch-slider"></span>
+            </label>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-head">
+            <div>
                 <h3>Global Hotkeys</h3>
                 <div class="card-sub">
                     Control playback and smart shuffle without opening the app.
@@ -679,6 +730,7 @@ window.actions = {
             Number(document.getElementById("albumWeight").value),
             Number(document.getElementById("randomness").value),
             Boolean(document.getElementById("hotkeysEnabled").checked),
+            Boolean(document.getElementById("gamingModeEnabled").checked),
             JSON.stringify(hotkeyState)
         );
     },
@@ -764,6 +816,11 @@ window.settingsPage = {
         setSlider("albumWeight", "albumValue", settings.album_weight ?? 50);
         setSlider("randomness", "randomValue", settings.randomness ?? 50);
 
+        const gamingEnabled = settings.gaming_mode_enabled === true;
+
+        document.getElementById("gamingModeEnabled").checked = gamingEnabled;
+        updateGamingModePill(gamingEnabled);
+
         document.getElementById("hotkeysEnabled").checked =
             settings.hotkeys_enabled !== false;
 
@@ -794,6 +851,14 @@ function setSlider(sliderId, labelId, value) {
     label.textContent = value;
 
     slider.style.setProperty("--progress", `${value}%`);
+}
+
+function updateGamingModePill(enabled) {
+    const pill = document.getElementById("gamingModePill");
+
+    if (!pill) return;
+
+    pill.textContent = enabled ? "on" : "off";
 }
 
 function renderHotkeys() {
@@ -955,10 +1020,14 @@ function setLocalMessage(message) {
     });
 });
 
-["profile", "queueSize", "hotkeysEnabled"].forEach((id) => {
+["profile", "queueSize", "hotkeysEnabled", "gamingModeEnabled"].forEach((id) => {
     const element = document.getElementById(id);
 
     element.addEventListener("change", () => {
+        if (id === "gamingModeEnabled") {
+            updateGamingModePill(Boolean(element.checked));
+        }
+
         setLocalMessage("");
     });
 });

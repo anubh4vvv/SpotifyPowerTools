@@ -32,6 +32,7 @@ DEFAULT_SETTINGS = {
     "album_weight": 50,
     "randomness": 50,
     "hotkeys_enabled": True,
+    "gaming_mode_enabled": False,
     **DEFAULT_HOTKEYS,
 }
 
@@ -189,6 +190,13 @@ def sanitize_settings(settings):
         int(clean["randomness"]),
         0,
         100
+    )
+
+    clean["gaming_mode_enabled"] = bool_from_value(
+        clean.get(
+            "gaming_mode_enabled",
+            False
+        )
     )
 
     clean = sanitize_hotkeys(
