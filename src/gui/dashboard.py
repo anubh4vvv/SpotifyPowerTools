@@ -248,6 +248,10 @@ class Dashboard(QWidget):
                 "shuffle_profile",
                 "Balanced"
             ),
+            "gamingModeEnabled": saved_settings.get(
+                "gaming_mode_enabled",
+                False
+            ),
         }
 
         root_layout = QVBoxLayout(self)
@@ -516,6 +520,7 @@ class Dashboard(QWidget):
 
         self.apply_dashboard_cleanup()
         self.push_shuffle_settings_to_web()
+        self.push_gaming_mode_to_web()
 
     def run_js_function(self, function_name, payload):
         if not self.web_ready:
@@ -630,11 +635,134 @@ class Dashboard(QWidget):
             """
         )
 
+    def update_gaming_mode(self, enabled):
+        context = dict(
+            self.latest_app_context or {}
+        )
+
+        context["gamingModeEnabled"] = bool(
+            enabled
+        )
+
+        self.latest_app_context = context
+
+        self.push_gaming_mode_to_web()
+
+    def push_gaming_mode_to_web(self):
+        if not self.web_ready:
+            return
+
+        enabled = bool(
+            self.latest_app_context.get(
+                "gamingModeEnabled",
+                False
+            )
+        )
+
+        payload = json.dumps(
+            {
+                "enabled": enabled,
+            },
+            ensure_ascii=False
+        )
+
+        self.run_raw_js(
+            f"""
+            (function () {{
+                const data = {payload};
+                const enabled = Boolean(data.enabled);
+
+                let style = document.getElementById("gamingModeBadgeStyle");
+
+                if (!style) {{
+                    style = document.createElement("style");
+                    style.id = "gamingModeBadgeStyle";
+                    style.textContent = `
+                        .gaming-mode-badge {{
+                            height: 34px;
+                            display: none;
+                            align-items: center;
+                            gap: 8px;
+                            padding: 0 13px;
+                            border-radius: 999px;
+                            border: 1px solid rgba(226, 161, 66, 0.32);
+                            background:
+                                radial-gradient(circle at 20% 0%, rgba(226, 161, 66, 0.16), transparent 45%),
+                                rgba(29, 24, 18, 0.78);
+                            color: #e2a142;
+                            font-family: "PT JetBrains Mono", Consolas, monospace;
+                            font-size: 10.5px;
+                            text-transform: uppercase;
+                            letter-spacing: 1.15px;
+                            box-shadow:
+                                inset 0 1px 0 rgba(255,255,255,0.035),
+                                0 12px 24px rgba(0,0,0,0.16);
+                        }}
+
+                        .gaming-mode-badge.is-on {{
+                            display: inline-flex;
+                        }}
+
+                        .gaming-mode-dot {{
+                            width: 7px;
+                            height: 7px;
+                            border-radius: 50%;
+                            background: #e2a142;
+                            box-shadow: 0 0 14px rgba(226, 161, 66, 0.55);
+                        }}
+                    `;
+
+                    document.head.appendChild(style);
+                }}
+
+                let badge = document.getElementById("gamingModeBadge");
+
+                if (!badge) {{
+                    badge = document.createElement("div");
+                    badge.id = "gamingModeBadge";
+                    badge.className = "gaming-mode-badge";
+                    badge.innerHTML = `
+                        <span class="gaming-mode-dot"></span>
+                        <span>Gaming Mode</span>
+                    `;
+
+                    const topbar = document.querySelector(".topbar");
+                    const profile = document.querySelector(".profile");
+
+                    if (topbar && profile) {{
+                        topbar.insertBefore(
+                            badge,
+                            profile
+                        );
+                    }}
+                }}
+
+                if (badge) {{
+                    badge.classList.toggle(
+                        "is-on",
+                        enabled
+                    );
+
+                    badge.title = enabled
+                        ? "Gaming Mode is active: silent hotkeys, fewer popups, slower refresh."
+                        : "";
+                }}
+
+                const footerProfile = document.getElementById("footerProfile");
+
+                if (footerProfile && enabled) {{
+                    footerProfile.textContent = "gaming mode";
+                }}
+            }})();
+            """
+        )
+
     def update_app_context(
             self,
             profile_name=None,
             profile_image_url=None,
-            active_profile=None
+            active_profile=None,
+            gaming_mode_enabled=None,
     ):
         context = dict(
             self.latest_app_context or {}
@@ -663,6 +791,8 @@ class Dashboard(QWidget):
             "window.dashboard.updateAppContext",
             context
         )
+
+        self.push_gaming_mode_to_web()
 
     def update_user_profile(self, profile):
         profile = profile or {}

@@ -719,6 +719,11 @@ class MainWindow(QMainWindow):
 
         self.gaming_mode_enabled = enabled
 
+        if hasattr(self.dashboard, "update_gaming_mode"):
+            self.dashboard.update_gaming_mode(
+                enabled
+            )
+
         self.update_refresh_timers_for_gaming_mode()
         self.update_gaming_mode_tray_state()
 
@@ -1433,6 +1438,14 @@ class MainWindow(QMainWindow):
             save=False,
             show_message=False,
         )
+
+        if hasattr(self.dashboard, "update_app_context"):
+            self.dashboard.update_app_context(
+                gaming_mode_enabled=settings.get(
+                    "gaming_mode_enabled",
+                    False
+                )
+            )
 
         if self.hotkeys is not None or settings.get("hotkeys_enabled", True):
             self.restart_global_hotkeys()
