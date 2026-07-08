@@ -130,7 +130,7 @@ main {
     font-size: 12.5px;
     color: var(--text-mid);
     margin-top: 8px;
-    max-width: 580px;
+    max-width: 640px;
     line-height: 1.55;
 }
 
@@ -150,6 +150,14 @@ main {
         inset 0 1px 0 rgba(255,255,255,0.020);
 }
 
+.card.featured {
+    border-color: rgba(227,168,87,0.23);
+    background:
+        radial-gradient(circle at 9% 0%, rgba(227,168,87,0.095), transparent 34%),
+        linear-gradient(145deg, rgba(255,255,255,0.022), transparent 38%),
+        rgba(34,28,22,0.94);
+}
+
 .card::before {
     content: "";
     position: absolute;
@@ -167,11 +175,34 @@ main {
     z-index: 2;
 }
 
+.card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 13px;
+}
+
 .card h3 {
     font-family: var(--font-serif);
     font-size: 18px;
     font-weight: 500;
-    margin-bottom: 13px;
+}
+
+.mode-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(227,168,87,0.30);
+    color: var(--amber);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: rgba(227,168,87,0.080);
+    white-space: nowrap;
 }
 
 .card p {
@@ -203,6 +234,36 @@ main {
     color: var(--sage);
     font-size: 13px;
     flex-shrink: 0;
+}
+
+.mode-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.mode-box {
+    min-height: 86px;
+    border: 1px solid rgba(243,236,223,0.10);
+    border-radius: 8px;
+    padding: 13px 14px;
+    background:
+        linear-gradient(135deg, rgba(255,255,255,0.018), transparent),
+        rgba(26,22,17,0.64);
+}
+
+.mode-title {
+    font-size: 12px;
+    color: var(--text-hi);
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.mode-copy {
+    font-size: 11.4px;
+    line-height: 1.5;
+    color: var(--text-low);
 }
 
 .tech-row {
@@ -256,7 +317,7 @@ main {
     <div class="page-eyebrow">about</div>
     <div class="page-title">About Spotify Power Tools</div>
     <div class="page-sub">
-        A smart Spotify desktop companion for better shuffle, playlist insights, duplicate detection, and safe playlist cleaning.
+        A smart Spotify desktop companion for better shuffle, playlist insights, duplicate detection, safe playlist cleaning, tray controls, global hotkeys, and quiet background listening.
     </div>
 
     <section class="card">
@@ -268,6 +329,34 @@ main {
         </p>
     </section>
 
+    <section class="card featured">
+        <div class="card-head">
+            <h3>Gaming Mode</h3>
+            <span class="mode-pill">silent companion</span>
+        </div>
+
+        <p>
+            Gaming Mode lets Spotify Power Tools stay useful while you are in a game, without pulling focus away from what you are doing.
+        </p>
+
+        <div class="mode-grid">
+            <div class="mode-box">
+                <div class="mode-title">No focus stealing</div>
+                <div class="mode-copy">Preview and queue hotkeys run quietly instead of bringing the app to the front.</div>
+            </div>
+
+            <div class="mode-box">
+                <div class="mode-title">Quiet feedback</div>
+                <div class="mode-copy">Errors and confirmations use tray/status messages instead of intrusive popups.</div>
+            </div>
+
+            <div class="mode-box">
+                <div class="mode-title">Lower background load</div>
+                <div class="mode-copy">Refresh timers slow down while Gaming Mode is active to reduce API pressure.</div>
+            </div>
+        </div>
+    </section>
+
     <section class="card">
         <h3>Current Features</h3>
 
@@ -276,6 +365,10 @@ main {
             <div class="feature-item"><span class="feature-check">✓</span>Queue Smart Shuffle</div>
             <div class="feature-item"><span class="feature-check">✓</span>Queue size control</div>
             <div class="feature-item"><span class="feature-check">✓</span>Persistent settings</div>
+            <div class="feature-item"><span class="feature-check">✓</span>Global hotkeys</div>
+            <div class="feature-item"><span class="feature-check">✓</span>System tray controls</div>
+            <div class="feature-item"><span class="feature-check">✓</span>Gaming Mode</div>
+            <div class="feature-item"><span class="feature-check">✓</span>Silent hotkey actions</div>
             <div class="feature-item"><span class="feature-check">✓</span>Playlist analytics</div>
             <div class="feature-item"><span class="feature-check">✓</span>Visual analytics charts</div>
             <div class="feature-item"><span class="feature-check">✓</span>Playlist health score</div>
@@ -304,6 +397,8 @@ main {
             <span class="tech-pill">QWebEngine</span>
             <span class="tech-pill">Spotipy</span>
             <span class="tech-pill">Spotify Web API</span>
+            <span class="tech-pill">Global Hotkeys</span>
+            <span class="tech-pill">System Tray</span>
             <span class="tech-pill">Git + GitHub</span>
         </div>
     </section>
